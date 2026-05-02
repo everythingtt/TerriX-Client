@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TerriX Executor | Grandmaster Strategy Suite</title>
+    <title>TerriX | Grandmaster Strategy Suite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -13,6 +13,7 @@
             --bg: #050505;
             --surface: #0f0f0f;
             --border: 1.8px solid white;
+            --client-glow: rgba(58, 71, 255, 0.6);
         }
 
         * {
@@ -29,7 +30,6 @@
             line-height: 1.6;
         }
 
-        /* Background Animation */
         .stars {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -37,39 +37,62 @@
             z-index: -1;
         }
 
-        /* Layout */
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
 
         header {
-            padding: 40px 0;
+            padding: 60px 0 20px 0;
             text-align: center;
         }
 
         .logo {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 900;
             letter-spacing: 5px;
             text-transform: uppercase;
             background: linear-gradient(to bottom, #fff 30%, var(--primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(58, 71, 255, 0.5));
+            filter: drop-shadow(0 0 15px rgba(58, 71, 255, 0.4));
         }
 
         .tagline {
-            color: #888;
-            font-size: 1.1rem;
+            color: #aaa;
+            font-size: 1.2rem;
             margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        /* Hero Client Button */
+        .hero-cta {
+            display: inline-block;
+            padding: 15px 40px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            font-weight: 900;
+            border: var(--border);
+            border-radius: 4px;
+            box-shadow: 0 0 20px var(--client-glow);
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hero-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--primary);
+            background: white;
+            color: black;
         }
 
         /* 3D GUI PREVIEW */
         .preview-section {
-            perspective: 1000px;
-            padding: 60px 0;
+            perspective: 1200px;
+            padding: 40px 0;
             display: flex;
             justify-content: center;
         }
@@ -77,22 +100,22 @@
         .gui-3d {
             width: 600px;
             height: 380px;
-            background: rgba(10, 10, 10, 0.95);
+            background: rgba(0, 0, 0, 0.9);
             border: var(--border);
             position: relative;
-            transform: rotateY(-20deg) rotateX(10deg);
-            box-shadow: 20px 20px 50px rgba(0,0,0,0.8), 0 0 20px rgba(58, 71, 255, 0.2);
-            transition: transform 0.5s ease;
+            transform: rotateY(-15deg) rotateX(10deg);
+            box-shadow: 30px 30px 60px rgba(0,0,0,0.9);
+            transition: transform 0.6s ease;
             display: flex;
             flex-direction: column;
         }
 
         .gui-3d:hover {
-            transform: rotateY(-5deg) rotateX(5deg) scale(1.02);
+            transform: rotateY(0deg) rotateX(0deg) scale(1.05);
         }
 
         .gui-header {
-            background: #1a1a1a;
+            background: rgba(30, 30, 30, 0.9);
             padding: 10px 15px;
             border-bottom: var(--border);
             display: flex;
@@ -101,136 +124,105 @@
             font-weight: bold;
         }
 
-        .gui-body {
-            display: flex;
-            flex: 1;
-        }
+        .gui-body { display: flex; flex: 1; }
 
         .gui-sidebar {
-            width: 120px;
-            background: #0f0f0f;
+            width: 130px;
+            background: rgba(15, 15, 15, 0.9);
             border-right: var(--border);
-            padding: 10px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        .gui-main {
-            flex: 1;
-            background: #000;
-            padding: 15px;
-            position: relative;
-        }
+        .gui-main { flex: 1; background: #000; padding: 20px; position: relative; }
 
-        .gui-mock-btn {
-            height: 25px;
-            border: 1px solid #444;
-            background: #222;
-        }
-        .gui-mock-btn.active { background: var(--secondary); border: 1px solid white; }
+        .gui-mock-btn { height: 22px; border: 1.2px solid white; background: rgba(60,60,60,0.8); }
+        .gui-mock-btn.active { background: var(--secondary); }
+        .gui-mock-btn.hook { background: #4b3214; margin-top: auto; border-color: var(--gold); }
 
-        .gui-code {
-            color: #00ff00;
-            font-family: monospace;
-            font-size: 11px;
-        }
+        .gui-code { color: #00ff00; font-family: 'Consolas', monospace; font-size: 12px; }
 
-        /* Version Cards */
-        .releases {
+        /* Releases Section */
+        .grid-layout {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 30px;
-            margin-bottom: 80px;
+            margin: 60px 0;
         }
 
         .card {
             background: var(--surface);
             border: 1.8px solid #222;
-            padding: 30px;
-            border-radius: 4px;
+            padding: 35px;
             transition: 0.3s;
-            position: relative;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .card:hover {
             border-color: var(--primary);
             transform: translateY(-5px);
+            background: #0a0a0a;
         }
 
-        .card.latest {
-            border-color: var(--gold);
-            background: linear-gradient(145deg, #0f0f0f, #1a1500);
+        .card.client {
+            border-color: var(--primary);
+            background: linear-gradient(145deg, #050505, #000835);
         }
 
-        .card h2 {
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
+        .card h2 { margin-bottom: 10px; font-size: 1.6rem; letter-spacing: 1px; }
+        .card .version { color: var(--primary); font-family: monospace; margin-bottom: 15px; display: block; }
+        .card p { color: #999; font-size: 0.95rem; margin-bottom: 30px; flex: 1; }
 
-        .card p {
-            color: #aaa;
-            font-size: 0.95rem;
-            margin-bottom: 25px;
-            height: 50px;
-        }
-
-        .download-btn {
-            display: inline-block;
-            padding: 12px 30px;
+        .btn-link {
+            display: block;
+            padding: 12px;
+            text-align: center;
             background: white;
             color: black;
             text-decoration: none;
             font-weight: bold;
-            text-transform: uppercase;
             font-size: 12px;
-            border-radius: 2px;
-            transition: 0.2s;
+            text-transform: uppercase;
         }
 
-        .card.latest .download-btn {
-            background: var(--gold);
-        }
+        .card.client .btn-link { background: var(--primary); color: white; border: 1px solid white; }
+        .card.latest .btn-link { background: var(--gold); }
 
-        .download-btn:hover {
-            opacity: 0.8;
-            letter-spacing: 1px;
-        }
-
-        /* Footer Section */
+        /* Footer */
         footer {
-            background: #0a0a0a;
-            padding: 60px 0;
-            border-top: 1px solid #111;
-            font-size: 14px;
-            color: #666;
+            background: #080808;
+            padding: 80px 0 40px 0;
+            border-top: 1px solid #1a1a1a;
         }
 
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
             gap: 40px;
         }
 
-        .org-info h4 { color: white; margin-bottom: 10px; }
-        .contact-info a { color: var(--primary); text-decoration: none; }
+        .footer-box { max-width: 500px; }
+        .footer-box h4 { color: white; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px;}
+        .footer-box p { color: #666; font-size: 14px; margin-bottom: 10px; }
+        .footer-box a { color: var(--primary); text-decoration: none; font-weight: bold;}
 
         .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: #333;
-            color: #fff;
+            padding: 2px 10px;
+            background: #222;
             font-size: 10px;
-            border-radius: 3px;
-            margin-bottom: 10px;
             text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: inline-block;
         }
 
         @media (max-width: 768px) {
-            .gui-3d { width: 90%; height: 300px; transform: none; }
-            .releases { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr; }
+            .gui-3d { width: 95%; transform: none; }
+            .logo { font-size: 2.5rem; }
         }
     </style>
 </head>
@@ -241,7 +233,8 @@
     <header>
         <div class="container">
             <div class="logo">TerriX</div>
-            <p class="tagline">The Art of Conquest, Automated.</p>
+            <p class="tagline">Superior Automation for the Territorial.io Grandmaster.</p>
+            <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" class="hero-cta">🚀 Launch TerriX Pro Client</a>
         </div>
     </header>
 
@@ -250,70 +243,83 @@
         <div class="preview-section">
             <div class="gui-3d">
                 <div class="gui-header">
-                    <span>TERRIX SYSTEM [GRANDMASTER]</span>
-                    <span><i class="fa-solid fa-minus"></i> &nbsp; <i class="fa-solid fa-xmark"></i></span>
+                    <span>TERRIX SYSTEM [ELITE-ACCESS]</span>
+                    <span><i class="fa-solid fa-window-minimize"></i> &nbsp; <i class="fa-solid fa-xmark"></i></span>
                 </div>
                 <div class="gui-body">
                     <div class="gui-sidebar">
                         <div class="gui-mock-btn active"></div>
                         <div class="gui-mock-btn"></div>
                         <div class="gui-mock-btn"></div>
-                        <div style="flex:1"></div>
-                        <div class="gui-mock-btn" style="background: var(--secondary);"></div>
+                        <div class="gui-mock-btn"></div>
+                        <div class="gui-mock-btn hook"></div>
                     </div>
                     <div class="gui-main">
                         <div class="gui-code">
-                            <span style="color:#888">// Initializing GodBot...</span><br>
-                            <span style="color:var(--gold)">const</span> target = G.findWeakest();<br>
-                            G.b8.hV.hc(1024, target);<br>
-                            <span style="color:#888">// Success: Territory Acquired.</span>
+                            <span style="color:#666">// Checking Scope...</span><br>
+                            <span style="color:var(--primary)">if</span> (window.G) { <br>
+                            &nbsp;&nbsp;<span style="color:var(--gold)">Status.Connected</span> = <span style="color:var(--secondary)">true</span>;<br>
+                            &nbsp;&nbsp;GodBot.init();<br>
+                            }
                         </div>
-                        <!-- Mock Power Index Chart -->
-                        <div style="position:absolute; bottom:15px; left:15px; right:15px; height:100px; border-top: 1px solid #222; padding-top:10px;">
-                            <div style="width:100%; height:10px; background:#ffd700; margin-bottom:5px; border-radius:5px;"></div>
-                            <div style="width:70%; height:10px; background:var(--primary); margin-bottom:5px; border-radius:5px;"></div>
-                            <div style="width:40%; height:10px; background:var(--primary); border-radius:5px;"></div>
+                        <!-- Mock Power Index Bars -->
+                        <div style="margin-top:30px; border-left: 1px solid #333; padding-left:10px;">
+                            <div style="width:100%; height:12px; background:var(--gold); margin-bottom:8px; border: 1px solid white;"></div>
+                            <div style="width:85%; height:12px; background:var(--primary); margin-bottom:8px;"></div>
+                            <div style="width:60%; height:12px; background:var(--primary);"></div>
                         </div>
+                        <div style="position:absolute; bottom:15px; right:15px; font-size:10px; color:#444;">ID: SNIFFED</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- DOWNLOADS -->
-        <div class="releases">
+        <!-- PRODUCT GRID -->
+        <div class="grid-layout">
+            <!-- Client -->
+            <div class="card client">
+                <span class="badge" style="background:var(--primary); color:white;">Recommended</span>
+                <h2>TerriX Pro Client</h2>
+                <span class="version">Web-Based Custom Client</span>
+                <p>The elite way to play. A pre-modded version of the game engine that allows 100% hook success, GodBot stability, and frame-perfect interest timing.</p>
+                <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" target="_blank" class="btn-link">Open Client</a>
+            </div>
+
             <!-- v2.8 -->
             <div class="card latest">
-                <span class="badge" style="background: var(--gold); color: black;">Latest Stable</span>
-                <h2>TerriX v2.8</h2>
-                <p>Grandmaster Strategy Suite. Fixed 'Undefined 87' errors and stabilized GodBot for high-Elo competitive play.</p>
-                <a href="https://greasyfork.org/en/scripts/576338-terrix-executor-v2-8" target="_blank" class="download-btn">Get v2.8 (Grandmaster)</a>
+                <span class="badge" style="background:var(--gold); color:black;">Latest Script</span>
+                <h2>TerriX Executor v2.8</h2>
+                <span class="version">LATEST STABLE RELEASE</span>
+                <p>Features our proprietary "Null-Ref Shields" to prevent Undefined 87 errors. The most stable script for the official site.</p>
+                <a href="https://greasyfork.org/en/scripts/576338-terrix-executor-v2-8" target="_blank" class="btn-link">Download Script</a>
             </div>
 
             <!-- v2.6 -->
             <div class="card">
-                <span class="badge">Legacy Stable</span>
-                <h2>TerriX v2.6</h2>
-                <p>Elite Intelligence Suite. Adds Threat Radar, Interest Sync, and Reactive Defense for tactical awareness.</p>
-                <a href="https://greasyfork.org/en/scripts/576332-terrix-executor-v2-6" target="_blank" class="download-btn">Get v2.6 (Elite)</a>
+                <span class="badge">Legacy</span>
+                <h2>TerriX Executor v2.6</h2>
+                <span class="version">STABLE RELEASE</span>
+                <p>Includes the original Threat Radar and Reactive Defense logic. Preferred by players using older hardware.</p>
+                <a href="https://greasyfork.org/en/scripts/576332-terrix-executor-v2-6" target="_blank" class="btn-link">Download Script</a>
             </div>
         </div>
     </section>
 
     <footer>
-        <div class="container footer-grid">
-            <div class="org-info">
-                <h4>TERRI EXPLOITS INC.</h4>
-                <p>Automating the meta since version 1.0. Our mission is to provide the most stable and advanced game logic testing environment for Territorial.io enthusiasts.</p>
-                <p style="margin-top: 20px; font-style: italic;">Developer Identity: [CLASSIFIED / ANONYMOUS]</p>
+        <div class="container footer-content">
+            <div class="footer-box">
+                <h4>Terri Exploits Inc.</h4>
+                <p>Lead by an anonymous developer, our team focuses on reverse-engineering the Territorial.io engine to provide deep game-state insights and automated strategy testing.</p>
+                <p style="color:var(--primary); margin-top:20px;">Developer Identity: [CLASSIFIED]</p>
             </div>
-            <div class="contact-info">
-                <h4>CONTACT</h4>
-                <p>Suggestions & Business:</p>
+            <div class="footer-box">
+                <h4>Support & Feedback</h4>
+                <p>Have an exploit suggestion or found a bug in the Grandmaster suite? Reach out via our encrypted business line:</p>
                 <a href="mailto:forbusiness6886543@gmail.com">forbusiness6886543@gmail.com</a>
             </div>
         </div>
-        <div class="container" style="text-align:center; margin-top:40px; border-top:1px solid #111; padding-top:20px;">
-            <p>&copy; 2026 Terri Exploits Inc. All rights reserved.</p>
+        <div style="text-align:center; margin-top:50px; color:#333; font-size:12px;">
+            &copy; 2026 TERRI EXPLOITS INC. ALL DATA SNIFFED SECURELY.
         </div>
     </footer>
 
