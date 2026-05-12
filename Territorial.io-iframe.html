@@ -3,244 +3,431 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; frame-src *; style-src * 'unsafe-inline'; img-src * data:; connect-src *;">
-    <title>TerriX Iframe Manager</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; frame-src *; style-src * 'unsafe-inline'; img-src * data:; connect-src *; script-src * 'unsafe-inline' 'unsafe-eval';">
+    <title>TerriX Iframe Manager — Multi-Account Bypass</title>
     <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg: #08080c; --surf: #0f0f16; --surf2: #16161f; --brd: #252535;
-            --txt: #e8e8f0; --dim: #7878a0; --accent: #3a47ff; --green: #00e676;
-            --red: #ff5252; --sidebar-w: 280px;
+            --bg: #08080c; --surf: #0f0f16; --surf2: #16161f; --brd: #252535; --brd-light: #35354a;
+            --txt: #e8e8f0; --dim: #7878a0; --muted: #4a4a6a;
+            --accent: #3a47ff; --accent2: #58a6ff; --green: #00e676; --red: #ff5252; --gold: #ffd700; --cyan: #00e5ff; --orange: #ff9100; --purple: #b388ff;
+            --sidebar-w: 280px;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--txt); display: flex; height: 100vh; overflow: hidden; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--txt); font: 13px/1.5 system-ui, "Segoe UI", sans-serif; user-select: none; }
+        .app { display: flex; height: 100vh; }
+        input, button { font: inherit; color: inherit; }
+
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-w); background: var(--surf); border-right: 1px solid var(--brd); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; }
+        .sb-header { padding: 14px 16px; border-bottom: 1px solid var(--brd); display: flex; align-items: center; gap: 10px; }
+        .sb-logo { width: 30px; height: 30px; background: linear-gradient(135deg, var(--accent), var(--cyan)); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #fff; }
+        .sb-title { font-weight: 700; font-size: 14px; letter-spacing: .5px; }
+        .sb-sub { font-size: 10px; color: var(--muted); }
+
+        /* URL INPUT */
+        .sb-url-section { padding: 16px; border-bottom: 1px solid var(--brd); display: flex; flex-direction: column; gap: 10px; }
+        .sb-url-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); font-weight: 600; }
+        .sb-url-row { display: flex; gap: 6px; }
+        .sb-url-input { flex: 1; background: #0a0a12; border: 1px solid var(--brd); border-radius: 4px; padding: 8px 10px; font-size: 12px; color: var(--cyan); outline: none; transition: border .2s; }
+        .sb-url-input:focus { border-color: var(--accent); }
+        .sb-go-btn { background: var(--accent); border: none; border-radius: 4px; padding: 0 14px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .15s; }
+        .sb-go-btn:hover { background: #4d5cff; }
         
-        .sidebar { width: var(--sidebar-w); background: var(--surf); border-right: 1px solid var(--brd); display: flex; flex-direction: column; }
-        .header { padding: 15px; border-bottom: 1px solid var(--brd); font-weight: bold; font-size: 16px; color: var(--accent); display: flex; align-items: center; gap: 10px; }
-        .logo { width: 24px; height: 24px; background: linear-gradient(135deg, var(--accent), #00e5ff); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+        .sb-toggles { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        .sb-toggle { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--dim); cursor: pointer; }
+        .sb-toggle input { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+        .sb-toggle:hover { color: var(--txt); }
+
+        /* TABS LIST */
+        .sb-tabs { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .sb-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); padding: 4px 6px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .tab-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: all .15s; background: var(--surf2); }
+        .tab-item:hover { border-color: var(--brd-light); }
+        .tab-item.active { background: rgba(58,71,255,0.1); border-color: rgba(58,71,255,0.3); }
+        .tab-status { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
+        .tab-status.online { background: var(--green); box-shadow: 0 0 5px var(--green); }
+        .tab-name { flex: 1; font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tab-item.active .tab-name { color: var(--txt); font-weight: 500; }
+        .tab-device-badge { font-size: 9px; padding: 2px 5px; border-radius: 3px; background: rgba(179,136,255,0.15); color: var(--purple); font-weight: 600; border: 1px solid rgba(179,136,255,0.3); font-family: monospace; }
+        .tab-close { width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
+        .tab-close:hover { background: var(--red); color: #fff; }
+
+        /* FOOTER */
+        .sb-footer { padding: 16px; border-top: 1px solid var(--brd); display: flex; gap: 8px; }
+        .sb-btn { flex: 1; padding: 8px 0; border-radius: 4px; border: 1px solid var(--brd); background: var(--surf2); color: var(--txt); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; text-align: center; }
+        .sb-btn:hover { border-color: var(--accent); background: rgba(58,71,255,0.1); color: var(--accent2); }
+
+        /* MAIN CONTENT */
+        .main { flex: 1; display: flex; flex-direction: column; position: relative; background: #000; }
         
-        .controls { padding: 15px; border-bottom: 1px solid var(--brd); }
-        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .input-group label { font-size: 11px; color: var(--dim); text-transform: uppercase; font-weight: bold; }
-        .url-row { display: flex; gap: 5px; }
-        input[type="text"] { flex: 1; padding: 8px; background: #000; border: 1px solid var(--brd); color: var(--txt); border-radius: 4px; font-size: 12px; outline: none; }
-        input[type="text"]:focus { border-color: var(--accent); }
-        button { padding: 8px 12px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #4d5cff; }
+        /* STATUS BAR */
+        .status-bar { padding: 6px 16px; background: var(--surf); border-bottom: 1px solid var(--brd); font-size: 11px; color: var(--dim); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .status-left { display: flex; align-items: center; gap: 12px; }
+        .bypass-badge { display: flex; align-items: center; gap: 6px; color: var(--gold); font-weight: 600; }
+        .bypass-badge.active { color: var(--green); }
+        .bypass-badge i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 5px currentColor; }
+
+        /* IFRAME CONTAINER */
+        .iframe-container { flex: 1; position: relative; }
+        .iframe-wrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; background: #fff; }
+        .iframe-wrapper.active { display: block; }
+        .iframe-wrapper iframe { width: 100%; height: 100%; border: none; }
         
-        .options { display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--dim); }
-        .options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-        .options input[type="checkbox"] { accent-color: var(--accent); }
-        
-        .tab-list { flex: 1; overflow-y: auto; padding: 10px; }
-        .tab-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--surf2); margin-bottom: 5px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
-        .tab-item:hover { background: #1c1c28; }
-        .tab-item.active { border-color: var(--accent); background: rgba(58, 71, 255, 0.1); }
-        .tab-title { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; display: flex; align-items: center; gap: 8px; }
-        .device-badge { background: var(--surf); border: 1px solid var(--brd); padding: 2px 6px; border-radius: 10px; font-size: 9px; color: #b388ff; }
-        .tab-close { color: var(--dim); background: none; padding: 2px 5px; font-size: 16px; border: none; transition: 0.2s; }
-        .tab-close:hover { color: var(--red); }
-        
-        .main { flex: 1; display: flex; flex-direction: column; }
-        .topbar { display: flex; background: var(--surf); border-bottom: 1px solid var(--brd); padding: 8px 10px 0; gap: 5px; overflow-x: auto; }
-        .topbar::-webkit-scrollbar { height: 4px; }
-        .topbar::-webkit-scrollbar-thumb { background: var(--brd); border-radius: 4px; }
-        
-        .top-tab { padding: 8px 15px; background: var(--surf2); border-radius: 6px 6px 0 0; font-size: 12px; cursor: pointer; border: 1px solid var(--brd); border-bottom: none; display: flex; align-items: center; gap: 8px; color: var(--dim); }
-        .top-tab:hover { color: var(--txt); }
-        .top-tab.active { background: var(--bg); color: var(--txt); border-top: 2px solid var(--accent); }
-        .top-tab-close { margin-left: 5px; font-size: 14px; cursor: pointer; color: inherit; border: none; background: none; }
-        .top-tab-close:hover { color: var(--red); }
-        
-        .iframes { flex: 1; position: relative; background: #000; }
-        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: #fff; }
-        iframe.active { display: block; }
+        .empty-state { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--dim); pointer-events: none; }
+        .empty-icon { font-size: 48px; opacity: 0.2; }
+        .empty-text { font-size: 14px; font-weight: 500; letter-spacing: 1px; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--brd-light); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
     </style>
 </head>
 <body>
 
+<div class="app">
+    <!-- SIDEBAR -->
     <div class="sidebar">
-        <div class="header">
-            <div class="logo">TX</div>
-            Iframe Manager
-        </div>
-        <div class="controls">
-            <div class="input-group">
-                <label>Target URL</label>
-                <div class="url-row">
-                    <input type="text" id="urlInput" value="https://everythingtt.github.io/TerriX-Client/Territorial.io.html">
-                    <button id="addBtn">Spawn</button>
-                </div>
-            </div>
-            <div class="options">
-                <label><input type="checkbox" id="optProtocol" checked> Auto Protocol Upgrading</label>
-                <label><input type="checkbox" id="optBypass" checked> Bypass X-Frame-Options</label>
-                <label><input type="checkbox" id="optDevice" checked> Spoof Device Fingerprint</label>
+        <div class="sb-header">
+            <div class="sb-logo">TX</div>
+            <div>
+                <div class="sb-title">Iframe Manager</div>
+                <div class="sb-sub">Multi-Account Bypass System</div>
             </div>
         </div>
-        <div class="tab-list" id="tabList"></div>
+
+        <div class="sb-url-section">
+            <div class="sb-url-label">Target URL</div>
+            <div class="sb-url-row">
+                <input type="text" class="sb-url-input" id="urlInput" value="https://everythingtt.github.io/TerriX-Client/Territorial.io-iframe.html" placeholder="Enter game URL...">
+                <button class="sb-go-btn" id="goBtn">GO</button>
+            </div>
+            <div class="sb-toggles">
+                <label class="sb-toggle" title="Forces HTTPS for secure connections">
+                    <input type="checkbox" id="optHttps" checked> Auto-Protocol Upgrade (HTTPS)
+                </label>
+                <label class="sb-toggle" title="Wraps URL in Google Search to bypass X-Frame-Options">
+                    <input type="checkbox" id="optGoogleProxy" checked> Google Search Proxy Wrap
+                </label>
+                <label class="sb-toggle" title="Generates a unique hardware footprint per tab">
+                    <input type="checkbox" id="optDeviceSpoof" checked> Device Fingerprint Spoofing
+                </label>
+            </div>
+        </div>
+
+        <div class="sb-tabs">
+            <div class="sb-section-title">
+                <span>Active Sessions</span>
+                <span id="tabCount">0</span>
+            </div>
+            <div id="tabList"></div>
+        </div>
+
+        <div class="sb-footer">
+            <button class="sb-btn" id="newTabBtn">+ New Instance</button>
+            <button class="sb-btn" id="closeAllBtn" style="color: var(--red);">Close All</button>
+        </div>
     </div>
 
+    <!-- MAIN AREA -->
     <div class="main">
-        <div class="topbar" id="topBar"></div>
-        <div class="iframes" id="iframeContainer"></div>
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="currentUrlDisplay">Ready</span>
+            </div>
+            <div class="status-right" style="display: flex; gap: 16px;">
+                <div class="bypass-badge active" id="statusHttps"><i></i>HTTPS</div>
+                <div class="bypass-badge active" id="statusProxy"><i></i>PROXY</div>
+                <div class="bypass-badge active" id="statusSpoof"><i></i>SPOOF</div>
+            </div>
+        </div>
+
+        <div class="iframe-container" id="iframeContainer">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">🌐</div>
+                <div class="empty-text">NO ACTIVE SESSIONS</div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <script>
-        const urlInput = document.getElementById('urlInput');
-        const addBtn = document.getElementById('addBtn');
-        const optProtocol = document.getElementById('optProtocol');
-        const optBypass = document.getElementById('optBypass');
-        const optDevice = document.getElementById('optDevice');
+<script>
+    // --- STATE ---
+    const tabs = [];
+    let activeTabId = null;
+    let tabCounter = 0;
+
+    // --- DOM ELEMENTS ---
+    const els = {
+        urlInput: document.getElementById('urlInput'),
+        goBtn: document.getElementById('goBtn'),
+        optHttps: document.getElementById('optHttps'),
+        optGoogleProxy: document.getElementById('optGoogleProxy'),
+        optDeviceSpoof: document.getElementById('optDeviceSpoof'),
+        tabList: document.getElementById('tabList'),
+        tabCount: document.getElementById('tabCount'),
+        newTabBtn: document.getElementById('newTabBtn'),
+        closeAllBtn: document.getElementById('closeAllBtn'),
+        iframeContainer: document.getElementById('iframeContainer'),
+        emptyState: document.getElementById('emptyState'),
+        currentUrlDisplay: document.getElementById('currentUrlDisplay'),
+        statusHttps: document.getElementById('statusHttps'),
+        statusProxy: document.getElementById('statusProxy'),
+        statusSpoof: document.getElementById('statusSpoof')
+    };
+
+    // --- DEVICE SPOOFING UTILS ---
+    const generateFingerprint = () => {
+        const uas = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15",
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+        ];
         
-        const tabList = document.getElementById('tabList');
-        const topBar = document.getElementById('topBar');
-        const iframeContainer = document.getElementById('iframeContainer');
+        const screens = [
+            {w: 1920, h: 1080}, {w: 1366, h: 768}, {w: 1440, h: 900}, {w: 1536, h: 864},
+            {w: 2560, h: 1440}, {w: 1280, h: 720}, {w: 3840, h: 2160}
+        ];
         
-        let tabs = [];
-        let activeTabId = null;
-        let tabCounter = 0;
+        const hwConcurrency = [2, 4, 6, 8, 12, 16, 24, 32];
+        const deviceMem = [2, 4, 8, 16, 32];
+        const langs = ['en-US', 'en-GB', 'fr-FR', 'de-DE', 'es-ES', 'ja-JP', 'ru-RU'];
+        
+        const r = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const sc = r(screens);
+        
+        // Generate a hex ID for UI display
+        const hexId = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0').toUpperCase();
+        
+        return {
+            id: hexId,
+            ua: r(uas),
+            width: sc.w,
+            height: sc.h,
+            cores: r(hwConcurrency),
+            mem: r(deviceMem),
+            lang: r(langs),
+            webglVendor: "Google Inc. (Intel)",
+            webglRenderer: `Intel(R) UHD Graphics ${Math.floor(Math.random() * 1000) + 600}`
+        };
+    };
 
-        function generateDeviceId() {
-            return Math.random().toString(36).substring(2, 8).toUpperCase();
-        }
-
-        function sanitizeUrl(url) {
-            let finalUrl = url.trim();
-            if (optProtocol.checked) {
-                // Auto Protocol Upgrading: Force https://
-                if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-                    finalUrl = 'https://' + finalUrl;
-                } else if (finalUrl.startsWith('http://')) {
-                    finalUrl = finalUrl.replace('http://', 'https://');
-                }
+    // --- CORE LOGIC ---
+    
+    function processUrl(rawUrl) {
+        let url = rawUrl.trim();
+        if (!url) return null;
+        
+        // 1. Auto Protocol Upgrade & Sanitization
+        if (els.optHttps.checked) {
+            // Force https://
+            if (url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+            } else if (!url.startsWith('https://')) {
+                url = 'https://' + url;
             }
-            return finalUrl;
-        }
-
-        function buildProxyUrl(url, deviceId) {
-            let targetUrl = url;
-            
-            // Make the game think each iframe is another device by appending unique device query param
-            if (optDevice.checked) {
-                const separator = targetUrl.includes('?') ? '&' : '?';
-                targetUrl += separator + 'device_id=' + deviceId;
+        } else {
+            if (!url.startsWith('http')) {
+                url = 'https://' + url;
             }
-
-            if (optBypass.checked) {
-                // Wrap in Google search query to bypass X-Frame-Options: SAMEORIGIN
-                // Prepend google.com/search?igu=1
-                return 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(targetUrl);
-            }
-            
-            return targetUrl;
         }
+        
+        // 2. Google Search Proxy Wrap (bypass X-Frame-Options: SAMEORIGIN)
+        if (els.optGoogleProxy.checked) {
+            // Only wrap if it's not already wrapped
+            if (!url.includes('google.com/search')) {
+                url = 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(url);
+            }
+        }
+        
+        return url;
+    }
 
-        function createTab(rawUrl) {
-            tabCounter++;
-            const id = 'tab_' + tabCounter;
-            const deviceId = generateDeviceId();
+    function createTab(targetUrl) {
+        tabCounter++;
+        const id = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        
+        const finalUrl = processUrl(targetUrl);
+        if (!finalUrl) return;
+        
+        const fingerprint = els.optDeviceSpoof.checked ? generateFingerprint() : null;
+        
+        const tab = {
+            id,
+            num: tabCounter,
+            url: finalUrl,
+            rawUrl: targetUrl,
+            fingerprint,
+            created: Date.now()
+        };
+        
+        tabs.push(tab);
+        
+        // Create UI Elements
+        renderTabList();
+        
+        // Create Iframe Wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'iframe-wrapper';
+        wrapper.id = 'wrapper_' + id;
+        
+        const iframe = document.createElement('iframe');
+        iframe.src = finalUrl;
+        
+        // Apply Spoofing script before iframe load if possible
+        if (fingerprint) {
+            // Setting iframe.name passes the data to the child window's window.name securely across origins
+            iframe.name = JSON.stringify(fingerprint);
+        }
+        
+        wrapper.appendChild(iframe);
+        els.iframeContainer.appendChild(wrapper);
+        
+        activateTab(id);
+        updateState();
+    }
+
+    function removeTab(id) {
+        const index = tabs.findIndex(t => t.id === id);
+        if (index === -1) return;
+        
+        // Remove DOM
+        const wrapper = document.getElementById('wrapper_' + id);
+        if (wrapper) wrapper.remove();
+        
+        tabs.splice(index, 1);
+        
+        if (activeTabId === id) {
+            activeTabId = tabs.length > 0 ? tabs[tabs.length - 1].id : null;
+        }
+        
+        renderTabList();
+        if (activeTabId) activateTab(activeTabId);
+        updateState();
+    }
+
+    function activateTab(id) {
+        activeTabId = id;
+        
+        // Update Wrappers
+        document.querySelectorAll('.iframe-wrapper').forEach(w => {
+            w.classList.remove('active');
+        });
+        const activeWrapper = document.getElementById('wrapper_' + id);
+        if (activeWrapper) activeWrapper.classList.add('active');
+        
+        // Update List UI
+        document.querySelectorAll('.tab-item').forEach(t => {
+            t.classList.remove('active');
+        });
+        const activeTabEl = document.getElementById('tabel_' + id);
+        if (activeTabEl) activeTabEl.classList.add('active');
+        
+        updateState();
+    }
+
+    // --- UI UPDATES ---
+    
+    function renderTabList() {
+        els.tabList.innerHTML = '';
+        
+        tabs.forEach(tab => {
+            const el = document.createElement('div');
+            el.className = 'tab-item' + (tab.id === activeTabId ? ' active' : '');
+            el.id = 'tabel_' + tab.id;
             
-            // Sanitization
-            const sanitizedUrl = sanitizeUrl(rawUrl);
-            
-            // Final assigned src
-            const finalUrl = buildProxyUrl(sanitizedUrl, deviceId);
-            
-            const title = `Instance ${tabCounter}`;
-            
-            const tabObj = { id, title, finalUrl, deviceId };
-            tabs.push(tabObj);
-            
-            // Create sidebar item
-            const sbItem = document.createElement('div');
-            sbItem.className = 'tab-item';
-            sbItem.id = `sb_${id}`;
-            sbItem.innerHTML = `
-                <div class="tab-title">
-                    ${title}
-                    <span class="device-badge">${deviceId}</span>
-                </div>
-                <button class="tab-close" onclick="closeTab('${id}', event)">×</button>
+            el.innerHTML = `
+                <div class="tab-status online"></div>
+                <div class="tab-name">Instance #${tab.num}</div>
+                ${tab.fingerprint ? `<div class="tab-device-badge">${tab.fingerprint.id}</div>` : ''}
+                <div class="tab-close">&times;</div>
             `;
-            sbItem.onclick = () => activateTab(id);
-            tabList.appendChild(sbItem);
             
-            // Create top bar item
-            const topItem = document.createElement('div');
-            topItem.className = 'top-tab';
-            topItem.id = `top_${id}`;
-            topItem.innerHTML = `
-                ${title}
-                <button class="top-tab-close" onclick="closeTab('${id}', event)">×</button>
-            `;
-            topItem.onclick = () => activateTab(id);
-            topBar.appendChild(topItem);
-            
-            // Create iframe
-            const iframe = document.createElement('iframe');
-            iframe.id = `frame_${id}`;
-            iframe.src = finalUrl;
-            
-            iframeContainer.appendChild(iframe);
-            
-            activateTab(id);
-        }
-
-        function activateTab(id) {
-            activeTabId = id;
-            
-            // Update UI active states
-            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('iframe').forEach(el => el.classList.remove('active'));
-            
-            if (id) {
-                const sb = document.getElementById(`sb_${id}`);
-                const top = document.getElementById(`top_${id}`);
-                const frame = document.getElementById(`frame_${id}`);
-                
-                if (sb) sb.classList.add('active');
-                if (top) top.classList.add('active');
-                if (frame) frame.classList.add('active');
-            }
-        }
-
-        window.closeTab = function(id, event) {
-            if (event) event.stopPropagation();
-            
-            tabs = tabs.filter(t => t.id !== id);
-            
-            const sb = document.getElementById(`sb_${id}`);
-            const top = document.getElementById(`top_${id}`);
-            const frame = document.getElementById(`frame_${id}`);
-            
-            if (sb) sb.remove();
-            if (top) top.remove();
-            if (frame) frame.remove();
-            
-            if (activeTabId === id) {
-                if (tabs.length > 0) {
-                    activateTab(tabs[tabs.length - 1].id);
+            el.onclick = (e) => {
+                if (e.target.classList.contains('tab-close')) {
+                    removeTab(tab.id);
                 } else {
-                    activateTab(null);
+                    activateTab(tab.id);
                 }
+            };
+            
+            els.tabList.appendChild(el);
+        });
+        
+        els.tabCount.innerText = tabs.length;
+    }
+
+    function updateState() {
+        els.emptyState.style.display = tabs.length === 0 ? 'flex' : 'none';
+        
+        const activeTab = tabs.find(t => t.id === activeTabId);
+        
+        if (activeTab) {
+            els.currentUrlDisplay.innerText = activeTab.url;
+            els.urlInput.value = activeTab.rawUrl;
+            
+            els.statusHttps.className = 'bypass-badge ' + (els.optHttps.checked ? 'active' : '');
+            els.statusProxy.className = 'bypass-badge ' + (els.optGoogleProxy.checked ? 'active' : '');
+            els.statusSpoof.className = 'bypass-badge ' + (activeTab.fingerprint ? 'active' : '');
+        } else {
+            els.currentUrlDisplay.innerText = 'Ready';
+            els.statusHttps.className = 'bypass-badge ' + (els.optHttps.checked ? 'active' : '');
+            els.statusProxy.className = 'bypass-badge ' + (els.optGoogleProxy.checked ? 'active' : '');
+            els.statusSpoof.className = 'bypass-badge ' + (els.optDeviceSpoof.checked ? 'active' : '');
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    
+    els.goBtn.onclick = () => {
+        const url = els.urlInput.value;
+        if (url) {
+            if (activeTabId) {
+                // Update current tab
+                const tab = tabs.find(t => t.id === activeTabId);
+                if (tab) {
+                    tab.rawUrl = url;
+                    tab.url = processUrl(url);
+                    const iframe = document.querySelector(`#wrapper_${tab.id} iframe`);
+                    if (iframe) iframe.src = tab.url;
+                    updateState();
+                }
+            } else {
+                createTab(url);
             }
         }
+    };
+    
+    els.urlInput.onkeydown = (e) => {
+        if (e.key === 'Enter') els.goBtn.click();
+    };
+    
+    els.newTabBtn.onclick = () => {
+        createTab(els.urlInput.value || 'https://everythingtt.github.io/TerriX-Client/Territorial.io-iframe.html');
+    };
+    
+    els.closeAllBtn.onclick = () => {
+        tabs.length = 0;
+        activeTabId = null;
+        els.iframeContainer.innerHTML = '';
+        els.iframeContainer.appendChild(els.emptyState);
+        renderTabList();
+        updateState();
+    };
 
-        addBtn.addEventListener('click', () => {
-            if (urlInput.value.trim()) {
-                createTab(urlInput.value);
-            }
-        });
+    [els.optHttps, els.optGoogleProxy, els.optDeviceSpoof].forEach(el => {
+        el.onchange = updateState;
+    });
 
-        urlInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && urlInput.value.trim()) {
-                createTab(urlInput.value);
-            }
-        });
+    // Auto-create first tab on load
+    window.onload = () => {
+        createTab(els.urlInput.value);
+    };
+</script>
 
-        // Spawn first tab automatically
-        createTab(urlInput.value);
-    </script>
 </body>
 </html>
