@@ -240,7 +240,16 @@
         if (els.optGoogleProxy.checked) {
             // Only wrap if it's not already wrapped
             if (!url.includes('google.com/search')) {
-                url = 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(url);
+                // If it's the custom game link, wrapping it in google search doesn't actually LOAD the game, 
+                // it just searches for it. We must use a direct CORS proxy instead for the game client itself,
+                // or just load it directly since everythingtt.github.io does not set X-Frame-Options!
+                
+                // For other URLs, use Google Search wrapper as requested
+                if (url.includes('everythingtt.github.io')) {
+                    // No proxy needed, it allows framing natively
+                } else {
+                    url = 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(url);
+                }
             }
         }
         
