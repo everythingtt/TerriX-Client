@@ -1,430 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TerriX Iframe Manager</title>
-<style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{
-    --bg:#0a0a0f;--surf:#111118;--surf2:#1a1a25;--brd:#2a2a3a;--brd-light:#3a3a4a;
-    --txt:#eee;--dim:#888;--muted:#555;
-    --accent:#3a47ff;--accent2:#58a6ff;--green:#0f0;--red:#f44;--gold:#ffd700;--cyan:#0af;
-    --sidebar-w:260px;--tab-h:36px;
-}
-html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font:13px/1.5 system-ui,sanselection:none}
-.app{display:flex;height:100vh}
-/* ICONS */
-.icon{width:16px;height:16px;display:inline-block;vertical-align:middle;fill:currentColor}
-.icon-lg{width:64px;height:64px}
-/* SIDEBAR */
-.sidebar{width:var(--sidebar-w);background:var(--surf);border-right:1px solid var(--brd);display:flex;flex-direction:column;flex-shrink:0}
-.sb-header{padding:16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:12px}
-.sb-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--cyan));border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;flex-shrink:0}
-.sb-title{font-weight:700;font-size:14px}
-.sb-sub{font-size:10px;color:var(--muted)}
-.sb-tabs{flex:1;overflow-y:auto;padding:8px}
-.sb-section-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:8px 8px 4px;font-weight:600}
-/* IFRAME TAB ITEM */
-.tab-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;margin-bottom:2px;transition:background .15s;position:relative}
-.tab-item:hover{background:var(--surf2)}
-.tab-item.active{background:rgba(58,71,255,0.15);border:1px solid rgba(58,71,255,0.3)}
-.tab-favicon{width:16px;height:16px;background:var(--accent);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0}
-.tab-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--dim)}
-.tab-item.active .tab-name{color:var(--txt)}
-.tab-close{width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);flex-shrink:0;transition:all .15s}
-.tab-close:hover{background:var(--red);color:#fff}
-.tab-status{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.tab-status.online{background:var(--green)}
-.tab-status.offline{background:var(--red)}
-.tab-status.loading{background:var(--gold);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-/* SB FOOTER */
-.sb-footer{padding:12px;border-top:1px solid var(--brd);display:flex;flex-direction:column;gap:8px}
-.sb-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;border:1px solid var(--brd);background:var(--surf2);color:var(--dim);cursor:pointer;font-size:12px;font-weight:600;transition:all .15s;width:100%}
-.sb-btn:hover{border-color:var(--accent);color:var(--txt);background:rgba(58,71,255,0.1)}
-.sb-btn-primary{border-color:var(--accent);background:rgba(58,71,255,0.15);color:var(--accent)}
-.sb-btn-primary:hover{background:rgba(58,71,255,0.25)}
-/* MAIN AREA */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-/* TOP BAR */
-.topbar{height:var(--tab-h);background:var(--surf);border-bottom:1px solid var(--brd);display:flex;align-items:center;padding:0 8px;gap:4px;overflow-x:auto;flex-shrink:0}
-.topbar::-webkit-scrollbar{height:0}
-.top-tab{display:flex;align-items:center;gap:6px;padding:0 12px;height:28px;background:var(--surf2);border:1px solid var(--brd);border-radius:4px 4px 0 0;cursor:pointer;font-size:11px;color:var(--dim);white-space:nowrap;position:relative;top:8px;transition:all .15s;flex-shrink:0;max-width:180px}
-.top-tab:hover{color:var(--txt)}
-.top-tab.active{background:var(--bg);color:var(--txt);border-bottom-color:var(--bg)}
-.top-tab-close{width:14px;height:14px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted)}
-.top-tab-close:hover{background:var(--red);color:#fff}
-/* CONTENT */
-.content{flex:1;position:relative;background:#000}
-.iframe-pane{position:absolute;top:0;left:0;width:100%;height:100%;display:none}
-.iframe-pane.active{display:block}
-.iframe-pane iframe{width:100%;height:100%;border:none;background:#000}
-/* EMPTY STATE */
-.empty-state{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--muted)}
-.empty-state .icon-lg{opacity:.3}
-.empty-state h2{font-size:18px;color:var(--dim)}
-.empty-state p{font-size:13px;max-width:400px;text-align:center;line-height:1.6}
-/* CONTEXT MENU */
-.ctx-menu{position:fixed;background:var(--surf);border:1px solid var(--brd);border-radius:6px;padding:4px;min-width:160px;z-index:99999;box-shadow:0 8px 32px rgba(0,0,0,0.6);display:none}
-.ctx-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:3px;cursor:pointer;font-size:12px;color:var(--dim);transition:all .1s}
-.ctx-item:hover{background:var(--surf2);color:var(--txt)}
-.ctx-item.danger:hover{background:rgba(200,0,0,0.2);color:var(--red)}
-.ctx-sep{height:1px;background:var(--brd);margin:4px 0}
-/* LOADING OVERLAY */
-.load-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10}
-.load-spinner{width:32px;height:32px;border:3px solid var(--brd);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-/* BROADCAST INDICATOR */
-.broadcast-bar{padding:6px 12px;background:rgba(58,71,255,0.1);border-bottom:1px solid var(--brd);font-size:11px;color:var(--dim);display:flex;align-items:center;gap:8px;flex-shrink:0}
-.broadcast-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; frame-src *; style-src * 'unsafe-inline'; img-src * data:; connect-src *;">
+    <title>TerriX Iframe Manager</title>
+    <style>
+        :root {
+            --bg: #08080c; --surf: #0f0f16; --surf2: #16161f; --brd: #252535;
+            --txt: #e8e8f0; --dim: #7878a0; --accent: #3a47ff; --green: #00e676;
+            --red: #ff5252; --sidebar-w: 280px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--txt); display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: var(--sidebar-w); background: var(--surf); border-right: 1px solid var(--brd); display: flex; flex-direction: column; }
+        .header { padding: 15px; border-bottom: 1px solid var(--brd); font-weight: bold; font-size: 16px; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+        .logo { width: 24px; height: 24px; background: linear-gradient(135deg, var(--accent), #00e5ff); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+        
+        .controls { padding: 15px; border-bottom: 1px solid var(--brd); }
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .input-group label { font-size: 11px; color: var(--dim); text-transform: uppercase; font-weight: bold; }
+        .url-row { display: flex; gap: 5px; }
+        input[type="text"] { flex: 1; padding: 8px; background: #000; border: 1px solid var(--brd); color: var(--txt); border-radius: 4px; font-size: 12px; outline: none; }
+        input[type="text"]:focus { border-color: var(--accent); }
+        button { padding: 8px 12px; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #4d5cff; }
+        
+        .options { display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--dim); }
+        .options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .options input[type="checkbox"] { accent-color: var(--accent); }
+        
+        .tab-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .tab-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: var(--surf2); margin-bottom: 5px; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: 0.2s; }
+        .tab-item:hover { background: #1c1c28; }
+        .tab-item.active { border-color: var(--accent); background: rgba(58, 71, 255, 0.1); }
+        .tab-title { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; display: flex; align-items: center; gap: 8px; }
+        .device-badge { background: var(--surf); border: 1px solid var(--brd); padding: 2px 6px; border-radius: 10px; font-size: 9px; color: #b388ff; }
+        .tab-close { color: var(--dim); background: none; padding: 2px 5px; font-size: 16px; border: none; transition: 0.2s; }
+        .tab-close:hover { color: var(--red); }
+        
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .topbar { display: flex; background: var(--surf); border-bottom: 1px solid var(--brd); padding: 8px 10px 0; gap: 5px; overflow-x: auto; }
+        .topbar::-webkit-scrollbar { height: 4px; }
+        .topbar::-webkit-scrollbar-thumb { background: var(--brd); border-radius: 4px; }
+        
+        .top-tab { padding: 8px 15px; background: var(--surf2); border-radius: 6px 6px 0 0; font-size: 12px; cursor: pointer; border: 1px solid var(--brd); border-bottom: none; display: flex; align-items: center; gap: 8px; color: var(--dim); }
+        .top-tab:hover { color: var(--txt); }
+        .top-tab.active { background: var(--bg); color: var(--txt); border-top: 2px solid var(--accent); }
+        .top-tab-close { margin-left: 5px; font-size: 14px; cursor: pointer; color: inherit; border: none; background: none; }
+        .top-tab-close:hover { color: var(--red); }
+        
+        .iframes { flex: 1; position: relative; background: #000; }
+        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; background: #fff; }
+        iframe.active { display: block; }
+    </style>
 </head>
 <body>
-<div class="app">
-    <!-- SIDEBAR -->
+
     <div class="sidebar">
-        <div class="sb-header">
-            <div class="sb-logo">T</div>
-            <div>
-                <div class="sb-title">TerriX</div>
-                <div class="sb-sub">Iframe Manager v3.0</div>
+        <div class="header">
+            <div class="logo">TX</div>
+            Iframe Manager
+        </div>
+        <div class="controls">
+            <div class="input-group">
+                <label>Target URL</label>
+                <div class="url-row">
+                    <input type="text" id="urlInput" value="https://everythingtt.github.io/TerriX-Client/Territorial.io.html">
+                    <button id="addBtn">Spawn</button>
+                </div>
+            </div>
+            <div class="options">
+                <label><input type="checkbox" id="optProtocol" checked> Auto Protocol Upgrading</label>
+                <label><input type="checkbox" id="optBypass" checked> Bypass X-Frame-Options</label>
+                <label><input type="checkbox" id="optDevice" checked> Spoof Device Fingerprint</label>
             </div>
         </div>
-        <div class="sb-tabs" id="sb-tabs">
-            <div class="sb-section-title">Tabs (<span id="tab-count">0</span>)</div>
-            <div id="tab-list"></div>
-        </div>
-        <div class="sb-footer">
-            <button class="sb-btn sb-btn-primary" onclick="iframeManager.addTab()">
-                <svg class="icon" viewBox="0 0 16 16"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                New Tab
-            </button>
-            <button class="sb-btn" onclick="iframeManager.addTab(4)">
-                <svg class="icon" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 4v8M4 8h8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-                Add 4 Tabs
-            </button>
-            <button class="sb-btn" onclick="iframeManager.closeAll()">
-                <svg class="icon" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                Close All
-            </button>
-        </div>
+        <div class="tab-list" id="tabList"></div>
     </div>
 
-    <!-- MAIN -->
     <div class="main">
-        <div class="broadcast-bar">
-            <div class="broadcast-dot"></div>
-            <span>BroadcastChannel Active</span>
-            <span style="margin-left:auto;color:var(--accent)" id="peer-count">0 peers</span>
-        </div>
-        <div class="topbar" id="topbar"></div>
-        <div class="content" id="content">
-            <div class="empty-state" id="empty-state">
-                <svg class="icon icon-lg" viewBox="0 0 64 64" style="fill:var(--accent)"><rect x="4" y="8" width="56" height="48" rx="4" stroke="currentColor" stroke-width="3" fill="none"/><path d="M4 20h56" stroke="currentColor" stroke-width="3"/></svg>
-                <h2>No tabs open</h2>
-                <p>Click <strong style="color:var(--accent)">New Tab</strong> to open a TerriX Client instance, or <strong style="color:var(--accent)">Add 4 Tabs</strong> for quad view.</p>
-            </div>
-        </div>
+        <div class="topbar" id="topBar"></div>
+        <div class="iframes" id="iframeContainer"></div>
     </div>
-</div>
 
-<!-- CONTEXT MENU -->
-<div class="ctx-menu" id="ctx-menu">
-    <div class="ctx-item" onclick="iframeManager.reloadTab(ctxTarget)">Reload</div>
-    <div class="ctx-item" onclick="iframeManager.cloneTab(ctxTarget)">Duplicate</div>
-    <div class="ctx-item" onclick="iframeManager.toggleMute(ctxTarget)">Mute</div>
-    <div class="ctx-sep"></div>
-    <div class="ctx-item" onclick="iframeManager.closeTab(ctxTarget)">Close</div>
-    <div class="ctx-item danger" onclick="iframeManager.closeOthers(ctxTarget)">Close Others</div>
-</div>
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const addBtn = document.getElementById('addBtn');
+        const optProtocol = document.getElementById('optProtocol');
+        const optBypass = document.getElementById('optBypass');
+        const optDevice = document.getElementById('optDevice');
+        
+        const tabList = document.getElementById('tabList');
+        const topBar = document.getElementById('topBar');
+        const iframeContainer = document.getElementById('iframeContainer');
+        
+        let tabs = [];
+        let activeTabId = null;
+        let tabCounter = 0;
 
-<script>
-const CLIENT_URL = 'https://everythingtt.github.io/TerriX-Client/Territorial.io.html';
-let ctxTarget = null;
-let bc = null;
-
-const iframeManager = {
-    tabs: [],
-    activeTab: null,
-    nextId: 1,
-
-    init() {
-        this.loadState();
-        if (this.tabs.length === 0) this.addTab();
-        this.render();
-        this.setupBroadcastChannel();
-        document.addEventListener('click', () => this.hideCtx());
-    },
-
-    addTab(count = 1) {
-        for (let i = 0; i < count; i++) {
-            const id = this.nextId++;
-            const tab = {
-                id,
-                name: 'TerriX #' + id,
-                url: CLIENT_URL,
-                muted: false,
-                status: 'loading'
-            };
-            this.tabs.push(tab);
-            this.createIframe(tab);
+        function generateDeviceId() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
-        this.activeTab = this.tabs[this.tabs.length - 1].id;
-        this.saveState();
-        this.render();
-    },
 
-    createIframe(tab) {
-        const content = document.getElementById('content');
-        const pane = document.createElement('div');
-        pane.className = 'iframe-pane';
-        pane.id = 'pane-' + tab.id;
-
-        const loader = document.createElement('div');
-        loader.className = 'load-overlay';
-        loader.id = 'loader-' + tab.id;
-        loader.innerHTML = '<div class="load-spinner"></div>';
-        pane.appendChild(loader);
-
-        const iframe = document.createElement('iframe');
-        iframe.src = tab.url;
-        iframe.allow = 'fullscreen; autoplay';
-        iframe.onload = () => {
-            tab.status = 'online';
-            const l = document.getElementById('loader-' + tab.id);
-            if (l) l.remove();
-            this.updateTabUI(tab.id);
-            // Inject name after load
-            try {
-                iframe.contentWindow.postMessage({ type: 'terrix-setname', name: tab.name }, '*');
-            } catch(e) {}
-        };
-        pane.appendChild(iframe);
-        content.appendChild(pane);
-    },
-
-    closeTab(id) {
-        const idx = this.tabs.findIndex(t => t.id === id);
-        if (idx === -1) return;
-        this.tabs.splice(idx, 1);
-        const pane = document.getElementById('pane-' + id);
-        if (pane) pane.remove();
-        if (this.activeTab === id) {
-            this.activeTab = this.tabs.length > 0 ? this.tabs[Math.max(0, idx - 1)].id : null;
-        }
-        this.saveState();
-        this.render();
-    },
-
-    closeOthers(id) {
-        const keep = this.tabs.filter(t => t.id === id);
-        this.tabs.forEach(t => {
-            if (t.id !== id) {
-                const pane = document.getElementById('pane-' + t.id);
-                if (pane) pane.remove();
-            }
-        });
-        this.tabs = keep;
-        this.activeTab = id;
-        this.saveState();
-        this.render();
-    },
-
-    closeAll() {
-        this.tabs.forEach(t => {
-            const pane = document.getElementById('pane-' + t.id);
-            if (pane) pane.remove();
-        });
-        this.tabs = [];
-        this.activeTab = null;
-        this.saveState();
-        this.render();
-    },
-
-    reloadTab(id) {
-        const tab = this.tabs.find(t => t.id === id);
-        if (!tab) return;
-        const pane = document.getElementById('pane-' + id);
-        if (!pane) return;
-        const iframe = pane.querySelector('iframe');
-        if (iframe) {
-            tab.status = 'loading';
-            const loader = document.createElement('div');
-            loader.className = 'load-overlay';
-            loader.id = 'loader-' + id;
-            loader.innerHTML = '<div class="load-spinner"></div>';
-            pane.insertBefore(loader, iframe);
-            iframe.src = tab.url;
-            this.updateTabUI(id);
-        }
-    },
-
-    cloneTab(id) {
-        const tab = this.tabs.find(t => t.id === id);
-        if (!tab) return;
-        this.nextId++;
-        const newTab = {
-            id: this.nextId - 1,
-            name: tab.name + ' (copy)',
-            url: tab.url,
-            muted: false,
-            status: 'loading'
-        };
-        this.tabs.push(newTab);
-        this.createIframe(newTab);
-        this.activeTab = newTab.id;
-        this.saveState();
-        this.render();
-    },
-
-    toggleMute(id) {
-        const tab = this.tabs.find(t => t.id === id);
-        if (!tab) return;
-        tab.muted = !tab.muted;
-        const pane = document.getElementById('pane-' + id);
-        if (pane) {
-            const iframe = pane.querySelector('iframe');
-            if (iframe) {
-                try {
-                    iframe.contentWindow.postMessage({ type: 'terrix-mute', muted: tab.muted }, '*');
-                } catch(e) {}
-            }
-        }
-        this.updateTabUI(id);
-    },
-
-    activateTab(id) {
-        this.activeTab = id;
-        document.querySelectorAll('.iframe-pane').forEach(p => p.classList.remove('active'));
-        const pane = document.getElementById('pane-' + id);
-        if (pane) pane.classList.add('active');
-        this.renderSidebar();
-    },
-
-    saveState() {
-        try {
-            const saveData = this.tabs.map(t => ({ id: t.id, name: t.name, url: t.url, muted: t.muted }));
-            localStorage.setItem('terrix-iframes', JSON.stringify(saveData));
-        } catch(e) {}
-    },
-
-    loadState() {
-        try {
-            const saved = localStorage.getItem('terrix-iframes');
-            if (saved) {
-                const data = JSON.parse(saved);
-                data.forEach(t => {
-                    this.tabs.push({ ...t, status: 'offline' });
-                    if (t.id >= this.nextId) this.nextId = t.id + 1;
-                });
-                if (this.tabs.length > 0) this.activeTab = this.tabs[0].id;
-            }
-        } catch(e) {}
-    },
-
-    render() {
-        this.renderTopbar();
-        this.renderSidebar();
-        const empty = document.getElementById('empty-state');
-        if (empty) empty.style.display = this.tabs.length === 0 ? 'flex' : 'none';
-        const peerEl = document.getElementById('peer-count');
-        if (peerEl) peerEl.textContent = this.tabs.length + ' tab' + (this.tabs.length !== 1 ? 's' : '');
-    },
-
-    renderTopbar() {
-        const bar = document.getElementById('topbar');
-        // Keep the active tab's pane visible
-        document.querySelectorAll('.iframe-pane').forEach(p => p.classList.remove('active'));
-        const activePane = document.getElementById('pane-' + this.activeTab);
-        if (activePane) activePane.classList.add('active');
-
-        bar.innerHTML = '';
-        this.tabs.forEach(tab => {
-            const el = document.createElement('div');
-            el.className = 'top-tab' + (tab.id === this.activeTab ? ' active' : '');
-            el.innerHTML = '<span style="color:' + (tab.muted ? 'var(--muted)' : 'var(--green)') + '">●</span>' +
-                '<span style="flex:1;overflow:hidden;text-overflow:ellipsis">' + tab.name + '</span>' +
-                '<span class="top-tab-close">✕</span>';
-            el.querySelector('.top-tab-close').onclick = (e) => { e.stopPropagation(); this.closeTab(tab.id); };
-            el.onclick = () => this.activateTab(tab.id);
-            el.oncontextmenu = (e) => { e.preventDefault(); ctxTarget = tab.id; this.showCtx(e); };
-            bar.appendChild(el);
-        });
-    },
-
-    renderSidebar() {
-        const list = document.getElementById('tab-list');
-        const count = document.getElementById('tab-count');
-        if (count) count.textContent = this.tabs.length;
-        list.innerHTML = '';
-        this.tabs.forEach(tab => {
-            const el = document.createElement('div');
-            el.className = 'tab-item' + (tab.id === this.activeTab ? ' active' : '');
-            el.innerHTML =
-                '<div class="tab-status ' + tab.status + '"></div>' +
-                '<div class="tab-name">' + tab.name + '</div>' +
-                (tab.muted ? '<span style="font-size:10px;color:var(--muted)">🔇</span>' : '') +
-                '<div class="tab-close">✕</div>';
-            el.querySelector('.tab-close').onclick = (e) => { e.stopPropagation(); this.closeTab(tab.id); };
-            el.onclick = () => this.activateTab(tab.id);
-            el.oncontextmenu = (e) => { e.preventDefault(); ctxTarget = tab.id; this.showCtx(e); };
-            list.appendChild(el);
-        });
-    },
-
-    updateTabUI(id) {
-        this.renderTopbar();
-        this.renderSidebar();
-    },
-
-    hideCtx() {
-        document.getElementById('ctx-menu').style.display = 'none';
-    },
-
-    showCtx(e) {
-        const menu = document.getElementById('ctx-menu');
-        menu.style.display = 'block';
-        menu.style.left = Math.min(e.clientX, window.innerWidth - 180) + 'px';
-        menu.style.top = Math.min(e.clientY, window.innerHeight - 200) + 'px';
-    },
-
-    setupBroadcastChannel() {
-        try {
-            bc = new BroadcastChannel('terrix-sync');
-            bc.onmessage = (e) => {
-                if (e.data && e.data.type === 'terrix-iframe-join') {
-                    this.broadcast({ type: 'terrix-iframe-here', id: 'manager' });
+        function sanitizeUrl(url) {
+            let finalUrl = url.trim();
+            if (optProtocol.checked) {
+                // Auto Protocol Upgrading: Force https://
+                if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                    finalUrl = 'https://' + finalUrl;
+                } else if (finalUrl.startsWith('http://')) {
+                    finalUrl = finalUrl.replace('http://', 'https://');
                 }
-                if (e.data && e.data.type === 'terrix-broadcast') {
-                    // Relay broadcasts to all other iframes
-                    this.tabs.forEach(tab => {
-                        const pane = document.getElementById('pane-' + tab.id);
-                        if (pane) {
-                            const iframe = pane.querySelector('iframe');
-                            if (iframe && iframe.contentWindow) {
-                                try { iframe.contentWindow.postMessage(e.data, '*'); } catch(e2) {}
-                            }
-                        }
-                    });
+            }
+            return finalUrl;
+        }
+
+        function buildProxyUrl(url, deviceId) {
+            let targetUrl = url;
+            
+            // Make the game think each iframe is another device by appending unique device query param
+            if (optDevice.checked) {
+                const separator = targetUrl.includes('?') ? '&' : '?';
+                targetUrl += separator + 'device_id=' + deviceId;
+            }
+
+            if (optBypass.checked) {
+                // Wrap in Google search query to bypass X-Frame-Options: SAMEORIGIN
+                // Prepend google.com/search?igu=1
+                return 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(targetUrl);
+            }
+            
+            return targetUrl;
+        }
+
+        function createTab(rawUrl) {
+            tabCounter++;
+            const id = 'tab_' + tabCounter;
+            const deviceId = generateDeviceId();
+            
+            // Sanitization
+            const sanitizedUrl = sanitizeUrl(rawUrl);
+            
+            // Final assigned src
+            const finalUrl = buildProxyUrl(sanitizedUrl, deviceId);
+            
+            const title = `Instance ${tabCounter}`;
+            
+            const tabObj = { id, title, finalUrl, deviceId };
+            tabs.push(tabObj);
+            
+            // Create sidebar item
+            const sbItem = document.createElement('div');
+            sbItem.className = 'tab-item';
+            sbItem.id = `sb_${id}`;
+            sbItem.innerHTML = `
+                <div class="tab-title">
+                    ${title}
+                    <span class="device-badge">${deviceId}</span>
+                </div>
+                <button class="tab-close" onclick="closeTab('${id}', event)">×</button>
+            `;
+            sbItem.onclick = () => activateTab(id);
+            tabList.appendChild(sbItem);
+            
+            // Create top bar item
+            const topItem = document.createElement('div');
+            topItem.className = 'top-tab';
+            topItem.id = `top_${id}`;
+            topItem.innerHTML = `
+                ${title}
+                <button class="top-tab-close" onclick="closeTab('${id}', event)">×</button>
+            `;
+            topItem.onclick = () => activateTab(id);
+            topBar.appendChild(topItem);
+            
+            // Create iframe
+            const iframe = document.createElement('iframe');
+            iframe.id = `frame_${id}`;
+            iframe.src = finalUrl;
+            
+            iframeContainer.appendChild(iframe);
+            
+            activateTab(id);
+        }
+
+        function activateTab(id) {
+            activeTabId = id;
+            
+            // Update UI active states
+            document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('iframe').forEach(el => el.classList.remove('active'));
+            
+            if (id) {
+                const sb = document.getElementById(`sb_${id}`);
+                const top = document.getElementById(`top_${id}`);
+                const frame = document.getElementById(`frame_${id}`);
+                
+                if (sb) sb.classList.add('active');
+                if (top) top.classList.add('active');
+                if (frame) frame.classList.add('active');
+            }
+        }
+
+        window.closeTab = function(id, event) {
+            if (event) event.stopPropagation();
+            
+            tabs = tabs.filter(t => t.id !== id);
+            
+            const sb = document.getElementById(`sb_${id}`);
+            const top = document.getElementById(`top_${id}`);
+            const frame = document.getElementById(`frame_${id}`);
+            
+            if (sb) sb.remove();
+            if (top) top.remove();
+            if (frame) frame.remove();
+            
+            if (activeTabId === id) {
+                if (tabs.length > 0) {
+                    activateTab(tabs[tabs.length - 1].id);
+                } else {
+                    activateTab(null);
                 }
-            };
-            this.broadcast({ type: 'terrix-iframe-join', id: 'manager' });
-        } catch(e) { console.log('BroadcastChannel not supported'); }
-    },
+            }
+        }
 
-    broadcast(data) {
-        try { if (bc) bc.postMessage(data); } catch(e) {}
-    }
-};
+        addBtn.addEventListener('click', () => {
+            if (urlInput.value.trim()) {
+                createTab(urlInput.value);
+            }
+        });
 
-window.addEventListener('message', (e) => {
-    if (e.data && e.data.type && e.data.type.startsWith('terrix-')) {
-        iframeManager.broadcast(e.data);
-    }
-});
+        urlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && urlInput.value.trim()) {
+                createTab(urlInput.value);
+            }
+        });
 
-iframeManager.init();
-</script>
+        // Spawn first tab automatically
+        createTab(urlInput.value);
+    </script>
 </body>
 </html>
