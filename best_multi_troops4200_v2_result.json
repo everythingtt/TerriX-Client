@@ -1,0 +1,603 @@
+{
+  "name": "Best multi attack troops near 4200",
+  "startPercent": 50,
+  "endTick": 508,
+  "input": [
+    {
+      "cycle": 1,
+      "exactTick": 7,
+      "percent": 24.8008
+    },
+    {
+      "cycle": 1,
+      "exactTick": 9.1,
+      "percent": 18.3711,
+      "targetLand": 144,
+      "targetTroops": 799
+    },
+    {
+      "cycle": 2,
+      "exactTick": 6.1,
+      "percent": 16.5039
+    },
+    {
+      "cycle": 2,
+      "exactTick": 7.5,
+      "percent": 18.75
+    },
+    {
+      "cycle": 2,
+      "exactTick": 8.2,
+      "percent": 39.9414
+    },
+    {
+      "cycle": 2,
+      "exactTick": 9.6,
+      "percent": 24.7188,
+      "targetLand": 544,
+      "targetTroops": 1043
+    },
+    {
+      "cycle": 3,
+      "exactTick": 6.6,
+      "percent": 0.5977
+    },
+    {
+      "cycle": 3,
+      "exactTick": 7.3,
+      "percent": 22.3633
+    },
+    {
+      "cycle": 3,
+      "exactTick": 8,
+      "percent": 52.7344
+    },
+    {
+      "cycle": 3,
+      "exactTick": 9.4,
+      "percent": 30.1758,
+      "targetLand": 1104,
+      "targetTroops": 1650
+    },
+    {
+      "cycle": 4,
+      "exactTick": 6.4,
+      "percent": 0.6
+    },
+    {
+      "cycle": 4,
+      "exactTick": 7.1,
+      "percent": 43.72068
+    },
+    {
+      "cycle": 4,
+      "exactTick": 8.5,
+      "percent": 33.42284000000001
+    },
+    {
+      "cycle": 4,
+      "exactTick": 9.2,
+      "percent": 81.7504825,
+      "targetLand": 2244,
+      "targetTroops": 2474
+    },
+    {
+      "cycle": 5,
+      "exactTick": 6.2,
+      "percent": 35.888624999999976
+    },
+    {
+      "cycle": 5,
+      "exactTick": 7.6,
+      "percent": 29.907249999999976
+    },
+    {
+      "cycle": 5,
+      "exactTick": 8.3,
+      "percent": 39.79487499999997
+    },
+    {
+      "cycle": 5,
+      "exactTick": 9.1,
+      "percent": 89.72162499999993,
+      "targetLand": 3784,
+      "targetTroops": 4361
+    }
+  ],
+  "attacks": [
+    {
+      "cycle": 1,
+      "exactTick": 7,
+      "percent": 24.8008,
+      "keybinds": "",
+      "displayedPercent": 24.8,
+      "internalTick": 70
+    },
+    {
+      "cycle": 1,
+      "exactTick": 9.1,
+      "percent": 18.3711,
+      "targetLand": 144,
+      "targetTroops": 799,
+      "keybinds": "",
+      "displayedPercent": 18.3,
+      "internalTick": 91
+    },
+    {
+      "cycle": 2,
+      "exactTick": 6.1,
+      "percent": 16.5039,
+      "keybinds": "",
+      "displayedPercent": 16.5,
+      "internalTick": 161
+    },
+    {
+      "cycle": 2,
+      "exactTick": 7.5,
+      "percent": 18.75,
+      "keybinds": "",
+      "displayedPercent": 18.7,
+      "internalTick": 175
+    },
+    {
+      "cycle": 2,
+      "exactTick": 8.2,
+      "percent": 39.9414,
+      "keybinds": "",
+      "displayedPercent": 39.9,
+      "internalTick": 182
+    },
+    {
+      "cycle": 2,
+      "exactTick": 9.6,
+      "percent": 24.7188,
+      "targetLand": 544,
+      "targetTroops": 1043,
+      "keybinds": "",
+      "displayedPercent": 24.7,
+      "internalTick": 196
+    },
+    {
+      "cycle": 3,
+      "exactTick": 6.6,
+      "percent": 0.5977,
+      "keybinds": "",
+      "displayedPercent": 0.5,
+      "internalTick": 266
+    },
+    {
+      "cycle": 3,
+      "exactTick": 7.3,
+      "percent": 22.3633,
+      "keybinds": "",
+      "displayedPercent": 22.3,
+      "internalTick": 273
+    },
+    {
+      "cycle": 3,
+      "exactTick": 8,
+      "percent": 52.7344,
+      "keybinds": "",
+      "displayedPercent": 52.7,
+      "internalTick": 280
+    },
+    {
+      "cycle": 3,
+      "exactTick": 9.4,
+      "percent": 30.1758,
+      "targetLand": 1104,
+      "targetTroops": 1650,
+      "keybinds": "",
+      "displayedPercent": 30.1,
+      "internalTick": 294
+    },
+    {
+      "cycle": 4,
+      "exactTick": 6.4,
+      "percent": 0.6,
+      "keybinds": "",
+      "displayedPercent": 0.6,
+      "internalTick": 364
+    },
+    {
+      "cycle": 4,
+      "exactTick": 7.1,
+      "percent": 43.72068,
+      "keybinds": "",
+      "displayedPercent": 43.7,
+      "internalTick": 371
+    },
+    {
+      "cycle": 4,
+      "exactTick": 8.5,
+      "percent": 33.42284000000001,
+      "keybinds": "",
+      "displayedPercent": 33.4,
+      "internalTick": 385
+    },
+    {
+      "cycle": 4,
+      "exactTick": 9.2,
+      "percent": 81.7504825,
+      "targetLand": 2244,
+      "targetTroops": 2474,
+      "keybinds": "",
+      "displayedPercent": 81.7,
+      "internalTick": 392
+    },
+    {
+      "cycle": 5,
+      "exactTick": 6.2,
+      "percent": 35.888624999999976,
+      "keybinds": "",
+      "displayedPercent": 35.8,
+      "internalTick": 462
+    },
+    {
+      "cycle": 5,
+      "exactTick": 7.6,
+      "percent": 29.907249999999976,
+      "keybinds": "",
+      "displayedPercent": 29.9,
+      "internalTick": 476
+    },
+    {
+      "cycle": 5,
+      "exactTick": 8.3,
+      "percent": 39.79487499999997,
+      "keybinds": "",
+      "displayedPercent": 39.7,
+      "internalTick": 483
+    },
+    {
+      "cycle": 5,
+      "exactTick": 9.1,
+      "percent": 89.72162499999993,
+      "targetLand": 3784,
+      "targetTroops": 4361,
+      "keybinds": "",
+      "displayedPercent": 89.7,
+      "internalTick": 491
+    }
+  ],
+  "attackResults": [
+    {
+      "cycle": 1,
+      "exactTick": 7,
+      "percent": 24.8008,
+      "keybinds": "",
+      "displayedPercent": 24.8,
+      "internalTick": 70,
+      "troopsBefore": 810,
+      "requested": 200,
+      "tax": 9,
+      "sent": 200,
+      "troopsAfter": 601,
+      "landAfterSend": 12
+    },
+    {
+      "cycle": 1,
+      "exactTick": 9.1,
+      "percent": 18.3711,
+      "targetLand": 144,
+      "targetTroops": 799,
+      "keybinds": "",
+      "displayedPercent": 18.3,
+      "internalTick": 91,
+      "troopsBefore": 684,
+      "requested": 125,
+      "tax": 8,
+      "sent": 125,
+      "troopsAfter": 551,
+      "landAfterSend": 84
+    },
+    {
+      "cycle": 2,
+      "exactTick": 6.1,
+      "percent": 16.5039,
+      "keybinds": "",
+      "displayedPercent": 16.5,
+      "internalTick": 161,
+      "troopsBefore": 1156,
+      "requested": 190,
+      "tax": 13,
+      "sent": 190,
+      "troopsAfter": 953,
+      "landAfterSend": 144
+    },
+    {
+      "cycle": 2,
+      "exactTick": 7.5,
+      "percent": 18.75,
+      "keybinds": "",
+      "displayedPercent": 18.7,
+      "internalTick": 175,
+      "troopsBefore": 1132,
+      "requested": 212,
+      "tax": 13,
+      "sent": 212,
+      "troopsAfter": 907,
+      "landAfterSend": 180
+    },
+    {
+      "cycle": 2,
+      "exactTick": 8.2,
+      "percent": 39.9414,
+      "keybinds": "",
+      "displayedPercent": 39.9,
+      "internalTick": 182,
+      "troopsBefore": 965,
+      "requested": 385,
+      "tax": 11,
+      "sent": 385,
+      "troopsAfter": 569,
+      "landAfterSend": 180
+    },
+    {
+      "cycle": 2,
+      "exactTick": 9.6,
+      "percent": 24.7188,
+      "targetLand": 544,
+      "targetTroops": 1043,
+      "keybinds": "",
+      "displayedPercent": 24.7,
+      "internalTick": 196,
+      "troopsBefore": 605,
+      "requested": 149,
+      "tax": 7,
+      "sent": 149,
+      "troopsAfter": 449,
+      "landAfterSend": 364
+    },
+    {
+      "cycle": 3,
+      "exactTick": 6.6,
+      "percent": 0.5977,
+      "keybinds": "",
+      "displayedPercent": 0.5,
+      "internalTick": 266,
+      "troopsBefore": 1498,
+      "requested": 8,
+      "tax": 17,
+      "sent": 8,
+      "troopsAfter": 1473,
+      "landAfterSend": 480
+    },
+    {
+      "cycle": 3,
+      "exactTick": 7.3,
+      "percent": 22.3633,
+      "keybinds": "",
+      "displayedPercent": 22.3,
+      "internalTick": 273,
+      "troopsBefore": 1563,
+      "requested": 349,
+      "tax": 18,
+      "sent": 349,
+      "troopsAfter": 1196,
+      "landAfterSend": 480
+    },
+    {
+      "cycle": 3,
+      "exactTick": 8,
+      "percent": 52.7344,
+      "keybinds": "",
+      "displayedPercent": 52.7,
+      "internalTick": 280,
+      "troopsBefore": 1269,
+      "requested": 669,
+      "tax": 14,
+      "sent": 655,
+      "troopsAfter": 600,
+      "landAfterSend": 612
+    },
+    {
+      "cycle": 3,
+      "exactTick": 9.4,
+      "percent": 30.1758,
+      "targetLand": 1104,
+      "targetTroops": 1650,
+      "keybinds": "",
+      "displayedPercent": 30.1,
+      "internalTick": 294,
+      "troopsBefore": 636,
+      "requested": 191,
+      "tax": 7,
+      "sent": 191,
+      "troopsAfter": 438,
+      "landAfterSend": 924
+    },
+    {
+      "cycle": 4,
+      "exactTick": 6.4,
+      "percent": 0.6,
+      "keybinds": "",
+      "displayedPercent": 0.6,
+      "internalTick": 364,
+      "troopsBefore": 2282,
+      "requested": 13,
+      "tax": 26,
+      "sent": 13,
+      "troopsAfter": 2243,
+      "landAfterSend": 1012
+    },
+    {
+      "cycle": 4,
+      "exactTick": 7.1,
+      "percent": 43.72068,
+      "keybinds": "",
+      "displayedPercent": 43.7,
+      "internalTick": 371,
+      "troopsBefore": 2373,
+      "requested": 1037,
+      "tax": 27,
+      "sent": 1037,
+      "troopsAfter": 1309,
+      "landAfterSend": 1012
+    },
+    {
+      "cycle": 4,
+      "exactTick": 8.5,
+      "percent": 33.42284000000001,
+      "keybinds": "",
+      "displayedPercent": 33.4,
+      "internalTick": 385,
+      "troopsBefore": 1651,
+      "requested": 551,
+      "tax": 19,
+      "sent": 551,
+      "troopsAfter": 1081,
+      "landAfterSend": 1404
+    },
+    {
+      "cycle": 4,
+      "exactTick": 9.2,
+      "percent": 81.7504825,
+      "targetLand": 2244,
+      "targetTroops": 2474,
+      "keybinds": "",
+      "displayedPercent": 81.7,
+      "internalTick": 392,
+      "troopsBefore": 1143,
+      "requested": 934,
+      "tax": 13,
+      "sent": 921,
+      "troopsAfter": 209,
+      "landAfterSend": 1404
+    },
+    {
+      "cycle": 5,
+      "exactTick": 6.2,
+      "percent": 35.888624999999976,
+      "keybinds": "",
+      "displayedPercent": 35.8,
+      "internalTick": 462,
+      "troopsBefore": 3156,
+      "requested": 1132,
+      "tax": 36,
+      "sent": 1132,
+      "troopsAfter": 1988,
+      "landAfterSend": 1984
+    },
+    {
+      "cycle": 5,
+      "exactTick": 7.6,
+      "percent": 29.907249999999976,
+      "keybinds": "",
+      "displayedPercent": 29.9,
+      "internalTick": 476,
+      "troopsBefore": 2097,
+      "requested": 627,
+      "tax": 24,
+      "sent": 627,
+      "troopsAfter": 1446,
+      "landAfterSend": 2380
+    },
+    {
+      "cycle": 5,
+      "exactTick": 8.3,
+      "percent": 39.79487499999997,
+      "keybinds": "",
+      "displayedPercent": 39.7,
+      "internalTick": 483,
+      "troopsBefore": 1525,
+      "requested": 606,
+      "tax": 17,
+      "sent": 606,
+      "troopsAfter": 902,
+      "landAfterSend": 2664
+    },
+    {
+      "cycle": 5,
+      "exactTick": 9.1,
+      "percent": 89.72162499999993,
+      "targetLand": 3784,
+      "targetTroops": 4361,
+      "keybinds": "",
+      "displayedPercent": 89.7,
+      "internalTick": 491,
+      "troopsBefore": 1356,
+      "requested": 1216,
+      "tax": 15,
+      "sent": 1201,
+      "troopsAfter": 140,
+      "landAfterSend": 2964
+    }
+  ],
+  "checkpoints": [
+    {
+      "cycle": 1,
+      "tick": 99,
+      "land": 144,
+      "troops": 731,
+      "remaining": 61,
+      "oi": 1073,
+      "tax": 17,
+      "targetLand": 144,
+      "targetTroops": 799,
+      "landDelta": 0,
+      "troopsDelta": -68
+    },
+    {
+      "cycle": 2,
+      "tick": 199,
+      "land": 420,
+      "troops": 897,
+      "remaining": 266,
+      "oi": 2040,
+      "tax": 61,
+      "targetLand": 544,
+      "targetTroops": 1043,
+      "landDelta": -124,
+      "troopsDelta": -146
+    },
+    {
+      "cycle": 3,
+      "tick": 299,
+      "land": 1012,
+      "troops": 1476,
+      "remaining": 139,
+      "oi": 3732,
+      "tax": 117,
+      "targetLand": 1104,
+      "targetTroops": 1650,
+      "landDelta": -92,
+      "troopsDelta": -174
+    },
+    {
+      "cycle": 4,
+      "tick": 399,
+      "land": 1740,
+      "troops": 1961,
+      "remaining": 800,
+      "oi": 6419,
+      "tax": 202,
+      "targetLand": 2244,
+      "targetTroops": 2474,
+      "landDelta": -504,
+      "troopsDelta": -513
+    },
+    {
+      "cycle": 5,
+      "tick": 499,
+      "land": 3120,
+      "troops": 3267,
+      "remaining": 889,
+      "oi": 10666,
+      "tax": 294,
+      "targetLand": 3784,
+      "targetTroops": 4361,
+      "landDelta": -664,
+      "troopsDelta": -1094
+    }
+  ],
+  "final": {
+    "tick": 508,
+    "land": 3444,
+    "troops": 3508,
+    "remaining": 0,
+    "oi": 10666,
+    "tax": 294,
+    "netOi": 10372
+  }
+}

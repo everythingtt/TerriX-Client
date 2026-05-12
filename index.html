@@ -45,12 +45,12 @@
         }
 
         header {
-            padding: 60px 0 30px 0;
+            padding: 40px 0;
             text-align: center;
         }
 
         .logo {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 900;
             letter-spacing: 5px;
             text-transform: uppercase;
@@ -64,36 +64,12 @@
             color: #888;
             font-size: 1.1rem;
             margin-top: 10px;
-            margin-bottom: 25px;
-        }
-
-        /* Hero Launch Button */
-        .hero-btn {
-            display: inline-block;
-            padding: 15px 35px;
-            background: var(--primary);
-            color: white;
-            text-decoration: none;
-            font-weight: 900;
-            border: var(--border);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            box-shadow: 0 0 20px rgba(58, 71, 255, 0.4);
-            transition: 0.3s;
-            margin-bottom: 20px;
-        }
-
-        .hero-btn:hover {
-            transform: scale(1.05);
-            background: white;
-            color: black;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
         }
 
         /* 3D GUI PREVIEW */
         .preview-section {
             perspective: 1000px;
-            padding: 40px 0;
+            padding: 60px 0;
             display: flex;
             justify-content: center;
         }
@@ -163,8 +139,8 @@
         /* Version Cards */
         .releases {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
             margin-bottom: 80px;
         }
 
@@ -176,8 +152,6 @@
             transition: 0.3s;
             position: relative;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
 
         .card:hover {
@@ -190,29 +164,16 @@
             background: linear-gradient(145deg, #0f0f0f, #1a1500);
         }
 
-        .card.client {
-            border-color: var(--primary);
-            background: linear-gradient(145deg, #050505, #000835);
-        }
-
         .card h2 {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             font-size: 1.5rem;
-        }
-
-        .card .v-tag {
-            font-family: monospace;
-            color: var(--primary);
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            display: block;
         }
 
         .card p {
             color: #aaa;
             font-size: 0.95rem;
             margin-bottom: 25px;
-            flex-grow: 1;
+            height: 50px;
         }
 
         .download-btn {
@@ -226,11 +187,11 @@
             font-size: 12px;
             border-radius: 2px;
             transition: 0.2s;
-            text-align: center;
         }
 
-        .card.latest .download-btn { background: var(--gold); }
-        .card.client .download-btn { background: var(--primary); color: white; border: 1px solid white; }
+        .card.latest .download-btn {
+            background: var(--gold);
+        }
 
         .download-btn:hover {
             opacity: 0.8;
@@ -281,7 +242,6 @@
         <div class="container">
             <div class="logo">TerriX</div>
             <p class="tagline">The Art of Conquest, Automated.</p>
-            <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" target="_blank" class="hero-btn">🚀 Launch TerriX Pro Client</a>
         </div>
     </header>
 
@@ -303,11 +263,10 @@
                     </div>
                     <div class="gui-main">
                         <div class="gui-code">
-                            <span style="color:#888">// Scanning for TerriX-Client...</span><br>
-                            <span style="color:var(--primary)">if</span> (window.location.host.includes(<span style="color:#00d2ff">'github.io'</span>)) { <br>
-                            &nbsp;&nbsp;G.status = <span style="color:var(--gold)">'CONNECTED'</span>;<br>
-                            &nbsp;&nbsp;GodBot.start();<br>
-                            }
+                            <span style="color:#888">// Initializing GodBot...</span><br>
+                            <span style="color:var(--gold)">const</span> target = G.findWeakest();<br>
+                            G.b8.hV.hc(1024, target);<br>
+                            <span style="color:#888">// Success: Territory Acquired.</span>
                         </div>
                         <!-- Mock Power Index Chart -->
                         <div style="position:absolute; bottom:15px; left:15px; right:15px; height:100px; border-top: 1px solid #222; padding-top:10px;">
@@ -320,33 +279,22 @@
             </div>
         </div>
 
-        <!-- DOWNLOADS & LINKS -->
+        <!-- DOWNLOADS -->
         <div class="releases">
-            <!-- Client Card -->
-            <div class="card client">
-                <span class="badge" style="background: var(--primary);">Recommended</span>
-                <h2>TerriX Pro Client</h2>
-                <span class="v-tag">Custom Pre-Hooked Client</span>
-                <p>The elite way to run TerriX. Our custom-hosted client bypasses official site sandboxing for 100% stable execution and GodBot performance.</p>
-                <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" target="_blank" class="download-btn">Open Pro Client</a>
-            </div>
-
-            <!-- v2.8 Card -->
+            <!-- v2.8 -->
             <div class="card latest">
-                <span class="badge" style="background: var(--gold); color: black;">Latest Release</span>
-                <h2>Executor v2.8</h2>
-                <span class="v-tag">Grandmaster Strategy Suite</span>
-                <p>Fixed 'Undefined 87' errors and stabilized GodBot logic. Optimized for high-Elo competitive play on local or official mirrors.</p>
-                <a href="https://greasyfork.org/en/scripts/576338-terrix-executor-v2-8" target="_blank" class="download-btn">Download Script</a>
+                <span class="badge" style="background: var(--gold); color: black;">Latest Stable</span>
+                <h2>TerriX v2.8</h2>
+                <p>Grandmaster Strategy Suite. Fixed 'Undefined 87' errors and stabilized GodBot for high-Elo competitive play.</p>
+                <a href="https://greasyfork.org/en/scripts/576338-terrix-executor-v2-8" target="_blank" class="download-btn">Get v2.8 (Grandmaster)</a>
             </div>
 
-            <!-- v2.6 Card -->
+            <!-- v2.6 -->
             <div class="card">
                 <span class="badge">Legacy Stable</span>
-                <h2>Executor v2.6</h2>
-                <span class="v-tag">Elite Intelligence Suite</span>
-                <p>Adds Threat Radar, Interest Sync, and Reactive Defense. A classic build for those who prioritize tactical map information.</p>
-                <a href="https://greasyfork.org/en/scripts/576332-terrix-executor-v2-6" target="_blank" class="download-btn">Download Script</a>
+                <h2>TerriX v2.6</h2>
+                <p>Elite Intelligence Suite. Adds Threat Radar, Interest Sync, and Reactive Defense for tactical awareness.</p>
+                <a href="https://greasyfork.org/en/scripts/576332-terrix-executor-v2-6" target="_blank" class="download-btn">Get v2.6 (Elite)</a>
             </div>
         </div>
     </section>
