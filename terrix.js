@@ -15,6 +15,29 @@
 (function() {
     'use strict';
 
+    // Spoof device footprint from iframe proxy if present
+    try {
+        if (window.name && window.name.startsWith('{')) {
+            const fp = JSON.parse(window.name);
+            
+            // MULTI-ACCOUNT ISOLATION: 
+            // Clear storage specifically to prevent "Player Already In Lobby" cross-tab detection
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch(e) {}
+            
+            if (fp.ua) {
+                Object.defineProperty(navigator, 'userAgent', { value: fp.ua });
+                Object.defineProperty(navigator, 'hardwareConcurrency', { value: fp.cores });
+                Object.defineProperty(navigator, 'deviceMemory', { value: fp.mem });
+                Object.defineProperty(navigator, 'language', { value: fp.lang });
+                Object.defineProperty(screen, 'width', { value: fp.width });
+                Object.defineProperty(screen, 'height', { value: fp.height });
+            }
+        }
+    } catch(e) {}
+    
     const TERRIX = {
         version: '3.0.0',
         initialized: false,

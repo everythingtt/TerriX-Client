@@ -100,8 +100,7 @@
         <div class="sb-url-section">
             <div class="sb-url-label">Target URL</div>
             <div class="sb-url-row">
-                <input type="text" class="sb-url-input" id="urlInput" value="https://everythingtt.github.io/TerriX-Client/Territorial.io-iframe.html" placeholder="Enter game URL...">
-                <button class="sb-go-btn" id="goBtn">GO</button>
+                <input type="text" class="sb-url-input" id="urlInput" value="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" readonly style="color: var(--dim); cursor: default; background: var(--surf2);">
             </div>
             <div class="sb-toggles">
                 <label class="sb-toggle" title="Forces HTTPS for secure connections">
@@ -153,6 +152,9 @@
 </div>
 
 <script>
+    // --- CONSTANTS ---
+    const TARGET_URL = "https://everythingtt.github.io/TerriX-Client/Territorial.io.html";
+
     // --- STATE ---
     const tabs = [];
     let activeTabId = null;
@@ -161,7 +163,6 @@
     // --- DOM ELEMENTS ---
     const els = {
         urlInput: document.getElementById('urlInput'),
-        goBtn: document.getElementById('goBtn'),
         optHttps: document.getElementById('optHttps'),
         optGoogleProxy: document.getElementById('optGoogleProxy'),
         optDeviceSpoof: document.getElementById('optDeviceSpoof'),
@@ -203,8 +204,12 @@
         // Generate a hex ID for UI display
         const hexId = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0').toUpperCase();
         
+        // Add random query param to ensure browser treats it as a fresh load without cached states
+        const cacheBuster = Math.random().toString(36).substring(2, 10);
+        
         return {
             id: hexId,
+            cb: cacheBuster,
             ua: r(uas),
             width: sc.w,
             height: sc.h,
@@ -260,10 +265,15 @@
         tabCounter++;
         const id = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         
-        const finalUrl = processUrl(targetUrl);
+        let finalUrl = processUrl(targetUrl);
         if (!finalUrl) return;
         
         const fingerprint = els.optDeviceSpoof.checked ? generateFingerprint() : null;
+        
+        // Append cache buster to URL to forcefully isolate browser context/cache per iframe
+        if (fingerprint && fingerprint.cb) {
+            finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'instance=' + fingerprint.cb;
+        }
         
         const tab = {
             id,
@@ -392,31 +402,8 @@
 
     // --- EVENT LISTENERS ---
     
-    els.goBtn.onclick = () => {
-        const url = els.urlInput.value;
-        if (url) {
-            if (activeTabId) {
-                // Update current tab
-                const tab = tabs.find(t => t.id === activeTabId);
-                if (tab) {
-                    tab.rawUrl = url;
-                    tab.url = processUrl(url);
-                    const iframe = document.querySelector(`#wrapper_${tab.id} iframe`);
-                    if (iframe) iframe.src = tab.url;
-                    updateState();
-                }
-            } else {
-                createTab(url);
-            }
-        }
-    };
-    
-    els.urlInput.onkeydown = (e) => {
-        if (e.key === 'Enter') els.goBtn.click();
-    };
-    
     els.newTabBtn.onclick = () => {
-        createTab(els.urlInput.value || 'https://everythingtt.github.io/TerriX-Client/Territorial.io-iframe.html');
+        createTab(TARGET_URL);
     };
     
     els.closeAllBtn.onclick = () => {
@@ -434,7 +421,7 @@
 
     // Auto-create first tab on load
     window.onload = () => {
-        createTab(els.urlInput.value);
+        createTab(TARGET_URL);
     };
 </script>
 
