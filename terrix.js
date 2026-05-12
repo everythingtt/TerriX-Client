@@ -55,9 +55,218 @@
                 enabled: false,
                 proxyUrl: '',
                 syncAttack: true
+            },
+            ui: {
+                theme: 'terrix'
             }
         }
     };
+
+    const THEMES = {
+        terrix: {
+            name: 'TerriX Dark',
+            bg: 'rgba(5,5,10,0.97)',
+            bgHeader: 'rgba(15,15,25,1)',
+            bgSidebar: 'rgba(10,10,18,1)',
+            bgMain: 'rgba(8,8,15,1)',
+            bgFooter: 'rgba(8,8,15,1)',
+            bgEditor: '#0a0a0f',
+            bgOutput: 'rgba(5,5,10,1)',
+            bgTabActive: 'rgba(58,71,255,0.3)',
+            bgTabHover: 'rgba(60,60,80,0.9)',
+            bgToggleBar: '#0a1a0a',
+            bgBtn: 'rgba(40,40,60,0.9)',
+            bgBtnPrimary: 'rgba(58,71,255,0.4)',
+            bgBtnSuccess: 'rgba(40,140,40,0.4)',
+            bgBtnDanger: 'rgba(180,40,40,0.4)',
+            bgConfigInput: '#111',
+            bgScriptItem: 'rgba(20,20,35,0.9)',
+            bgBarTrack: '#111',
+            bgBarFill: '#3a47ff',
+            bgMeBarFill: '#ffd700',
+            colorText: '#eee',
+            colorTextDim: '#999',
+            colorTextMuted: '#666',
+            colorTextAccent: '#ccc',
+            colorTextGreen: '#0f0',
+            colorTextRed: '#f44',
+            colorTextYellow: '#ffd700',
+            colorBorder: '#3a47ff',
+            colorBorderLight: '#333',
+            colorBorderMuted: '#222',
+            colorBorderBtn: '#444',
+            colorBorderBtnPrimary: '#3a47ff',
+            colorBorderBtnSuccess: '#484',
+            colorBorderBtnDanger: '#844',
+            colorBorderScript: '#333',
+            colorToggleOn: '#0f0',
+            colorToggleOff: '#666',
+            colorToggleTrackOn: '#1a5a1a',
+            colorNavActive: '#fff',
+            colorNavInactive: '#aaa',
+            toggleBarBorder: '#0f0',
+            toggleBarText: '#0f0',
+            toggleBarHover: '#1a3a1a',
+            shadowGlow: 'rgba(58,71,255,0.3)',
+            shadowBox: 'rgba(0,0,0,0.8)',
+            editorText: '#0f0',
+            outputText: '#888',
+            outputBorder: '#222',
+            footerBorder: '#222',
+            statusOnline: '#0f0',
+            statusOffline: '#f44',
+            closeHover: '#f44',
+            verColor: '#3a47ff',
+            sectionTitle: '#3a47ff',
+            scriptName: '#fff',
+            scriptDesc: '#666',
+            configLabel: '#999',
+            configInputText: '#ddd',
+            toastBg: 'rgba(0,0,0,0.9)',
+            toastBorder: '#3a47ff',
+            toastText: '#fff',
+            minimapBorder: '#3a47ff',
+            minimapShadow: 'rgba(0,0,0,0.5)',
+            debugBg: 'rgba(0,0,0,0.9)',
+            debugBorder: '#333',
+            debugText: '#0f0',
+            rankNum: '#666',
+            meName: '#ffd700',
+            barValText: '#fff',
+            barRank: '#666',
+            barName: '#ccc',
+            barFill: '#3a47ff',
+            meBarFill: '#ffd700',
+            barTrack: '#111',
+            barBorder: '#222',
+            btnText: '#ccc',
+            btnTextPrimary: '#fff',
+            btnTextDanger: '#faa',
+            btnTextSuccess: '#afa',
+            btnHoverText: '#fff',
+            btnHoverBg: 'rgba(60,60,80,0.9)',
+            btnHoverPrimary: 'rgba(58,71,255,0.6)',
+            btnHoverDanger: 'rgba(180,40,40,0.6)',
+            btnHoverSuccess: 'rgba(40,140,40,0.6)',
+            configInputBorder: '#333',
+            configInputFocusBorder: '#3a47ff',
+            toggleTrackOff: '#222',
+            toggleTrackOn: '#1a5a1a',
+            toggleBorderOff: '#444',
+            toggleBorderOn: '#0a0',
+            toggleKnobOff: '#666',
+            toggleKnobOn: '#0f0',
+            selectBg: '#111',
+            selectText: '#ddd',
+            selectBorder: '#333',
+            selectWidth: '100px',
+            selectInputWidth: '80px'
+        },
+        territorial: {
+            name: 'Territorial.io',
+            bg: 'rgba(0,0,0,0.88)',
+            bgHeader: 'rgba(0,0,0,0.92)',
+            bgSidebar: 'rgba(0,0,0,0.90)',
+            bgMain: 'rgba(0,0,0,0.85)',
+            bgFooter: 'rgba(0,0,0,0.92)',
+            bgEditor: 'rgba(0,0,0,0.92)',
+            bgOutput: 'rgba(0,0,0,0.92)',
+            bgTabActive: 'rgba(70,50,0,0.85)',
+            bgTabHover: 'rgba(60,60,60,0.85)',
+            bgToggleBar: 'rgba(0,70,0,0.85)',
+            bgBtn: 'rgba(60,0,60,0.85)',
+            bgBtnPrimary: 'rgba(0,70,0,0.85)',
+            bgBtnSuccess: 'rgba(0,70,0,0.85)',
+            bgBtnDanger: 'rgba(100,0,0,0.85)',
+            bgConfigInput: 'rgba(0,0,0,0.70)',
+            bgScriptItem: 'rgba(0,0,0,0.80)',
+            bgBarTrack: 'rgba(0,0,0,0.85)',
+            bgBarFill: 'rgba(0,180,0,0.85)',
+            bgMeBarFill: 'rgba(180,150,0,0.85)',
+            colorText: 'rgb(255,255,255)',
+            colorTextDim: 'rgb(180,180,180)',
+            colorTextMuted: 'rgb(120,120,120)',
+            colorTextAccent: 'rgb(225,225,255)',
+            colorTextGreen: 'rgb(10,255,255)',
+            colorTextRed: 'rgb(255,120,120)',
+            colorTextYellow: 'rgb(255,200,50)',
+            colorBorder: 'rgb(255,255,255)',
+            colorBorderLight: 'rgba(255,255,255,0.5)',
+            colorBorderMuted: 'rgba(255,255,255,0.25)',
+            colorBorderBtn: 'rgb(255,255,255)',
+            colorBorderBtnPrimary: 'rgb(255,255,255)',
+            colorBorderBtnSuccess: 'rgb(255,255,255)',
+            colorBorderBtnDanger: 'rgb(255,255,255)',
+            colorBorderScript: 'rgba(255,255,255,0.4)',
+            colorToggleOn: 'rgb(0,230,0)',
+            colorToggleOff: 'rgb(100,100,100)',
+            colorToggleTrackOn: 'rgba(0,100,0,0.6)',
+            colorNavActive: 'rgb(255,255,255)',
+            colorNavInactive: 'rgb(180,180,180)',
+            toggleBarBorder: 'rgb(255,255,255)',
+            toggleBarText: 'rgb(255,255,255)',
+            toggleBarHover: 'rgba(0,100,0,0.85)',
+            shadowGlow: 'rgba(0,0,0,0.6)',
+            shadowBox: 'rgba(0,0,0,0.9)',
+            editorText: 'rgb(10,255,255)',
+            outputText: 'rgb(180,180,180)',
+            outputBorder: 'rgba(255,255,255,0.3)',
+            footerBorder: 'rgba(255,255,255,0.3)',
+            statusOnline: 'rgb(0,230,0)',
+            statusOffline: 'rgb(255,80,80)',
+            closeHover: 'rgb(255,100,100)',
+            verColor: 'rgb(10,255,255)',
+            sectionTitle: 'rgb(255,255,255)',
+            scriptName: 'rgb(255,255,255)',
+            scriptDesc: 'rgb(150,150,150)',
+            configLabel: 'rgb(200,200,200)',
+            configInputText: 'rgb(255,255,255)',
+            toastBg: 'rgba(0,0,0,0.92)',
+            toastBorder: 'rgb(255,255,255)',
+            toastText: 'rgb(255,255,255)',
+            minimapBorder: 'rgb(255,255,255)',
+            minimapShadow: 'rgba(0,0,0,0.7)',
+            debugBg: 'rgba(0,0,0,0.95)',
+            debugBorder: 'rgba(255,255,255,0.3)',
+            debugText: 'rgb(10,255,255)',
+            rankNum: 'rgb(150,150,150)',
+            meName: 'rgb(255,200,50)',
+            barValText: 'rgb(255,255,255)',
+            barRank: 'rgb(150,150,150)',
+            barName: 'rgb(225,225,255)',
+            barFill: 'rgb(0,180,0)',
+            meBarFill: 'rgb(180,150,0)',
+            barTrack: 'rgba(0,0,0,0.85)',
+            barBorder: 'rgba(255,255,255,0.3)',
+            btnText: 'rgb(255,255,255)',
+            btnTextPrimary: 'rgb(255,255,255)',
+            btnTextDanger: 'rgb(255,255,255)',
+            btnTextSuccess: 'rgb(255,255,255)',
+            btnHoverText: 'rgb(255,255,255)',
+            btnHoverBg: 'rgba(80,80,80,0.9)',
+            btnHoverPrimary: 'rgba(0,100,0,0.9)',
+            btnHoverDanger: 'rgba(140,0,0,0.9)',
+            btnHoverSuccess: 'rgba(0,100,0,0.9)',
+            configInputBorder: 'rgb(255,255,255)',
+            configInputFocusBorder: 'rgb(10,255,255)',
+            toggleTrackOff: 'rgba(50,50,50,0.8)',
+            toggleTrackOn: 'rgba(0,100,0,0.5)',
+            toggleBorderOff: 'rgba(255,255,255,0.4)',
+            toggleBorderOn: 'rgb(0,230,0)',
+            toggleKnobOff: 'rgb(150,150,150)',
+            toggleKnobOn: 'rgb(0,255,0)',
+            selectBg: 'rgba(0,0,0,0.70)',
+            selectText: 'rgb(255,255,255)',
+            selectBorder: 'rgb(255,255,255)',
+            selectWidth: '120px',
+            selectInputWidth: '80px'
+        }
+    };
+
+    function getCurrentTheme() {
+        const name = TERRIX.config.ui && TERRIX.config.ui.theme;
+        return THEMES[name] || THEMES.terrix;
+    }
 
     function loadConfig() {
         try {
@@ -529,6 +738,7 @@
         TERRIX.initialized = true;
         injectStyles();
         buildGUI();
+        applyTheme();
         restoreGUIState();
         startLoops();
         setupKeyboardShortcuts();
@@ -536,7 +746,7 @@
         PropResolver.resetCache();
         lbPropCache = null;
         MultiTab.init();
-        Logger.log('TerriX ready. Press the toggle bar or F2 to open.');
+        Logger.log('TerriX ready. Theme: ' + getCurrentTheme().name + '. Press the toggle bar or F2 to open.');
     }
 
     function restoreGUIState() {
@@ -629,20 +839,21 @@
     }
 
     function buildErrorGUI() {
+        const T = getCurrentTheme();
         const wrapper = document.createElement('div');
         wrapper.id = 'tx-wrapper';
         wrapper.innerHTML = [
             '<div id="tx-toggle">TERRIX v3.0</div>',
-            '<div id="tx-gui" style="display:flex;">',
-            '  <div id="tx-header"><span>TERRIX <span class="tx-ver">v3.0</span></span><span id="tx-close">✕</span></div>',
+            '<div id="tx-gui" style="display:flex;background:' + T.bg + ';border-color:' + T.colorBorder + ';color:' + T.colorText + ';box-shadow:0 0 40px ' + T.shadowGlow + ',0 20px 60px ' + T.shadowBox + ';">',
+            '  <div id="tx-header" style="background:' + T.bgHeader + ';border-bottom-color:' + T.colorBorderLight + ';"><span>TERRIX <span class="tx-ver" style="color:' + T.verColor + ';">v3.0</span></span><span id="tx-close" style="color:' + T.colorTextMuted + ';">✕</span></div>',
             '  <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;">',
-            '    <div style="font-size:48px;color:#f44;">⚠</div>',
-            '    <div style="color:#f44;font-size:16px;font:bold;">Game Hook Not Detected</div>',
-            '    <div style="color:#888;font-size:12px;text-align:center;max-width:400px;">',
+            '    <div style="font-size:48px;color:' + T.colorTextRed + ';">⚠</div>',
+            '    <div style="color:' + T.colorTextRed + ';font-size:16px;font-weight:bold;">Game Hook Not Detected</div>',
+            '    <div style="color:' + T.colorTextDim + ';font-size:12px;text-align:center;max-width:400px;">',
             '      This page does not have the TerriX hook. You must use the TerriX Client to run TerriX Executor.<br><br>',
-            '      <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" style="color:#3a47ff;" target="_blank">Open TerriX Client →</a>',
+            '      <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" style="color:' + T.colorBorderBtnPrimary + ';" target="_blank">Open TerriX Client →</a>',
             '    </div>',
-            '    <button class="tx-btn tx-btn-primary" onclick="location.reload()">Retry</button>',
+            '    <button class="tx-btn tx-btn-primary" style="background:' + T.bgBtnPrimary + ';border-color:' + T.colorBorderBtnPrimary + ';color:' + T.btnTextPrimary + ';" onclick="location.reload()">Retry</button>',
             '  </div>',
             '</div>'
         ].join('');
@@ -657,66 +868,234 @@
     }
 
     function injectStyles() {
+        const T = getCurrentTheme();
         const s = document.createElement('style');
+        s.id = 'tx-styles';
         s.textContent = [
-            '#tx-wrapper{position:fixed;top:0;left:0;width:0;height:0;z-index:2147483647;font-family:system-ui,sans-serif;pointer-events:none;}',
-            '#tx-toggle{pointer-events:auto;position:fixed;top:0;left:50%;transform:translateX(-50%);padding:4px 24px;background:#0a1a0a;color:#0f0;border:1.5px solid #0f0;border-top:none;border-radius:0 0 8px 8px;cursor:pointer;font-weight:bold;font-size:11px;letter-spacing:2px;z-index:2147483647;}',
-            '#tx-toggle:hover{background:#1a3a1a;}',
-            '#tx-gui{pointer-events:auto;position:fixed;top:80px;left:50%;transform:translateX(-50%);width:740px;height:520px;background:rgba(5,5,10,0.97);border:1.5px solid #3a47ff;display:none;flex-direction:column;color:#eee;box-shadow:0 0 40px rgba(58,71,255,0.3),0 20px 60px rgba(0,0,0,0.8);border-radius:6px;overflow:hidden;}',
-            '#tx-header{padding:10px 18px;background:rgba(15,15,25,1);display:flex;justify-content:space-between;align-items:center;cursor:move;border-bottom:1px solid #333;font-size:13px;font-weight:bold;}',
-            '#tx-header .tx-ver{color:#3a47ff;font-size:10px;margin-left:8px;}',
-            '#tx-close{cursor:pointer;color:#666;font-size:16px;padding:2px 6px;}',
-            '#tx-close:hover{color:#f44;}',
+            '#tx-wrapper{position:fixed;top:0;left:0;width:0;height:0;z-index:2147483647;font-family:system-ui,"Segoe UI",Arial,sans-serif;pointer-events:none;}',
+            '#tx-toggle{pointer-events:auto;position:fixed;top:0;left:50%;transform:translateX(-50%);padding:4px 24px;background:' + T.bgToggleBar + ';color:' + T.toggleBarText + ';border:1.5px solid ' + T.toggleBarBorder + ';border-top:none;border-radius:0 0 8px 8px;cursor:pointer;font-weight:bold;font-size:11px;letter-spacing:2px;z-index:2147483647;}',
+            '#tx-toggle:hover{background:' + T.toggleBarHover + ';}',
+            '#tx-gui{pointer-events:auto;position:fixed;top:80px;left:50%;transform:translateX(-50%);width:740px;height:520px;background:' + T.bg + ';border:1.5px solid ' + T.colorBorder + ';display:none;flex-direction:column;color:' + T.colorText + ';box-shadow:0 0 40px ' + T.shadowGlow + ',0 20px 60px ' + T.shadowBox + ';border-radius:6px;overflow:hidden;}',
+            '#tx-header{padding:10px 18px;background:' + T.bgHeader + ';display:flex;justify-content:space-between;align-items:center;cursor:move;border-bottom:1px solid ' + T.colorBorderLight + ';font-size:13px;font-weight:bold;}',
+            '#tx-header .tx-ver{color:' + T.verColor + ';font-size:10px;margin-left:8px;}',
+            '#tx-close{cursor:pointer;color:' + T.colorTextMuted + ';font-size:16px;padding:2px 6px;}',
+            '#tx-close:hover{color:' + T.closeHover + ';}',
             '#tx-body{display:flex;flex:1;overflow:hidden;}',
-            '#tx-sidebar{width:140px;background:rgba(10,10,18,1);border-right:1px solid #222;padding:10px;display:flex;flex-direction:column;gap:6px;}',
+            '#tx-sidebar{width:140px;background:' + T.bgSidebar + ';border-right:1px solid ' + T.colorBorderMuted + ';padding:10px;display:flex;flex-direction:column;gap:6px;}',
             '#tx-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}',
-            '.tx-nav-btn{padding:7px 10px;background:rgba(40,40,60,0.8);border:1px solid #333;color:#aaa;cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;text-align:left;}',
-            '.tx-nav-btn:hover{background:rgba(60,60,80,0.9);color:#ddd;}',
-            '.tx-nav-btn.active{background:rgba(58,71,255,0.3);color:#fff;border-color:#3a47ff;}',
+            '.tx-nav-btn{padding:7px 10px;background:' + T.bgBtn + ';border:1px solid ' + T.colorBorderLight + ';color:' + T.colorNavInactive + ';cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;text-align:left;}',
+            '.tx-nav-btn:hover{background:' + T.btnHoverBg + ';color:' + T.btnHoverText + ';}',
+            '.tx-nav-btn.active{background:' + T.bgTabActive + ';color:' + T.colorNavActive + ';border-color:' + T.colorBorderBtnPrimary + ';}',
             '#tx-tab-editor{flex:1;display:flex;flex-direction:column;overflow:hidden;}',
             '#tx-tab-chart{flex:1;display:none;flex-direction:column;gap:4px;overflow-y:auto;padding:10px;}',
             '#tx-tab-scripts{flex:1;display:none;flex-direction:column;gap:4px;overflow-y:auto;padding:10px;}',
             '#tx-tab-config{flex:1;display:none;flex-direction:column;gap:4px;overflow-y:auto;padding:10px;}',
             '#tx-tab-esp{flex:1;display:none;overflow:hidden;}',
-            '#tx-editor{flex:1;background:#0a0a0f;color:#0f0;border:none;padding:12px;font-family:Consolas,monospace;font-size:12px;resize:none;outline:none;line-height:1.5;}',
+            '#tx-editor{flex:1;background:' + T.bgEditor + ';color:' + T.editorText + ';border:none;padding:12px;font-family:Consolas,monospace;font-size:12px;resize:none;outline:none;line-height:1.5;}',
             '.tx-bar-row{display:flex;align-items:center;gap:8px;height:26px;width:100%;flex-shrink:0;}',
-            '.tx-bar-rank{width:30px;font-size:11px;color:#666;font-weight:bold;text-align:right;}',
-            '.tx-bar-name{width:120px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#ccc;}',
-            '.tx-bar-track{flex:1;background:#111;height:14px;border:1px solid #222;border-radius:2px;position:relative;overflow:hidden;}',
-            '.tx-bar-fill{height:100%;width:0%;background:#3a47ff;transition:width 0.3s ease;border-right:2px solid rgba(255,255,255,0.3);}',
-            '.tx-bar-val{position:absolute;right:4px;font-size:9px;color:#fff;line-height:14px;font-weight:bold;}',
-            '.tx-me-row .tx-bar-name{color:#ffd700!important;font-weight:bold;}',
-            '.tx-me-row .tx-bar-fill{background:#ffd700;}',
-            '.tx-script-item{background:rgba(20,20,35,0.9);border:1px solid #333;padding:10px;display:flex;justify-content:space-between;align-items:center;border-radius:4px;}',
-            '.tx-script-item:hover{border-color:#3a47ff;}',
-            '.tx-btn{padding:6px 14px;background:rgba(40,40,60,0.9);border:1px solid #444;color:#ccc;cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;}',
-            '.tx-btn:hover{background:rgba(60,60,80,0.9);color:#fff;}',
-            '.tx-btn-primary{background:rgba(58,71,255,0.4);border-color:#3a47ff;color:#fff;}',
-            '.tx-btn-primary:hover{background:rgba(58,71,255,0.6);}',
-            '.tx-btn-danger{background:rgba(180,40,40,0.4);border-color:#844;color:#faa;}',
-            '.tx-btn-danger:hover{background:rgba(180,40,40,0.6);}',
-            '.tx-btn-success{background:rgba(40,140,40,0.4);border-color:#484;color:#afa;}',
-            '.tx-btn-success:hover{background:rgba(40,140,40,0.6);}',
-            '#tx-footer{padding:8px 16px;background:rgba(8,8,15,1);display:flex;justify-content:space-between;align-items:center;border-top:1px solid #222;}',
-            '#tx-status{font-size:10px;color:#666;}',
-            '#tx-status.tx-online{color:#0f0;}',
-            '#tx-status.tx-offline{color:#f44;}',
-            '.tx-section-title{font-size:12px;font-weight:bold;color:#3a47ff;margin:10px 0 6px 0;text-transform:uppercase;letter-spacing:1px;}',
+            '.tx-bar-rank{width:30px;font-size:11px;color:' + T.barRank + ';font-weight:bold;text-align:right;}',
+            '.tx-bar-name{width:120px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + T.barName + ';}',
+            '.tx-bar-track{flex:1;background:' + T.barTrack + ';height:14px;border:1px solid ' + T.barBorder + ';border-radius:2px;position:relative;overflow:hidden;}',
+            '.tx-bar-fill{height:100%;width:0%;background:' + T.barFill + ';transition:width 0.3s ease;border-right:2px solid rgba(255,255,255,0.3);}',
+            '.tx-bar-val{position:absolute;right:4px;font-size:9px;color:' + T.barValText + ';line-height:14px;font-weight:bold;}',
+            '.tx-me-row .tx-bar-name{color:' + T.meName + '!important;font-weight:bold;}',
+            '.tx-me-row .tx-bar-fill{background:' + T.meBarFill + ';}',
+            '.tx-script-item{background:' + T.bgScriptItem + ';border:1px solid ' + T.colorBorderScript + ';padding:10px;display:flex;justify-content:space-between;align-items:center;border-radius:4px;}',
+            '.tx-script-item:hover{border-color:' + T.colorBorderBtnPrimary + ';}',
+            '.tx-btn{padding:6px 14px;background:' + T.bgBtn + ';border:1px solid ' + T.colorBorderBtn + ';color:' + T.btnText + ';cursor:pointer;font-size:11px;font-weight:bold;border-radius:4px;}',
+            '.tx-btn:hover{background:' + T.btnHoverBg + ';color:' + T.btnHoverText + ';}',
+            '.tx-btn-primary{background:' + T.bgBtnPrimary + ';border-color:' + T.colorBorderBtnPrimary + ';color:' + T.btnTextPrimary + ';}',
+            '.tx-btn-primary:hover{background:' + T.btnHoverPrimary + ';}',
+            '.tx-btn-danger{background:' + T.bgBtnDanger + ';border-color:' + T.colorBorderBtnDanger + ';color:' + T.btnTextDanger + ';}',
+            '.tx-btn-danger:hover{background:' + T.btnHoverDanger + ';}',
+            '.tx-btn-success{background:' + T.bgBtnSuccess + ';border-color:' + T.colorBorderBtnSuccess + ';color:' + T.btnTextSuccess + ';}',
+            '.tx-btn-success:hover{background:' + T.btnHoverSuccess + ';}',
+            '#tx-footer{padding:8px 16px;background:' + T.bgFooter + ';display:flex;justify-content:space-between;align-items:center;border-top:1px solid ' + T.footerBorder + ';}',
+            '#tx-status{font-size:10px;color:' + T.colorTextMuted + ';}',
+            '#tx-status.tx-online{color:' + T.statusOnline + ';}',
+            '#tx-status.tx-offline{color:' + T.statusOffline + ';}',
+            '.tx-section-title{font-size:12px;font-weight:bold;color:' + T.sectionTitle + ';margin:10px 0 6px 0;text-transform:uppercase;letter-spacing:1px;}',
             '.tx-config-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);}',
-            '.tx-config-label{font-size:11px;color:#999;}',
-            '.tx-config-input{background:#111;border:1px solid #333;color:#ddd;padding:3px 8px;font-size:11px;border-radius:3px;width:80px;text-align:right;}',
-            '.tx-config-input:focus{border-color:#3a47ff;outline:none;}',
-            '.tx-toggle-switch{position:relative;width:36px;height:18px;background:#222;border-radius:9px;cursor:pointer;border:1px solid #444;}',
-            '.tx-toggle-switch.on{background:#1a5a1a;border-color:#0a0;}',
-            '.tx-toggle-switch::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;background:#666;border-radius:50%;transition:all 0.2s;}',
-            '.tx-toggle-switch.on::after{left:19px;background:#0f0;}',
-            '#tx-minimap{position:fixed;z-index:2147483646;pointer-events:none;border:1px solid #3a47ff;border-radius:4px;overflow:hidden;box-shadow:0 0 10px rgba(0,0,0,0.5);}',
+            '.tx-config-label{font-size:11px;color:' + T.configLabel + ';}',
+            '.tx-config-input{background:' + T.bgConfigInput + ';border:1px solid ' + T.configInputBorder + ';color:' + T.configInputText + ';padding:3px 8px;font-size:11px;border-radius:3px;width:' + T.selectInputWidth + ';text-align:right;}',
+            '.tx-config-input:focus{border-color:' + T.configInputFocusBorder + ';outline:none;}',
+            '.tx-toggle-switch{position:relative;width:36px;height:18px;background:' + T.toggleTrackOff + ';border-radius:9px;cursor:pointer;border:1px solid ' + T.toggleBorderOff + ';}',
+            '.tx-toggle-switch.on{background:' + T.toggleTrackOn + ';border-color:' + T.toggleBorderOn + ';}',
+            '.tx-toggle-switch::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;background:' + T.toggleKnobOff + ';border-radius:50%;transition:all 0.2s;}',
+            '.tx-toggle-switch.on::after{left:19px;background:' + T.toggleKnobOn + ';}',
+            '#tx-minimap{position:fixed;z-index:2147483646;pointer-events:none;border:1px solid ' + T.minimapBorder + ';border-radius:4px;overflow:hidden;box-shadow:0 0 10px ' + T.minimapShadow + ';}',
             '#tx-minimap canvas{display:block;}',
-            '#tx-debug-log{position:fixed;bottom:0;left:0;width:400px;max-height:200px;z-index:2147483647;background:rgba(0,0,0,0.9);border:1px solid #333;color:#0f0;font-family:monospace;font-size:10px;overflow-y:auto;padding:6px;display:none;}',
-            '.tx-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;padding:8px 16px;border-radius:4px;font-size:12px;z-index:2147483647;border:1px solid #3a47ff;transition:opacity 0.3s;}',
-            '#tx-code-output{flex:0 0 100px;background:rgba(5,5,10,1);border-top:1px solid #222;padding:8px;font-family:monospace;font-size:10px;color:#888;overflow-y:auto;white-space:pre-wrap;}'
+            '#tx-debug-log{position:fixed;bottom:0;left:0;width:400px;max-height:200px;z-index:2147483647;background:' + T.debugBg + ';border:1px solid ' + T.debugBorder + ';color:' + T.debugText + ';font-family:monospace;font-size:10px;overflow-y:auto;padding:6px;display:none;}',
+            '.tx-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:' + T.toastBg + ';color:' + T.toastText + ';padding:8px 16px;border-radius:4px;font-size:12px;z-index:2147483647;border:1px solid ' + T.toastBorder + ';transition:opacity 0.3s;}',
+            '#tx-code-output{flex:0 0 100px;background:' + T.bgOutput + ';border-top:1px solid ' + T.outputBorder + ';padding:8px;font-family:monospace;font-size:10px;color:' + T.outputText + ';overflow-y:auto;white-space:pre-wrap;}'
         ].join('');
         document.head.appendChild(s);
+    }
+
+    function applyTheme() {
+        const T = getCurrentTheme();
+        const gui = document.getElementById('tx-gui');
+        if (!gui) return;
+        gui.style.background = T.bg;
+        gui.style.borderColor = T.colorBorder;
+        gui.style.color = T.colorText;
+        gui.style.boxShadow = '0 0 40px ' + T.shadowGlow + ',0 20px 60px ' + T.shadowBox;
+
+        const toggle = document.getElementById('tx-toggle');
+        if (toggle) {
+            toggle.style.background = T.bgToggleBar;
+            toggle.style.color = T.toggleBarText;
+            toggle.style.borderColor = T.toggleBarBorder;
+        }
+
+        const header = document.getElementById('tx-header');
+        if (header) {
+            header.style.background = T.bgHeader;
+            header.style.borderBottomColor = T.colorBorderLight;
+        }
+
+        const sidebar = document.getElementById('tx-sidebar');
+        if (sidebar) {
+            sidebar.style.background = T.bgSidebar;
+            sidebar.style.borderRightColor = T.colorBorderMuted;
+        }
+
+        const footer = document.getElementById('tx-footer');
+        if (footer) {
+            footer.style.background = T.bgFooter;
+            footer.style.borderTopColor = T.footerBorder;
+        }
+
+        const editor = document.getElementById('tx-editor');
+        if (editor) {
+            editor.style.background = T.bgEditor;
+            editor.style.color = T.editorText;
+        }
+
+        const output = document.getElementById('tx-code-output');
+        if (output) {
+            output.style.background = T.bgOutput;
+            output.style.borderTopColor = T.outputBorder;
+            output.style.color = T.outputText;
+        }
+
+        const minimap = document.getElementById('tx-minimap');
+        if (minimap) {
+            minimap.style.borderColor = T.minimapBorder;
+            minimap.style.boxShadow = '0 0 10px ' + T.minimapShadow;
+        }
+
+        document.querySelectorAll('.tx-nav-btn').forEach(btn => {
+            if (btn.classList.contains('active')) {
+                btn.style.background = T.bgTabActive;
+                btn.style.color = T.colorNavActive;
+                btn.style.borderColor = T.colorBorderBtnPrimary;
+            } else {
+                btn.style.background = T.bgBtn;
+                btn.style.color = T.colorNavInactive;
+                btn.style.borderColor = T.colorBorderLight;
+            }
+        });
+
+        document.querySelectorAll('.tx-section-title').forEach(el => {
+            el.style.color = T.sectionTitle;
+        });
+
+        document.querySelectorAll('.tx-bar-track').forEach(el => {
+            el.style.background = T.barTrack;
+            el.style.borderColor = T.barBorder;
+        });
+
+        document.querySelectorAll('.tx-bar-fill').forEach(el => {
+            if (!el.parentElement || !el.parentElement.parentElement || !el.parentElement.parentElement.classList.contains('tx-me-row')) {
+                el.style.background = T.barFill;
+            }
+        });
+
+        document.querySelectorAll('.tx-me-row .tx-bar-fill').forEach(el => {
+            el.style.background = T.meBarFill;
+        });
+
+        document.querySelectorAll('.tx-bar-val').forEach(el => {
+            el.style.color = T.barValText;
+        });
+
+        document.querySelectorAll('.tx-bar-rank').forEach(el => {
+            el.style.color = T.barRank;
+        });
+
+        document.querySelectorAll('.tx-bar-name').forEach(el => {
+            if (!el.parentElement || !el.parentElement.classList.contains('tx-me-row')) {
+                el.style.color = T.barName;
+            } else {
+                el.style.color = T.meName;
+            }
+        });
+
+        document.querySelectorAll('.tx-script-item').forEach(el => {
+            el.style.background = T.bgScriptItem;
+            el.style.borderColor = T.colorBorderScript;
+        });
+
+        document.querySelectorAll('.tx-config-label').forEach(el => {
+            el.style.color = T.configLabel;
+        });
+
+        document.querySelectorAll('.tx-config-input').forEach(el => {
+            el.style.background = T.bgConfigInput;
+            el.style.borderColor = T.configInputBorder;
+            el.style.color = T.configInputText;
+        });
+
+        document.querySelectorAll('.tx-toggle-switch').forEach(el => {
+            if (el.classList.contains('on')) {
+                el.style.background = T.toggleTrackOn;
+                el.style.borderColor = T.toggleBorderOn;
+            } else {
+                el.style.background = T.toggleTrackOff;
+                el.style.borderColor = T.toggleBorderOff;
+            }
+        });
+
+        document.querySelectorAll('.tx-btn').forEach(btn => {
+            if (btn.classList.contains('tx-btn-primary')) {
+                btn.style.background = T.bgBtnPrimary;
+                btn.style.borderColor = T.colorBorderBtnPrimary;
+                btn.style.color = T.btnTextPrimary;
+            } else if (btn.classList.contains('tx-btn-danger')) {
+                btn.style.background = T.bgBtnDanger;
+                btn.style.borderColor = T.colorBorderBtnDanger;
+                btn.style.color = T.btnTextDanger;
+            } else if (btn.classList.contains('tx-btn-success')) {
+                btn.style.background = T.bgBtnSuccess;
+                btn.style.borderColor = T.colorBorderBtnSuccess;
+                btn.style.color = T.btnTextSuccess;
+            } else {
+                btn.style.background = T.bgBtn;
+                btn.style.borderColor = T.colorBorderBtn;
+                btn.style.color = T.btnText;
+            }
+        });
+
+        const status = document.getElementById('tx-status');
+        if (status) {
+            if (status.classList.contains('tx-online')) {
+                status.style.color = T.statusOnline;
+            } else {
+                status.style.color = T.statusOffline;
+            }
+        }
+
+        const ver = document.querySelector('#tx-header .tx-ver');
+        if (ver) ver.style.color = T.verColor;
+
+        const close = document.getElementById('tx-close');
+        if (close) close.style.color = T.colorTextMuted;
+
+        const hookBtn = document.getElementById('tx-btn-hook');
+        if (hookBtn) hookBtn.style.borderColor = T.colorBorderBtnDanger;
+
+        Logger.log('Theme applied: ' + T.name);
     }
 
     function buildGUI() {
@@ -897,6 +1276,12 @@
 
         const sections = [
             {
+                title: 'UI THEME',
+                items: [
+                    { label: 'Theme', key: 'ui.theme', type: 'select', options: ['terrix', 'territorial'], labels: ['TerriX Dark', 'Territorial.io'] }
+                ]
+            },
+            {
                 title: 'GODBOT SETTINGS',
                 items: [
                     { label: 'Enable GodBot', key: 'godbot.enabled', type: 'toggle' },
@@ -970,16 +1355,18 @@
                 } else if (item.type === 'select') {
                     const sel = document.createElement('select');
                     sel.className = 'tx-config-input';
-                    sel.style.width = '100px';
-                    (item.options || []).forEach(opt => {
+                    sel.style.width = '120px';
+                    (item.options || []).forEach((opt, idx) => {
                         const o = document.createElement('option');
-                        o.value = opt; o.textContent = opt;
+                        o.value = opt;
+                        o.textContent = (item.labels && item.labels[idx]) ? item.labels[idx] : opt;
                         if (opt === getNested(TERRIX.config, item.key)) o.selected = true;
                         sel.appendChild(o);
                     });
                     sel.addEventListener('change', () => {
                         setNested(TERRIX.config, item.key, sel.value);
                         saveConfig();
+                        if (item.key === 'ui.theme') applyTheme();
                     });
                     row.appendChild(sel);
                 }

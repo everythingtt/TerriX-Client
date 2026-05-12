@@ -22,13 +22,14 @@
         .step-card h3{font-size:1.1rem;margin-bottom:8px}
         .step-card p{color:var(--dim);font-size:.9rem}
         .step-card a{color:var(--primary);text-decoration:none}
-        .downloads{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:50px 0}
+        .downloads{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin:50px 0}
         .dl-card{background:var(--surf);border:1px solid var(--brd);border-radius:8px;padding:32px;transition:all .3s}
         .dl-card:hover{border-color:var(--primary)}
         .dl-card.latest{border-color:var(--gold)}
         .badge{display:inline-block;padding:3px 10px;border-radius:3px;font-size:10px;font-weight:bold;text-transform:uppercase;margin-bottom:12px}
         .badge-gold{background:var(--gold);color:#000}
         .badge-gray{background:#333;color:#fff}
+        .badge-new{background:linear-gradient(135deg,#3a47ff,#0af);color:#fff}
         .dl-card h2{font-size:1.4rem;margin-bottom:8px}
         .dl-card p{color:var(--dim);font-size:.95rem;margin-bottom:20px}
         .dl-btn{display:inline-block;padding:12px 28px;background:#fff;color:#000;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:12px;border-radius:4px;transition:.2s}
@@ -79,14 +80,81 @@
         .guide-tip{background:rgba(58,71,255,0.08);border-left:3px solid var(--primary);border-radius:0 4px 4px 0;padding:10px 16px;margin-top:14px;font-size:.85rem;color:var(--dim)}
         .guide-tip i{color:var(--gold);margin-right:6px}
         .guide-ok{color:var(--green);font-weight:bold}
+        /* 3D UI Preview */
+        .preview-section{text-align:center;margin:80px 0 60px}
+        .preview-section h2{font-size:1.8rem;color:var(--primary);margin-bottom:6px}
+        .preview-subtitle{color:var(--dim);font-size:.95rem;margin-bottom:28px}
+        .preview-toggle{display:inline-flex;background:var(--surf);border:1px solid var(--brd);border-radius:6px;padding:3px;margin-bottom:32px}
+        .preview-btn{padding:8px 20px;border:none;background:transparent;color:var(--dim);cursor:pointer;font-size:12px;font-weight:600;border-radius:4px;transition:all .2s}
+        .preview-btn.active{background:var(--primary);color:#fff}
+        .preview-btn:not(.active):hover{color:var(--txt)}
+        .preview-stage{perspective:1200px;height:420px;display:flex;justify-content:center;align-items:center}
+        .preview-3d{display:none;transform-style:preserve-3d;transform:rotateY(-8deg) rotateX(4deg);transition:transform .6s ease}
+        .preview-3d.active{display:block}
+        .preview-3d:hover{transform:rotateY(0deg) rotateX(0deg) scale(1.03)}
+        .mock-gui{width:620px;background:rgba(5,5,10,0.97);border:1.5px solid #3a47ff;border-radius:6px;overflow:hidden;box-shadow:0 0 60px rgba(58,71,255,0.25),0 20px 60px rgba(0,0,0,0.8);font-family:system-ui,sans-serif;font-size:11px;margin:0 auto}
+        .mock-header{background:rgba(15,15,25,1);padding:8px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;font-size:12px;font-weight:bold}
+        .mock-title{color:#eee}
+        .mock-ver{color:#3a47ff;font-size:9px;margin-left:6px}
+        .mock-close{color:#555;font-size:14px;cursor:pointer;width:18px;text-align:center}
+        .mock-close:hover{color:#f44}
+        .mock-body{display:flex;height:280px}
+        .mock-sidebar{width:110px;background:rgba(10,10,18,1);border-right:1px solid #222;padding:8px;display:flex;flex-direction:column;gap:4px}
+        .mock-nav{padding:5px 8px;background:rgba(40,40,60,0.8);border:1px solid #333;color:#aaa;border-radius:3px;font-size:10px;font-weight:bold;cursor:pointer;transition:all .15s}
+        .mock-nav:hover{background:rgba(60,60,80,0.9)}
+        .mock-nav.active{background:rgba(58,71,255,0.3);color:#fff;border-color:#3a47ff}
+        .mock-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .mock-editor{flex:1;background:#0a0a0f;padding:10px;font-family:Consolas,monospace;font-size:11px;overflow:hidden;line-height:1.6}
+        .mock-line{white-space:pre}
+        .mock-line .kw{color:#c678dd}
+        .mock-line .fn{color:#61afef}
+        .mock-line .str{color:#98c379}
+        .mock-line .num{color:#d19a66}
+        .mock-output{background:rgba(5,5,10,1);border-top:1px solid #222;padding:6px 10px;font-family:monospace;font-size:9px;color:#888;white-space:nowrap;overflow:hidden;height:26px}
+        .mock-footer{background:rgba(8,8,15,1);padding:6px 12px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #222}
+        .mock-status{font-size:9px}
+        .mock-status.online{color:#0f0}
+        .mock-status.offline{color:#f44}
+        .mock-footer-right{display:flex;gap:6px}
+        .mock-btn{padding:4px 10px;border-radius:3px;border:1px solid;font-size:10px;font-weight:bold;cursor:pointer;transition:all .15s}
+        .mock-btn.btn-primary{background:rgba(58,71,255,0.4);border-color:#3a47ff;color:#fff}
+        .mock-btn.btn-primary:hover{background:rgba(58,71,255,0.6)}
+        .mock-btn.btn-danger{background:rgba(180,40,40,0.4);border-color:#844;color:#faa}
+        .mock-btn.btn-danger:hover{background:rgba(180,40,40,0.6)}
+
+        /* Territorial.io theme variant */
+        .mock-gui.territorial{background:rgba(0,0,0,0.88);border-color:rgb(255,255,255);box-shadow:0 0 60px rgba(0,0,0,0.4),0 20px 60px rgba(0,0,0,0.8)}
+        .mock-gui.territorial .mock-header{background:rgba(0,0,0,0.92);border-bottom-color:rgba(255,255,255,0.5)}
+        .mock-gui.territorial .mock-close{color:#888}
+        .mock-gui.territorial .mock-sidebar{background:rgba(0,0,0,0.90);border-right-color:rgba(255,255,255,0.25)}
+        .mock-gui.territorial .mock-nav{background:rgba(60,0,60,0.85);border-color:rgb(255,255,255);color:rgb(180,180,180)}
+        .mock-gui.territorial .mock-nav.active{background:rgba(70,50,0,0.85);color:rgb(255,255,255);border-color:rgb(255,255,255)}
+        .mock-gui.territorial .mock-editor{background:rgba(0,0,0,0.92)}
+        .mock-gui.territorial .mock-line .kw{color:#ff79c6}
+        .mock-gui.territorial .mock-line .fn{color:#8be9fd}
+        .mock-gui.territorial .mock-line .str{color:#50fa7b}
+        .mock-gui.territorial .mock-line .num{color:#ffb86c}
+        .mock-gui.territorial .mock-output{background:rgba(0,0,0,0.92);border-top-color:rgba(255,255,255,0.3);color:rgb(180,180,180)}
+        .mock-gui.territorial .mock-footer{background:rgba(0,0,0,0.92);border-top-color:rgba(255,255,255,0.3)}
+        .mock-gui.territorial .mock-status.online{color:#0f0}
+        .mock-gui.territorial .mock-btn.btn-primary{background:rgba(0,70,0,0.85);border-color:rgb(255,255,255);color:#fff}
+        .mock-gui.territorial .mock-btn.btn-danger{background:rgba(100,0,0,0.85);border-color:rgb(255,255,255);color:#fff}
+        .mock-gui.territorial .mock-ver{color:#0ff}
+
+        @keyframes float{0%,100%{transform:rotateY(-8deg) rotateX(4deg) translateY(0)}50%{transform:rotateY(-8deg) rotateX(4deg) translateY(-6px)}}
+        .preview-3d.active{animation:float 6s ease-in-out infinite}
+
         @media(max-width:768px){
             .install-steps{grid-template-columns:1fr}
             .downloads{grid-template-columns:1fr}
+            .preview-toggle{flex-direction:column;align-items:center}
             .feat-grid{grid-template-columns:1fr}
             .footer-grid{grid-template-columns:1fr}
             .guide-cols{grid-template-columns:1fr}
             .logo{font-size:2.5rem}
             .guide-table td:first-child{width:auto}
+            .mock-gui{width:95vw;transform:scale(0.75)}
+            .preview-stage{height:340px}
         }
     </style>
 </head>
@@ -98,6 +166,91 @@
             <p class="tagline">The Art of Conquest, Automated.</p>
         </div>
     </header>
+
+    <!-- 3D UI PREVIEWS -->
+    <section class="container preview-section">
+        <h2>Executor UI Preview</h2>
+        <p class="preview-subtitle">Two themes. One power. Switch instantly in CONFIG → UI THEME.</p>
+
+        <div class="preview-toggle">
+            <button class="preview-btn active" onclick="switchPreview('terrix',this)" id="btn-terrix">TerriX Dark</button>
+            <button class="preview-btn" onclick="switchPreview('territorial',this)" id="btn-territorial">Territorial.io</button>
+        </div>
+
+        <div class="preview-stage">
+            <!-- TERRIX DARK PREVIEW -->
+            <div class="preview-3d active" id="preview-terrix">
+                <div class="mock-gui">
+                    <div class="mock-header">
+                        <span class="mock-title">TERRIX <span class="mock-ver">v3.0</span></span>
+                        <span class="mock-close">✕</span>
+                    </div>
+                    <div class="mock-body">
+                        <div class="mock-sidebar">
+                            <div class="mock-nav active">EDITOR</div>
+                            <div class="mock-nav">LEADERBOARD</div>
+                            <div class="mock-nav">SCRIPTS</div>
+                            <div class="mock-nav">CONFIG</div>
+                            <div class="mock-nav">ESP VIEW</div>
+                        </div>
+                        <div class="mock-main">
+                            <div class="mock-editor">
+                                <div class="mock-line"><span class="kw">const</span> target = <span class="fn">GI</span>.<span class="fn">getWeakestNeighbor</span>();</div>
+                                <div class="mock-line"><span class="kw">if</span> (target &amp;&amp; <span class="fn">GI</span>.<span class="fn">getMyTroops</span>() &gt; <span class="num">500</span>) {</div>
+                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">GI</span>.<span class="fn">sendAttack</span>(<span class="num">0.8</span>, target);</div>
+                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">Logger</span>.<span class="fn">log</span>(<span class="str">"Attacking "</span> + target);</div>
+                                <div class="mock-line">}</div>
+                            </div>
+                            <div class="mock-output">[TerriX] Executed successfully</div>
+                        </div>
+                    </div>
+                    <div class="mock-footer">
+                        <span class="mock-status online">● Hooked</span>
+                        <span class="mock-footer-right">
+                            <button class="mock-btn btn-primary">EXECUTE</button>
+                            <button class="mock-btn btn-danger">STOP ALL</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TERRITORIAL.IO PREVIEW -->
+            <div class="preview-3d" id="preview-territorial">
+                <div class="mock-gui territorial">
+                    <div class="mock-header">
+                        <span class="mock-title">TERRIX <span class="mock-ver">v3.0</span></span>
+                        <span class="mock-close">✕</span>
+                    </div>
+                    <div class="mock-body">
+                        <div class="mock-sidebar">
+                            <div class="mock-nav active">EDITOR</div>
+                            <div class="mock-nav">LEADERBOARD</div>
+                            <div class="mock-nav">SCRIPTS</div>
+                            <div class="mock-nav">CONFIG</div>
+                            <div class="mock-nav">ESP VIEW</div>
+                        </div>
+                        <div class="mock-main">
+                            <div class="mock-editor">
+                                <div class="mock-line"><span class="kw">const</span> target = <span class="fn">GI</span>.<span class="fn">getWeakestNeighbor</span>();</div>
+                                <div class="mock-line"><span class="kw">if</span> (target &amp;&amp; <span class="fn">GI</span>.<span class="fn">getMyTroops</span>() &gt; <span class="num">500</span>) {</div>
+                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">GI</span>.<span class="fn">sendAttack</span>(<span class="num">0.8</span>, target);</div>
+                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">Logger</span>.<span class="fn">log</span>(<span class="str">"Attacking "</span> + target);</div>
+                                <div class="mock-line">}</div>
+                            </div>
+                            <div class="mock-output">[TerriX] Executed successfully</div>
+                        </div>
+                    </div>
+                    <div class="mock-footer">
+                        <span class="mock-status online">● Hooked</span>
+                        <span class="mock-footer-right">
+                            <button class="mock-btn btn-primary">EXECUTE</button>
+                            <button class="mock-btn btn-danger">STOP ALL</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <section class="container">
         <div class="install-steps">
@@ -132,6 +285,12 @@
                 <h2>TerriX v2.8</h2>
                 <p>Grandmaster Strategy Suite. Fixed GodBot errors and stabilized core automation for competitive play.</p>
                 <a href="https://greasyfork.org/en/users/1538530-terri-exploits-inc" target="_blank" class="dl-btn">Install v2.8</a>
+            </div>
+            <div class="dl-card">
+                <span class="badge badge-new">New</span>
+                <h2>Iframe Manager</h2>
+                <p>Browser-style tab manager. Open multiple TerriX Client instances in iframes with BroadcastChannel sync, right-click context menus, and session persistence.</p>
+                <a href="Territorial.io-iframe.html" target="_blank" class="dl-btn">Open Manager</a>
             </div>
         </div>
     </section>
@@ -369,5 +528,14 @@
             <div class="copy">&copy; 2026 Terri Exploits Inc. All rights reserved.</div>
         </div>
     </footer>
+<script>
+function switchPreview(theme, btn) {
+    document.querySelectorAll('.preview-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.querySelectorAll('.preview-3d').forEach(p => p.classList.remove('active'));
+    var el = document.getElementById('preview-' + theme);
+    if (el) el.classList.add('active');
+}
+</script>
 </body>
 </html>
