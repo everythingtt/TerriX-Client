@@ -77,8 +77,41 @@
 
     loadConfig();
 
+    const _win = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+
+    const PropResolver = {
+        _cache: {},
+
+        resetCache() { this._cache = {}; },
+
+        resolve(obj, candidates, preferType) {
+            if (!obj) return null;
+            const cacheKey = candidates.join(',');
+            if (this._cache[cacheKey]) return this._cache[cacheKey];
+            const props = Object.getOwnPropertyNames(obj);
+            for (const c of candidates) {
+                if (props.includes(c) && obj[c] != null) {
+                    if (preferType && !(obj[c] instanceof preferType) && !Array.isArray(obj[c]) && typeof obj[c] !== preferType) continue;
+                    this._cache[cacheKey] = c;
+                    return c;
+                }
+            }
+            return null;
+        },
+
+        resolveAgProp(candidates) {
+            const G = _win.G;
+            if (!G || !G.ag) return null;
+            return this.resolve(G.ag, candidates);
+        },
+
+        resolveTypedArray(candidates) {
+            return this.resolveAgProp(candidates);
+        }
+    };
+
     const GameInterface = {
-        get G() { return window.G; },
+        get G() { return _win.G; },
 
         get myId() {
             const G = this.G;
@@ -93,43 +126,52 @@
         getMyTroops() {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            return G.ag.hB[this.myId] || 0;
+            const prop = PropResolver.resolveTypedArray(['hB','gx','h7','gt']) || 'hB';
+            return G.ag[prop][this.myId] || 0;
         },
 
         getMyTerritory() {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            return G.ag.gx[this.myId] || 0;
+            const prop = PropResolver.resolveTypedArray(['gx','hB','h7','gt','j2']) || 'gx';
+            return G.ag[prop][this.myId] || 0;
         },
 
         getMyScore(playerId) {
             const G = this.G;
-            if (!G || !G.aD || !G.aD.kA) return 0;
-            return G.aD.kA(playerId ?? this.myId);
+            if (!G) return 0;
+            // kA is on ae (score/stats object), not on aD
+            const scoreObj = G.ae || G.aD;
+            if (!scoreObj || typeof scoreObj.kA !== 'function') return 0;
+            try { return scoreObj.kA(playerId ?? this.myId) || 0; } catch(e) { return 0; }
         },
 
         getPlayerTroops(id) {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            return G.ag.hB[id] || 0;
+            const prop = PropResolver.resolveTypedArray(['hB','gx','h7','gt']) || 'hB';
+            return G.ag[prop][id] || 0;
         },
 
         getPlayerTerritory(id) {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            return G.ag.gx[id] || 0;
+            const prop = PropResolver.resolveTypedArray(['gx','hB','h7','gt','j2']) || 'gx';
+            return G.ag[prop][id] || 0;
         },
 
         isPlayerAlive(id) {
             const G = this.G;
             if (!G || !G.ag) return false;
-            return (G.ag.n4[id] || 0) !== 0;
+            const prop = PropResolver.resolveTypedArray(['n4','a4W','a1h','n3','mz']) || 'n4';
+            return (G.ag[prop][id] || 0) !== 0;
         },
 
         getPlayerName(id) {
             const G = this.G;
             if (!G || !G.ag) return 'Bot';
-            return G.ag.za[id] || G.ag.a1n[id] || 'Bot';
+            const prop = PropResolver.resolveAgProp(['za','a1o','zb','zU','name','names']) || 'za';
+            return G.ag[prop][id] || 'Bot';
         },
 
         getPlayerTeam(id) {
@@ -140,8 +182,13 @@
 
         areAllies(p1, p2) {
             const G = this.G;
-            if (!G || !G.bu) return false;
-            return G.bu.f2(p1, p2);
+            if (!G) return false;
+            try {
+                if (G.bu && typeof G.bu.hi === 'function') return G.bu.hi(p1, p2);
+                if (G.bu && typeof G.bu.f2 === 'function') return !G.bu.f2(p1, p2);
+                if (G.bi && G.bi.f7) return G.bi.f7[p1] === G.bi.f7[p2];
+            } catch(e) {}
+            return false;
         },
 
         sameTeam(p1, p2) {
@@ -150,26 +197,30 @@
 
         getBorderTiles(id) {
             const G = this.G;
-            if (!G || !G.ag || !G.ag.gb) return [];
-            return G.ag.gb[id] || [];
+            if (!G || !G.ag) return [];
+            const prop = PropResolver.resolveAgProp(['gb','gp','gq','fY']) || 'gb';
+            return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
         getAllTiles(id) {
             const G = this.G;
-            if (!G || !G.ag || !G.ag.gq) return [];
-            return G.ag.gq[id] || [];
+            if (!G || !G.ag) return [];
+            const prop = PropResolver.resolveAgProp(['gq','gb','gp','fY']) || 'gq';
+            return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
         getLandTiles(id) {
             const G = this.G;
-            if (!G || !G.ag || !G.ag.fY) return [];
-            return G.ag.fY[id] || [];
+            if (!G || !G.ag) return [];
+            const prop = PropResolver.resolveAgProp(['fY','gq','gb','gp']) || 'fY';
+            return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
         getPerimeterTiles(id) {
             const G = this.G;
-            if (!G || !G.ag || !G.ag.gp) return [];
-            return G.ag.gp[id] || [];
+            if (!G || !G.ag) return [];
+            const prop = PropResolver.resolveAgProp(['gp','gb','gq','fY']) || 'gp';
+            return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
         getMapSize() {
@@ -230,14 +281,26 @@
 
         tileToXY(encoded) {
             const G = this.G;
-            if (!G || !G.ac) return { x: 0, y: 0 };
-            return { x: G.ac.fH(encoded), y: G.ac.fJ(encoded) };
+            if (!G) return { x: 0, y: 0 };
+            const mapW = (G.bU && G.bU.fK) || 512;
+            // Try ac.zC/ac.zD first (map tile access object)
+            if (G.ac && typeof G.ac.zC === 'function') return { x: G.ac.zC(encoded), y: G.ac.zD(encoded) };
+            // Try bO.fH/bO.fJ (map utility object)
+            if (G.bO && typeof G.bO.fH === 'function') return { x: G.bO.fH(encoded), y: G.bO.fJ(encoded) };
+            // Fallback: manual computation (encoded = tileId * 4, tileId = y * mapW + x)
+            return { x: (encoded >> 2) % mapW, y: Math.floor((encoded >> 2) / mapW) };
         },
 
         xyToTile(x, y) {
             const G = this.G;
-            if (!G || !G.ac) return 0;
-            return G.ac.fW(x, y);
+            if (!G) return 0;
+            const mapW = (G.bU && G.bU.fK) || 512;
+            // Try ac.yk first
+            if (G.ac && typeof G.ac.yk === 'function') return G.ac.yk(x, y);
+            // Try bO.fW
+            if (G.bO && typeof G.bO.fW === 'function') return G.bO.fW(x, y);
+            // Fallback: manual computation
+            return (y * mapW + x) * 4;
         },
 
         tileToEncoded(tileId) {
@@ -254,56 +317,83 @@
 
         sendAttack(intensity, targetId) {
             const G = this.G;
-            if (!G || !G.bA || !G.bA.hZ) return false;
+            if (!G) return false;
             try {
-                G.bA.hZ.hg(this.myId, intensity, targetId);
-                return true;
-            } catch(e) { return false; }
+                const hZ = G.bA && G.bA.hZ;
+                if (hZ && typeof hZ.hg === 'function') {
+                    hZ.hg(this.myId, Math.floor(intensity), targetId);
+                    return true;
+                }
+                if (G.b8 && typeof G.b8.hg === 'function') {
+                    G.b8.hg(this.myId, Math.floor(intensity), targetId);
+                    return true;
+                }
+            } catch(e) { Logger.error('sendAttack failed:', e.message); }
+            return false;
         },
 
         sendAttackTile(intensity, tile, targetId) {
             const G = this.G;
-            if (!G || !G.bA || !G.bA.hZ) return false;
+            if (!G) return false;
             try {
-                G.bA.hZ.hc(this.myId, intensity, tile, targetId);
-                return true;
-            } catch(e) { return false; }
+                const hZ = G.bA && G.bA.hZ;
+                if (hZ && typeof hZ.hc === 'function') {
+                    hZ.hc(this.myId, Math.floor(intensity), tile, targetId);
+                    return true;
+                }
+                if (G.b8 && typeof G.b8.hc === 'function') {
+                    G.b8.hc(this.myId, Math.floor(intensity), tile, targetId);
+                    return true;
+                }
+            } catch(e) { Logger.error('sendAttackTile failed:', e.message); }
+            return false;
         },
 
         sendPeace() {
             const G = this.G;
-            if (!G || !G.bA || !G.bA.hZ) return false;
+            if (!G) return false;
             try {
-                G.bA.hZ.pe(this.myId, 0);
-                return true;
-            } catch(e) { return false; }
+                const hZ = G.bA && G.bA.hZ;
+                if (hZ && typeof hZ.pe === 'function') { hZ.pe(this.myId, 0); return true; }
+                if (G.b8 && typeof G.b8.pe === 'function') { G.b8.pe(this.myId, 0); return true; }
+            } catch(e) {}
+            return false;
         },
 
         retreat() {
             const G = this.G;
-            if (!G || !G.bA || !G.bA.hZ) return false;
+            if (!G) return false;
             try {
-                G.bA.hZ.hu(this.myId);
-                return true;
-            } catch(e) { return false; }
+                const hZ = G.bA && G.bA.hZ;
+                if (hZ && typeof hZ.hu === 'function') { hZ.hu(this.myId); return true; }
+                if (G.b8 && typeof G.b8.hu === 'function') { G.b8.hu(this.myId); return true; }
+            } catch(e) {}
+            return false;
         },
 
         surrender() {
             const G = this.G;
-            if (!G || !G.bA || !G.bA.hZ) return false;
+            if (!G) return false;
             try {
-                G.bA.hZ.pn(this.myId);
-                return true;
-            } catch(e) { return false; }
+                const hZ = G.bA && G.bA.hZ;
+                if (hZ && typeof hZ.pn === 'function') { hZ.pn(this.myId); return true; }
+                if (G.b8 && typeof G.b8.pn === 'function') { G.b8.pn(this.myId); return true; }
+            } catch(e) {}
+            return false;
         },
 
         setColor(colorId) {
             const G = this.G;
             if (!G || !G.bA || !G.bA.hZ) return false;
             try {
-                G.bA.hZ.pj(this.myId, Math.max(0, Math.min(1023, colorId)));
-                return true;
+                // hZ.pi(player) where player id 513 = retreat; for color: hZ.pi(colorId)
+                const hZ = G.bA.hZ;
+                if (typeof hZ.pi === 'function') {
+                    hZ.pi(Math.max(0, Math.min(1023, colorId)));
+                    return true;
+                }
             } catch(e) { return false; }
+            return false;
         },
 
         isFFA() {
@@ -324,7 +414,7 @@
                     alive.push({
                         id: i,
                         name: this.getPlayerName(i),
-                        troops: this.getPlayerTerritory(i),
+                        troops: this.getPlayerTroops(i),
                         territory: this.getPlayerTerritory(i),
                         team: this.getPlayerTeam(i),
                         isMe: i === this.myId
@@ -356,9 +446,15 @@
         },
 
         shouldPeace() {
-            const score = this.getMyScore();
-            const maxScore = this.getMyScore(this.myId);
-            return score > (maxScore * TERRIX.config.godbot.peaceThreshold);
+            const G = this.G;
+            if (!G) return false;
+            const scoreObj = G.ae || G.aD;
+            if (!scoreObj || typeof scoreObj.kA !== 'function') return false;
+            try {
+                const myScore = scoreObj.kA(this.myId);
+                const maxScore = scoreObj.kA(); // no arg = global max
+                return myScore > (maxScore * TERRIX.config.godbot.peaceThreshold);
+            } catch(e) { return false; }
         }
     };
 
@@ -382,20 +478,50 @@
 
     Logger.log('TerriX v' + TERRIX.version + ' loaded.');
 
-    function waitForHook() {
-        if (window.G && window.G.aD && window.G.ag) {
-            Logger.log('Game hook detected. Initializing...');
+    function validateHook() {
+        const G = _win.G;
+        if (!G) return false;
+        if (!G.aD) return false;
+        if (!G.ag) return false;
+        if (typeof G.aD.et !== 'number') return false;
+        // Check that core typed arrays exist (tile arrays like gb/gp/gq/fY are null until ag.dh() runs)
+        if (!(G.ag.gx instanceof Uint32Array)) return false;
+        if (!(G.ag.hB instanceof Uint32Array)) return false;
+        if (!(G.ag.n4 instanceof Uint8Array)) return false;
+        return true;
+    }
+
+    function waitForHook(attempts) {
+        attempts = attempts || 0;
+        if (validateHook()) {
+            Logger.log('Game hook validated. Initializing...');
             TERRIX.hooked = true;
             init();
             return;
         }
-        setTimeout(waitForHook, 200);
+        if (attempts > 100) {
+            Logger.error('Hook detection failed after 20s. Is this the TerriX Client?');
+            injectStyles();
+            buildErrorGUI();
+            return;
+        }
+        setTimeout(() => waitForHook(attempts + 1), 200);
+    }
+
+    function onReady() {
+        if (validateHook()) {
+            Logger.log('Hook already present at DOMContentLoaded.');
+            TERRIX.hooked = true;
+            init();
+            return;
+        }
+        waitForHook(0);
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(waitForHook, 500));
+        document.addEventListener('DOMContentLoaded', onReady);
     } else {
-        setTimeout(waitForHook, 500);
+        onReady();
     }
 
     function init() {
@@ -403,8 +529,131 @@
         TERRIX.initialized = true;
         injectStyles();
         buildGUI();
+        restoreGUIState();
         startLoops();
-        Logger.log('TerriX ready. Click the toggle bar to open.');
+        setupKeyboardShortcuts();
+        setupPageLifecycle();
+        PropResolver.resetCache();
+        lbPropCache = null;
+        MultiTab.init();
+        Logger.log('TerriX ready. Press the toggle bar or F2 to open.');
+    }
+
+    function restoreGUIState() {
+        try {
+            const state = JSON.parse(GM_getValue('terrix_gui_state', '{}'));
+            const gui = document.getElementById('tx-gui');
+            if (gui && state.left) {
+                gui.style.left = state.left;
+                gui.style.top = state.top;
+                gui.style.transform = 'none';
+            }
+            if (state.activeTab) {
+                const btn = document.querySelector('.tx-nav-btn[data-tab="' + state.activeTab + '"]');
+                if (btn) btn.click();
+            }
+            if (state.editorContent) {
+                const editor = document.getElementById('tx-editor');
+                if (editor) editor.value = state.editorContent;
+            }
+        } catch(e) {}
+    }
+
+    function persistGUIState() {
+        try {
+            const gui = document.getElementById('tx-gui');
+            const editor = document.getElementById('tx-editor');
+            const activeBtn = document.querySelector('.tx-nav-btn.active');
+            const state = {
+                left: gui ? gui.style.left : '',
+                top: gui ? gui.style.top : '',
+                activeTab: activeBtn ? activeBtn.dataset.tab : 'editor',
+                editorContent: editor ? editor.value : ''
+            };
+            GM_setValue('terrix_gui_state', JSON.stringify(state));
+        } catch(e) {}
+    }
+
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                const gui = document.getElementById('tx-gui');
+                if (gui) gui.style.display = gui.style.display === 'flex' ? 'none' : 'flex';
+            }
+            if (e.ctrlKey && e.shiftKey && e.key === 'X') {
+                e.preventDefault();
+                const gui = document.getElementById('tx-gui');
+                if (gui) gui.style.display = gui.style.display === 'flex' ? 'none' : 'flex';
+            }
+        });
+    }
+
+    function setupPageLifecycle() {
+        _win.addEventListener('beforeunload', () => {
+            persistGUIState();
+            stopAllLoops();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                Logger.log('Tab hidden — reducing polling.');
+            } else {
+                if (!validateHook()) {
+                    Logger.warn('Hook lost while tab was hidden. Re-detecting...');
+                    TERRIX.hooked = false;
+                    TERRIX.initialized = false;
+                    waitForHook(0);
+                }
+            }
+        });
+
+        let lastDomCount = 0;
+        const domObserver = new MutationObserver(() => {
+            const currentCount = document.querySelectorAll('*').length;
+            if (Math.abs(currentCount - lastDomCount) > 100) {
+                lastDomCount = currentCount;
+                if (!validateHook() && TERRIX.initialized) {
+                    Logger.warn('DOM changed significantly — checking hook...');
+                    TERRIX.hooked = false;
+                    TERRIX.initialized = false;
+                    waitForHook(0);
+                }
+            }
+        });
+        setTimeout(() => {
+            if (document.body) {
+                domObserver.observe(document.body, { childList: true, subtree: true });
+            }
+        }, 2000);
+    }
+
+    function buildErrorGUI() {
+        const wrapper = document.createElement('div');
+        wrapper.id = 'tx-wrapper';
+        wrapper.innerHTML = [
+            '<div id="tx-toggle">TERRIX v3.0</div>',
+            '<div id="tx-gui" style="display:flex;">',
+            '  <div id="tx-header"><span>TERRIX <span class="tx-ver">v3.0</span></span><span id="tx-close">✕</span></div>',
+            '  <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;">',
+            '    <div style="font-size:48px;color:#f44;">⚠</div>',
+            '    <div style="color:#f44;font-size:16px;font:bold;">Game Hook Not Detected</div>',
+            '    <div style="color:#888;font-size:12px;text-align:center;max-width:400px;">',
+            '      This page does not have the TerriX hook. You must use the TerriX Client to run TerriX Executor.<br><br>',
+            '      <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" style="color:#3a47ff;" target="_blank">Open TerriX Client →</a>',
+            '    </div>',
+            '    <button class="tx-btn tx-btn-primary" onclick="location.reload()">Retry</button>',
+            '  </div>',
+            '</div>'
+        ].join('');
+        document.body.appendChild(wrapper);
+        document.getElementById('tx-toggle').addEventListener('click', () => {
+            const gui = document.getElementById('tx-gui');
+            gui.style.display = gui.style.display === 'flex' ? 'none' : 'flex';
+        });
+        document.getElementById('tx-close').addEventListener('click', () => {
+            document.getElementById('tx-gui').style.display = 'none';
+        });
     }
 
     function injectStyles() {
@@ -528,11 +777,12 @@
                     const el = document.getElementById('tx-tab-' + t);
                     if (el) el.style.display = (t === tab) ? (t === 'editor' ? 'flex' : t === 'esp' ? 'block' : 'flex') : 'none';
                 });
+                persistGUIState();
             });
         });
 
         document.getElementById('tx-btn-hook').addEventListener('click', function() {
-            if (window.G) {
+            if (_win.G) {
                 this.textContent = 'HOOKED';
                 this.style.borderColor = '#0f0';
                 this.style.color = '#0f0';
@@ -548,7 +798,7 @@
             const output = document.getElementById('tx-code-output');
             try {
                 const fn = new Function('G', 'GI', 'TERRIX', 'Logger', code);
-                fn(window.G, GameInterface, TERRIX, Logger);
+                fn(_win.G, GameInterface, TERRIX, Logger);
                 output.textContent = '✓ Executed successfully';
                 output.style.color = '#0f0';
             } catch(e) {
@@ -566,6 +816,15 @@
             toast('All loops stopped');
         });
 
+        document.getElementById('tx-editor').addEventListener('input', () => {
+            persistGUIState();
+        });
+
+        TERRIX.loops.autoSave = setInterval(() => {
+            persistGUIState();
+            saveConfig();
+        }, 5000);
+
         let dragging = false, dragX, dragY;
         document.getElementById('tx-header').addEventListener('mousedown', (e) => {
             if (e.target.id === 'tx-close') return;
@@ -580,7 +839,7 @@
             gui.style.top = (e.clientY - dragY) + 'px';
             gui.style.transform = 'none';
         });
-        document.addEventListener('mouseup', () => { dragging = false; });
+        document.addEventListener('mouseup', () => { dragging = false; persistGUIState(); });
 
         buildScriptsTab();
         buildConfigTab();
@@ -846,8 +1105,10 @@
                 '  if (!G || !G.bN || !G.bN.y || !G.aD) return;',
                 '  const ships = G.bN.y;',
                 '  const myId = G.aD.et;',
-                '  for (let i = 0; i < ships.mG; i++) {',
-                '    if ((ships.mK[i] >> 3) === myId) {',
+                '  // mK = ship count, mO[i] = (sourcePlayer<<3) + shipIdx, mZ[i] = encoded tile',
+                '  for (let i = 0; i < ships.mK; i++) {',
+                '    const targetPlayer = ships.mO[i] >> 3;',
+                '    if (targetPlayer === myId) {',
                 '      const hdr = document.getElementById("tx-header");',
                 '      if (hdr) { hdr.style.background = "#f00"; setTimeout(() => hdr.style.background = "", 200); }',
                 '      Logger.warn("Ship incoming!");',
@@ -923,20 +1184,74 @@
             ].join('\n'),
 
             debug: [
-                '/* Debug Dumper v3.0 */',
+                '/* Debug Dumper v3.0 — Deep Inspection */',
                 'const G = window.G;',
-                'if (!G) { Logger.error("No game hook"); return; }',
-                'Logger.log("=== GAME STATE DUMP ===");',
-                'for (const key of Object.keys(G)) {',
-                '  const val = G[key];',
-                '  if (typeof val === "object" && val !== null) {',
-                '    const props = Object.keys(val);',
-                '    Logger.log(key + ":", props.length, "props ->", props.slice(0, 20).join(","));',
-                '  } else {',
-                '    Logger.log(key + ":", typeof val, val);',
+                'if (!G) { console.error("No game hook"); return; }',
+                'console.log("=== TERRIX DEBUG DUMP ===");',
+                'console.log("G keys:", Object.keys(G));',
+                '',
+                '// --- ag (player data) ---',
+                'if (G.ag) {',
+                '  const agProps = Object.getOwnPropertyNames(G.ag);',
+                '  console.log("ag props:", agProps);',
+                '  for (const p of agProps) {',
+                '    const v = G.ag[p];',
+                '    if (Array.isArray(v)) {',
+                '      const nonNull = v.filter(x => x != null).length;',
+                '      console.log("  ag." + p + " = Array(" + v.length + "), non-null:" + nonNull);',
+                '    } else if (v instanceof Uint32Array) console.log("  ag." + p + " = Uint32Array(" + v.length + "), first5:", Array.from(v.subarray(0,5)));',
+                '    else if (v instanceof Uint16Array) console.log("  ag." + p + " = Uint16Array(" + v.length + "), first5:", Array.from(v.subarray(0,5)));',
+                '    else if (v instanceof Uint8Array) console.log("  ag." + p + " = Uint8Array(" + v.length + "), first5:", Array.from(v.subarray(0,5)));',
+                '    else if (typeof v === "function") console.log("  ag." + p + " = function");',
+                '    else console.log("  ag." + p + " =", typeof v, v);',
+                '  }',
+                '} else { console.log("G.ag is undefined!"); }',
+                '',
+                '// --- aD (game config) ---',
+                'if (G.aD) {',
+                '  console.log("aD.et =", G.aD.et, "| aD.f6 =", G.aD.f6, "| aD.ko =", G.aD.ko);',
+                '  console.log("aD.i3(FFA) =", G.aD.i3, "| aD.km(mode) =", G.aD.km);',
+                '  console.log("aD.kA type:", typeof G.aD.kA);',
+                '}',
+                '',
+                '// --- ae (score/stats) ---',
+                'if (G.ae) {',
+                '  console.log("ae.kA type:", typeof G.ae.kA);',
+                '  if (typeof G.ae.kA === "function") {',
+                '    try { console.log("ae.kA(myId) =", G.ae.kA(G.aD.et), "| ae.kA() =", G.ae.kA()); } catch(e) {}',
                 '  }',
                 '}',
-                'Logger.log("=== END DUMP ===");'
+                '',
+                '// --- ac (map tile access) ---',
+                'if (G.ac) {',
+                '  const acProps = Object.getOwnPropertyNames(G.ac);',
+                '  console.log("ac props:", acProps.filter(p => typeof G.ac[p] === "function"));',
+                '  console.log("ac.fB =", G.ac.fB);',
+                '}',
+                '',
+                '// --- bA.hZ (command sender) ---',
+                'if (G.bA && G.bA.hZ) {',
+                '  const hZProps = Object.getOwnPropertyNames(G.bA.hZ);',
+                '  console.log("hZ methods:", hZProps.filter(p => typeof G.bA.hZ[p] === "function"));',
+                '}',
+                '',
+                '// --- bU (map size) ---',
+                'if (G.bU) {',
+                '  console.log("bU.fK(width) =", G.bU.fK, "| bU.fL(height) =", G.bU.fL);',
+                '}',
+                '',
+                '// --- bN (ships) ---',
+                'if (G.bN && G.bN.y) {',
+                '  console.log("bN.y.mK(shipCount) =", G.bN.y.mK);',
+                '}',
+                '',
+                '// --- My player data ---',
+                'if (G.ag && G.aD && G.ag.gx) {',
+                '  const myId = G.aD.et;',
+                '  console.log("MY DATA: id=" + myId + " territory=" + G.ag.gx[myId] + " troops=" + G.ag.hB[myId] + " alive=" + G.ag.n4[myId]);',
+                '  console.log("MY NAME:", G.ag.a1o ? G.ag.a1o[myId] : "N/A");',
+                '}',
+                'console.log("=== END DUMP ===");'
             ].join('\n')
         };
         return scripts[id] || null;
@@ -949,7 +1264,7 @@
                 const code = getScriptCode('godbot');
                 if (code) {
                     const fn = new Function('G', 'GI', 'TERRIX', 'Logger', code);
-                    fn(window.G, GameInterface, TERRIX, Logger);
+                    fn(_win.G, GameInterface, TERRIX, Logger);
                 }
             }
             if (TERRIX.config.minimap.enabled) {
@@ -970,19 +1285,56 @@
     }
 
     const lbNodes = {};
+    let lbPropCache = null;
+
+    function discoverAgProps() {
+        const G = _win.G;
+        if (!G || !G.ag) return null;
+        const props = Object.getOwnPropertyNames(G.ag);
+        const find = (candidates) => {
+            for (const c of candidates) {
+                if (props.includes(c) && G.ag[c] != null) return c;
+            }
+            return null;
+        };
+        const findTypedArray = (candidates, type) => {
+            for (const c of candidates) {
+                if (props.includes(c) && G.ag[c] instanceof type) return c;
+            }
+            return null;
+        };
+        return {
+            territory: findTypedArray(['gx','h7','gt','j2'], Uint32Array),
+            troops: findTypedArray(['hB','h7','gt'], Uint32Array),
+            alive: findTypedArray(['n4','a1h','n3','mz'], Uint8Array) || find(['n4','a4W','a1h']),
+            names: find(['a1o','za','zb','zU','name','names']),
+            maxPlayers: (G.aD && G.aD.f6) || 512
+        };
+    }
+
     function updateLeaderboard() {
         const container = document.getElementById('tx-tab-chart');
         if (!container || container.style.display !== 'flex') return;
-        const G = window.G;
-        if (!G || !G.ag || !G.ag.gx || !G.aD) return;
+        const G = _win.G;
+        if (!G || !G.ag || !G.aD) return;
 
-        const players = [];
-        const max = G.aD.f6 || 512;
+        if (!lbPropCache) lbPropCache = discoverAgProps();
+        if (!lbPropCache) return;
+
+        const { territory, troops, alive, names, maxPlayers } = lbPropCache;
+        if (!territory || !alive) return;
+
+        const ag = G.ag;
         const myId = G.aD.et;
-        for (let i = 0; i < max; i++) {
-            if ((G.ag.n4[i] || 0) !== 0 && G.ag.gx[i] > 0) {
-                const score = (G.ag.gx[i] * 10) + (G.ag.hB[i] / 50);
-                players.push({ id: i, name: G.ag.za[i] || 'Bot', val: score, isMe: i === myId });
+        const players = [];
+
+        for (let i = 0; i < maxPlayers; i++) {
+            if ((ag[alive][i] || 0) !== 0 && ag[territory][i] > 0) {
+                const t = ag[territory][i];
+                const tr = troops ? (ag[troops][i] || 0) : 0;
+                const score = (t * 10) + (tr / 50);
+                const name = names ? (ag[names][i] || 'Bot') : 'Bot';
+                players.push({ id: i, name, val: score, isMe: i === myId });
             }
         }
         players.sort((a, b) => b.val - a.val);
@@ -1046,11 +1398,35 @@
         const canvas = el.querySelector('canvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        const G = window.G;
-        if (!G || !G.ag || !G.ag.gx || !G.bU) return;
+        const G = _win.G;
+        if (!G || !G.ag || !G.aD || !G.bU || !G.ac) return;
+
+        const mapW = G.bU.fK, mapH = G.bU.fL;
+        if (!mapW || !mapH) return;
+
+        // Find the all-tiles property (gq, gb, gp, or fY) — must be an array of arrays
+        const agProps = Object.getOwnPropertyNames(G.ag);
+        let allTilesProp = null;
+        for (const p of ['gq', 'fY', 'gb', 'gp']) {
+            if (agProps.includes(p) && Array.isArray(G.ag[p]) && G.ag[p] !== null) {
+                // Verify it looks like tile data (array of arrays)
+                if (G.ag[p].length > 0 && Array.isArray(G.ag[p][0])) {
+                    allTilesProp = p;
+                    break;
+                }
+            }
+        }
+        if (!allTilesProp) return; // Tile data not initialized yet
+
+        const aliveProp = agProps.includes('n4') ? 'n4' : agProps.includes('a4W') ? 'a4W' : null;
+        if (!aliveProp) return;
+
+        // Tile to XY conversion using ac.zC/ac.zD
+        const ac = G.ac;
+        const toX = typeof ac.zC === 'function' ? ac.zC : (e => (e >> 2) % mapW);
+        const toY = typeof ac.zD === 'function' ? ac.zD : (e => Math.floor((e >> 2) / mapW));
 
         const W = canvas.width, H = canvas.height;
-        const mapW = G.bU.fK, mapH = G.bU.fL;
         const scaleX = W / mapW, scaleY = H / mapH;
 
         ctx.fillStyle = '#0a0a0a';
@@ -1058,29 +1434,44 @@
 
         const max = G.aD.f6 || 512;
         const myId = G.aD.et;
-        const cfg = TERRIX.config.minimap;
 
         for (let i = 0; i < max; i++) {
-            if (i === myId || (G.ag.n4[i] || 0) === 0) continue;
-            const tiles = G.ag.gq[i];
-            if (!tiles || tiles.length === 0) continue;
-            const isAlly = G.bu && G.bu.f2(myId, i);
-            if (isAlly) ctx.fillStyle = 'rgba(0,100,255,0.4)';
-            else ctx.fillStyle = 'rgba(200,50,50,0.4)';
-            for (let j = 0; j < tiles.length; j += 4) {
-                const xy = G.ac.fH ? G.ac.fH(tiles[j]) : (tiles[j] >> 2) % mapW;
-                const yy = G.ac.fJ ? G.ac.fJ(tiles[j]) : Math.floor((tiles[j] >> 2) / mapW);
-                ctx.fillRect(xy * scaleX, yy * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+            if (i === myId || (G.ag[aliveProp] && G.ag[aliveProp][i] === 0)) continue;
+            const tiles = G.ag[allTilesProp] && G.ag[allTilesProp][i];
+            if (!tiles || !Array.isArray(tiles) || tiles.length === 0) continue;
+            let isAlly = false;
+            try {
+                if (G.bu && typeof G.bu.hi === 'function') isAlly = G.bu.hi(myId, i);
+                else if (G.bu && typeof G.bu.f2 === 'function') isAlly = !G.bu.f2(myId, i);
+            } catch(e) {}
+            ctx.fillStyle = isAlly ? 'rgba(0,100,255,0.4)' : 'rgba(200,50,50,0.4)';
+            const step = Math.max(1, Math.floor(tiles.length / 200));
+            for (let j = 0; j < tiles.length; j += step) {
+                try {
+                    const enc = tiles[j];
+                    const xx = toX(enc);
+                    const yy = toY(enc);
+                    if (xx >= 0 && xx < mapW && yy >= 0 && yy < mapH) {
+                        ctx.fillRect(xx * scaleX, yy * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+                    }
+                } catch(e) {}
             }
         }
 
-        const myTiles = G.ag.gq[myId];
-        if (myTiles && myTiles.length > 0) {
+        // Draw my territory last (on top)
+        const myTiles = G.ag[allTilesProp] && G.ag[allTilesProp][myId];
+        if (myTiles && Array.isArray(myTiles) && myTiles.length > 0) {
             ctx.fillStyle = 'rgba(0,255,0,0.6)';
-            for (let j = 0; j < myTiles.length; j += 4) {
-                const xy = G.ac.fH ? G.ac.fH(myTiles[j]) : (myTiles[j] >> 2) % mapW;
-                const yy = G.ac.fJ ? G.ac.fJ(myTiles[j]) : Math.floor((myTiles[j] >> 2) / mapW);
-                ctx.fillRect(xy * scaleX, yy * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+            const step = Math.max(1, Math.floor(myTiles.length / 200));
+            for (let j = 0; j < myTiles.length; j += step) {
+                try {
+                    const enc = myTiles[j];
+                    const xx = toX(enc);
+                    const yy = toY(enc);
+                    if (xx >= 0 && xx < mapW && yy >= 0 && yy < mapH) {
+                        ctx.fillRect(xx * scaleX, yy * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+                    }
+                } catch(e) {}
             }
         }
 
@@ -1155,12 +1546,8 @@
         }
     };
 
-    if (TERRIX.hooked) {
-        MultiTab.init();
-    }
-
-    window.TERRIX = TERRIX;
-    window.GameInterface = GameInterface;
-    window.Logger = Logger;
-    window.MultiTab = MultiTab;
+    _win.TERRIX = TERRIX;
+    _win.GameInterface = GameInterface;
+    _win.Logger = Logger;
+    _win.MultiTab = MultiTab;
 })();

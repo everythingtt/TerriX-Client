@@ -54,12 +54,39 @@
         .footer-grid h4{color:var(--txt);margin-bottom:8px}
         .footer-grid a{color:var(--primary);text-decoration:none}
         .copy{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid var(--brd)}
+        /* Guide Section */
+        .guide{margin:60px 0}
+        .guide h2{text-align:center;font-size:1.8rem;margin-bottom:40px;color:var(--primary)}
+        .guide-section{background:var(--surf);border:1px solid var(--brd);border-radius:8px;padding:28px 32px;margin-bottom:20px;transition:border-color .3s}
+        .guide-section:hover{border-color:var(--primary)}
+        .guide-section h3{font-size:1.15rem;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+        .guide-step{width:30px;height:30px;background:var(--primary);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;flex-shrink:0}
+        .guide-body{color:var(--dim);font-size:.92rem}
+        .guide-body p{margin-bottom:10px;line-height:1.7}
+        .guide-body strong{color:var(--txt)}
+        .guide-body code{background:var(--surf2);color:var(--primary);padding:1px 6px;border-radius:3px;font-size:.85em}
+        .guide-body kbd{background:var(--surf2);border:1px solid var(--brd);border-radius:3px;padding:2px 8px;font-size:.85em;font-family:monospace;color:var(--txt)}
+        .guide-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+        .guide-card{background:var(--surf2);border:1px solid var(--brd);border-radius:6px;padding:16px;font-size:.85rem}
+        .guide-card i{color:var(--primary);margin-right:8px;font-size:1.1rem}
+        .guide-card strong{display:block;margin-bottom:4px;color:var(--txt)}
+        .guide-card span{color:var(--dim);line-height:1.5}
+        .guide-list{margin:8px 0 8px 20px;line-height:2}
+        .guide-list li{color:var(--dim)}
+        .guide-table{width:100%;border-collapse:collapse;margin-top:12px;background:transparent}
+        .guide-table td{padding:8px 12px;border-bottom:1px solid var(--brd);font-size:.85rem;color:var(--dim);vertical-align:top}
+        .guide-table td:first-child{width:200px;color:var(--txt);white-space:nowrap}
+        .guide-tip{background:rgba(58,71,255,0.08);border-left:3px solid var(--primary);border-radius:0 4px 4px 0;padding:10px 16px;margin-top:14px;font-size:.85rem;color:var(--dim)}
+        .guide-tip i{color:var(--gold);margin-right:6px}
+        .guide-ok{color:var(--green);font-weight:bold}
         @media(max-width:768px){
             .install-steps{grid-template-columns:1fr}
             .downloads{grid-template-columns:1fr}
             .feat-grid{grid-template-columns:1fr}
             .footer-grid{grid-template-columns:1fr}
+            .guide-cols{grid-template-columns:1fr}
             .logo{font-size:2.5rem}
+            .guide-table td:first-child{width:auto}
         }
     </style>
 </head>
@@ -121,6 +148,185 @@
             <div class="feat-item"><i class="fa-solid fa-bolt"></i><strong>Rush Mode</strong><span>All-in attack on the weakest neighbor for fast eliminations</span></div>
             <div class="feat-item"><i class="fa-solid fa-users"></i><strong>Team Assist</strong><span>Auto-attack enemies bordering your teammates</span></div>
             <div class="feat-item"><i class="fa-solid fa-bug"></i><strong>Debug Dumper</strong><span>Dump all game state properties to console for reverse engineering</span></div>
+        </div>
+    </section>
+
+    <section class="container guide">
+        <h2>How to Use TerriX Executor v3.0</h2>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">1</span> First Launch</h3>
+            <div class="guide-body">
+                <p>After installing Tampermonkey and the TerriX Executor script, open the <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" target="_blank">TerriX Client</a> and join a game. Once the game loads, you will see a green <strong>TERRIX v3.0</strong> bar at the top of the screen. Click it (or press <kbd>F2</kbd>) to open the Executor panel.</p>
+                <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> If you see "Game Hook Not Detected", you are not using the TerriX Client. Open the TerriX Client URL instead.</div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">2</span> The Interface</h3>
+            <div class="guide-body">
+                <p>The Executor panel has 5 tabs on the left sidebar:</p>
+                <div class="guide-cols">
+                    <div class="guide-card">
+                        <i class="fa-solid fa-code"></i>
+                        <strong>EDITOR</strong>
+                        <span>Write and execute JavaScript code with full access to the game's internals via the <code>GameInterface</code> (alias <code>GI</code>), <code>window.G</code>, and <code>TERRIX</code> objects.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-chart-bar"></i>
+                        <strong>LEADERBOARD</strong>
+                        <span>Live ranking of all players by score (territory × 10 + troops ÷ 50). Your row is highlighted in gold. Updates every 800ms.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-scroll"></i>
+                        <strong>SCRIPTS</strong>
+                        <span>Pre-built scripts: GodBot v3.0, Threat Radar, Auto-Expand, Rush Mode, Team Assist, and Debug Dumper. Click LOAD to insert into the editor.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-sliders"></i>
+                        <strong>CONFIG</strong>
+                        <span>Toggles and numeric inputs for GodBot ratios, ESP overlay, minimap position, and more. All settings persist across sessions.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-camera"></i>
+                        <strong>ESP VIEW</strong>
+                        <span>Canvas-based extra-sensory perception overlay showing full game state. Enable in CONFIG to activate.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">3</span> Running Scripts</h3>
+            <div class="guide-body">
+                <ol class="guide-list">
+                    <li>Go to the <strong>SCRIPTS</strong> tab.</li>
+                    <li>Click <strong>LOAD</strong> on any script — it gets inserted into the Editor and switches to the EDITOR tab.</li>
+                    <li>Press the green <strong>EXECUTE</strong> button at the bottom of the panel.</li>
+                    <li>The output area below the editor shows <span class="guide-ok">&#10003; Executed successfully</span> or the error message.</li>
+                    <li>To stop a looping script (GodBot, Radar, etc.), execute it again — it toggles on/off. Or press <strong>STOP ALL</strong>.</li>
+                </ol>
+                <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> Most scripts are toggle-based: running them once starts the loop, running them again stops it.</div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">4</span> GodBot v3.0 — The AI Bot</h3>
+            <div class="guide-body">
+                <p>GodBot is the flagship feature. It automates expansion, attacking, and retreating based on configurable troop-to-territory ratios.</p>
+                <div class="guide-cols">
+                    <div class="guide-card">
+                        <i class="fa-solid fa-chess"></i>
+                        <strong>4 Strategies</strong>
+                        <span><em>Balanced</em> — expand + attack neighbors. <em>Aggressive</em> — prioritize attacks. <em>Defensive</em> — hold territory. <em>Rush</em> — all-in on weakest player.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <strong>Smart Retreat</strong>
+                        <span>Automatically retreats when troops fall below the retreat ratio × territory. Re-engages when strong enough.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-list-ol"></i>
+                        <strong>Attack Queuing</strong>
+                        <span>Sends attacks with a configurable delay between them to avoid the game's rate limiter.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-users-viewfinder"></i>
+                        <strong>Neighbor Targeting</strong>
+                        <span>Only attacks enemies that border your territory (toggleable). Sorts targets by territory size — weakest first.</span>
+                    </div>
+                </div>
+                <p style="margin-top:16px">Open the <strong>CONFIG</strong> tab to customize all GodBot parameters. Key settings:</p>
+                <table class="guide-table">
+                    <tr><td><kbd>Expand Ratio</kbd></td><td>Troops must exceed territory × this value to expand into neutral land (default: 2.0)</td></tr>
+                    <tr><td><kbd>Attack Ratio</kbd></td><td>Troops must exceed territory × this value to attack enemies (default: 4.0)</td></tr>
+                    <tr><td><kbd>Retreat Ratio</kbd></td><td>Retreat when troops fall below territory × this value (default: 0.3)</td></tr>
+                    <tr><td><kbd>Tick Rate</kbd></td><td>How often the bot makes a decision, in milliseconds (default: 800ms)</td></tr>
+                    <tr><td><kbd>Queue Delay</kbd></td><td>Delay between queued attacks in milliseconds (default: 150ms)</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">5</span> Threat Radar</h3>
+            <div class="guide-body">
+                <p>Load and execute the <strong>Threat Radar</strong> script. It monitors all incoming ships every 300ms. When a ship targets your territory, the panel header flashes red and a warning is logged to the console. Useful as an early-warning system while multitasking.</p>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">6</span> Live Minimap</h3>
+            <div class="guide-body">
+                <p>Enable the minimap in the <strong>CONFIG</strong> tab. A canvas overlay appears showing:</p>
+                <ul class="guide-list">
+                    <li><span style="color:#0f0">Green</span> — Your territory</li>
+                    <li><span style="color:rgba(200,50,50,1)">Red</span> — Enemy territory</li>
+                    <li><span style="color:rgba(0,100,255,1)">Blue</span> — Allied/teammate territory</li>
+                </ul>
+                <p>Adjustable: size (px), opacity, position (4 corners), and refresh rate (200ms).</p>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">7</span> Code Executor &amp; GameInterface API</h3>
+            <div class="guide-body">
+                <p>The Editor gives you a JavaScript REPL with these globals:</p>
+                <table class="guide-table">
+                    <tr><td><code>G</code></td><td>The raw game hook — direct access to all game objects (<code>G.ag</code>, <code>G.aD</code>, <code>G.ac</code>, etc.)</td></tr>
+                    <tr><td><code>GI</code></td><td><code>GameInterface</code> — safe wrapper with defensive property access and fallbacks</td></tr>
+                    <tr><td><code>TERRIX</code></td><td>The Terrix namespace — config, loops registry, version</td></tr>
+                    <tr><td><code>Logger</code></td><td>Prefix-tagged console logger (<code>[TerriX]</code>)</td></tr>
+                </table>
+                <p style="margin-top:16px">Common <code>GI</code> methods:</p>
+                <table class="guide-table">
+                    <tr><td><code>GI.myId</code></td><td>Your player ID</td></tr>
+                    <tr><td><code>GI.getMyTroops()</code></td><td>Your current troop count</td></tr>
+                    <tr><td><code>GI.getMyTerritory()</code></td><td>Your territory tile count</td></tr>
+                    <tr><td><code>GI.getPlayerTerritory(id)</code></td><td>Territory count for any player</td></tr>
+                    <tr><td><code>GI.isPlayerAlive(id)</code></td><td>Whether a player is alive</td></tr>
+                    <tr><td><code>GI.getPlayerName(id)</code></td><td>Player name string</td></tr>
+                    <tr><td><code>GI.areAllies(p1, p2)</code></td><td>Alliance check</td></tr>
+                    <tr><td><code>GI.sendAttack(intensity, targetId)</code></td><td>Attack a player</td></tr>
+                    <tr><td><code>GI.sendAttackTile(intensity, tile, targetId)</code></td><td>Attack a specific tile</td></tr>
+                    <tr><td><code>GI.retreat()</code></td><td>Retreat all troops</td></tr>
+                    <tr><td><code>GI.getBorderTiles(id)</code></td><td>Array of border tile encodings for a player</td></tr>
+                    <tr><td><code>GI.getNeighbors(tile)</code></td><td>Array of 4 adjacent tile encodings</td></tr>
+                    <tr><td><code>GI.getTileOwner(encoded)</code></td><td>Owner player ID of a tile</td></tr>
+                    <tr><td><code>GI.isNeutral(encoded)</code></td><td>Whether a tile is unowned</td></tr>
+                    <tr><td><code>GI.tileToXY(encoded)</code></td><td>Convert tile encoding to {x, y} coordinates</td></tr>
+                </table>
+                <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> Use the <strong>Debug Dumper</strong> script to inspect all game object properties in the console. Essential for writing custom scripts.</div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">8</span> Keyboard Shortcuts</h3>
+            <div class="guide-body">
+                <table class="guide-table">
+                    <tr><td><kbd>F2</kbd></td><td>Toggle the Executor panel open/closed</td></tr>
+                    <tr><td><kbd>Ctrl + Shift + X</kbd></td><td>Toggle the Executor panel open/closed</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">9</span> Multi-Tab Sync</h3>
+            <div class="guide-body">
+                <p>Open multiple TerriX Client tabs simultaneously. They automatically discover each other via <code>BroadcastChannel</code> and sync attack/retreat/peace actions. Enable in CONFIG → Multi-Tab Settings. Each tab shows its peer count in the console on join.</p>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">10</span> Troubleshooting</h3>
+            <div class="guide-body">
+                <table class="guide-table">
+                    <tr><td><strong>"Hook detection failed after 20s"</strong></td><td>You are not on the TerriX Client page. Open the correct URL.</td></tr>
+                    <tr><td><strong>"Cannot read properties of undefined"</strong></td><td>The game updated and property names changed. Run the Debug Dumper script to check current names.</td></tr>
+                    <tr><td><strong>Script does nothing</strong></td><td>Check the output area below the editor for errors. Make sure you are in a game (not the menu).</td></tr>
+                    <tr><td><strong>Panel position lost</strong></td><td>Drag the header to reposition. Position is auto-saved every 5 seconds.</td></tr>
+                    <tr><td><strong>Config not saving</strong></td><td>Tampermonkey requires <code>GM_setValue</code> grant. Reinstall the script if needed.</td></tr>
+                </table>
+            </div>
         </div>
     </section>
 
