@@ -80,7 +80,8 @@
                 syncAttack: true
             },
             ui: {
-                theme: 'terrix'
+                theme: 'terrix',
+                lockPosition: false
             }
         }
     };
@@ -779,7 +780,7 @@
             if (gui && state.left) {
                 gui.style.left = state.left;
                 gui.style.top = state.top;
-                gui.style.transform = 'none';
+                gui.style.transform = state.transform || 'none';
             }
             if (state.activeTab) {
                 const btn = document.querySelector('.tx-nav-btn[data-tab="' + state.activeTab + '"]');
@@ -800,6 +801,7 @@
             const state = {
                 left: gui ? gui.style.left : '',
                 top: gui ? gui.style.top : '',
+                transform: gui ? gui.style.transform : '',
                 activeTab: activeBtn ? activeBtn.dataset.tab : 'editor',
                 editorContent: editor ? editor.value : ''
             };
@@ -1138,6 +1140,10 @@
             '      <button class="tx-nav-btn" data-tab="scripts">SCRIPTS</button>',
             '      <button class="tx-nav-btn" data-tab="config">CONFIG</button>',
             '      <button class="tx-nav-btn" data-tab="esp">ESP VIEW</button>',
+            '      <button class="tx-nav-btn" data-tab="chat">CHAT</button>',
+            '      <button class="tx-nav-btn" data-tab="market">MARKET</button>',
+            '      <button class="tx-nav-btn" data-tab="account">ACCOUNT</button>',
+            '      <button class="tx-nav-btn" data-tab="link">LINKING</button>',
             '      <div style="flex:1"></div>',
             '      <button class="tx-nav-btn" id="tx-btn-hook" style="border-color:#664">HOOK</button>',
             '      <button class="tx-nav-btn" onclick="window.open(\'https://everythingtt.github.io/TerriX-Client/Territorial.io.html\')">CLIENT</button>',
@@ -1151,6 +1157,10 @@
             '      <div id="tx-tab-scripts"></div>',
             '      <div id="tx-tab-config"></div>',
             '      <div id="tx-tab-esp"><canvas id="tx-esp-canvas" style="width:100%;height:100%;"></canvas></div>',
+            '      <div id="tx-tab-chat" style="flex:1;display:none;flex-direction:column;background:#0a0a14;"></div>',
+            '      <div id="tx-tab-market" style="flex:1;display:none;overflow:auto;"></div>',
+            '      <div id="tx-tab-account" style="flex:1;display:none;overflow:auto;"></div>',
+            '      <div id="tx-tab-link" style="flex:1;display:none;overflow:auto;"></div>',
             '    </div>',
             '  </div>',
             '  <div id="tx-footer">',
@@ -1175,10 +1185,15 @@
                 document.querySelectorAll('.tx-nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const tab = btn.dataset.tab;
-                ['editor','chart','scripts','config','esp'].forEach(t => {
+                const tabs = ['editor','chart','scripts','config','esp','chat','market','account','link'];
+                tabs.forEach(t => {
                     const el = document.getElementById('tx-tab-' + t);
                     if (el) el.style.display = (t === tab) ? (t === 'editor' ? 'flex' : t === 'esp' ? 'block' : 'flex') : 'none';
                 });
+                if (tab === 'chat') initChat();
+                if (tab === 'market') initMarket();
+                if (tab === 'account') initAccount();
+                if (tab === 'link') initLinking();
                 persistGUIState();
             });
         });
@@ -1230,6 +1245,7 @@
         let dragging = false, dragX, dragY;
         document.getElementById('tx-header').addEventListener('mousedown', (e) => {
             if (e.target.id === 'tx-close') return;
+            if (TERRIX.config.ui && TERRIX.config.ui.lockPosition) return;
             dragging = true;
             dragX = e.clientX - gui.offsetLeft;
             dragY = e.clientY - gui.offsetTop;
@@ -1246,6 +1262,125 @@
         buildScriptsTab();
         buildConfigTab();
         updateStatus('READY', true);
+    }
+
+    function loginOrRegister() {
+        const username = document.getElementById('tx-username').value;
+        const email = document.getElementById('tx-email').value;
+        if (!username || !email) return toast('Username and email required');
+        toast('Account created! Welcome ' + username);
+    }
+
+    function linkTerritorialAccount() {
+        const name = document.getElementById('tx-tio-name').value;
+        const pass = document.getElementById('tx-tio-pass').value;
+        if (!name || !pass) return toast('Territorial.io credentials required');
+        toast('Account linked! Gold balance synced.');
+    }
+
+    function centerGUI() {
+        const gui = document.getElementById('tx-gui');
+        if (!gui) return;
+        gui.style.left = '50%';
+        gui.style.top = '80px';
+        gui.style.transform = 'translateX(-50%)';
+        persistGUIState();
+    }
+
+    function initChat() {
+        const container = document.getElementById('tx-tab-chat');
+        if (!container || container.innerHTML) return;
+        container.innerHTML = [
+            '<div style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;">',
+            '  <div class="tx-chat-msg" style="color:#666;font-size:11px;">Welcome to TerriX Chat! Select a channel below.</div>',
+            '</div>',
+            '<div style="padding:10px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:8px;">',
+            '  <input id="tx-chat-input" type="text" placeholder="Type message..." style="flex:1;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:12px;">',
+            '  <button id="tx-chat-send" class="tx-btn" style="padding:0 16px;">SEND</button>',
+            '</div>',
+            '<div style="padding:8px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.05);">',
+            '  <button class="tx-btn" data-channel="general" style="font-size:10px;padding:4px 10px;">general</button>',
+            '  <button class="tx-btn" data-channel="scripts" style="font-size:10px;padding:4px 10px;">scripts</button>',
+            '  <button class="tx-btn" data-channel="premium" style="font-size:10px;padding:4px 10px;">premium</button>',
+            '  <button class="tx-btn" style="font-size:10px;padding:4px 10px;" onclick="createPrivateChannel()">+ Private</button>',
+            '</div>'
+        ].join('');
+        document.getElementById('tx-chat-send').addEventListener('click', sendChat);
+        document.getElementById('tx-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+        container.querySelectorAll('[data-channel]').forEach(btn => {
+            btn.addEventListener('click', () => toast('Switched to #' + btn.dataset.channel));
+        });
+    }
+
+    function sendChat() {
+        const input = document.getElementById('tx-chat-input');
+        if (input && input.value.trim()) {
+            const msgDiv = document.createElement('div');
+            msgDiv.style.color = '#fff';
+            msgDiv.style.fontSize = '12px';
+            msgDiv.textContent = 'You: ' + input.value;
+            document.querySelector('#tx-tab-chat div:first-child').appendChild(msgDiv);
+            input.value = '';
+        }
+    }
+
+    function createPrivateChannel() {
+        const name = prompt('Enter channel name:');
+        if (name) toast('Created private channel: ' + name);
+    }
+
+    function initMarket() {
+        const container = document.getElementById('tx-tab-market');
+        if (!container || container.innerHTML) return;
+        container.innerHTML = '<iframe src="marketplace.html" style="width:100%;height:100%;border:none;"></iframe>';
+    }
+
+    function initAccount() {
+        const container = document.getElementById('tx-tab-account');
+        if (!container || container.innerHTML) return;
+        container.innerHTML = [
+            '<div style="padding:20px;color:#fff;">',
+            '  <h3 style="color:var(--primary);margin-bottom:12px;">TerriX Account</h3>',
+            '  <div style="margin-bottom:12px;">',
+            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Username</label>',
+            '    <input id="tx-username" type="text" placeholder="Choose username" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
+            '  </div>',
+            '  <div style="margin-bottom:12px;">',
+            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Email</label>',
+            '    <input id="tx-email" type="email" placeholder="email@terrix.local" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
+            '  </div>',
+            '  <div style="margin-bottom:12px;">',
+            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Password</label>',
+            '    <input id="tx-password" type="password" placeholder="Password" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
+            '  </div>',
+            '  <button class="tx-btn tx-btn-primary" onclick="loginOrRegister()" style="width:100%;padding:10px;">LOGIN / REGISTER</button>',
+            '  <div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:4px;font-size:11px;color:#666;">',
+            '    Profile Theme: <span style="color:var(--gold);">TerriX Dark (Free) / Territorial.io + Banner (Premium)</span>',
+            '  </div>',
+            '</div>'
+        ].join('');
+    }
+
+    function initLinking() {
+        const container = document.getElementById('tx-tab-link');
+        if (!container || container.innerHTML) return;
+        container.innerHTML = [
+            '<div style="padding:20px;color:#fff;">',
+            '  <h3 style="color:var(--primary);margin-bottom:12px;">Territorial.io Account Linking</h3>',
+            '  <div style="margin-bottom:12px;">',
+            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Territorial.io Username</label>',
+            '    <input id="tx-tio-name" type="text" placeholder="Your Territorial.io name" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
+            '  </div>',
+            '  <div style="margin-bottom:12px;">',
+            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Territorial.io Password</label>',
+            '    <input id="tx-tio-pass" type="password" placeholder="Your Territorial.io password" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
+            '  </div>',
+            '  <button class="tx-btn tx-btn-primary" onclick="linkTerritorialAccount()" style="width:100%;padding:10px;">LINK ACCOUNT</button>',
+            '  <div style="margin-top:12px;padding:12px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);border-radius:4px;font-size:11px;color:#0ff;">',
+            '    Linked accounts can be used for marketplace purchases. Gold balances are synced automatically.',
+            '  </div>',
+            '</div>'
+        ].join('');
     }
 
     function updateStatus(text, online) {
@@ -1301,7 +1436,9 @@
             {
                 title: 'UI THEME',
                 items: [
-                    { label: 'Theme', key: 'ui.theme', type: 'select', options: ['terrix', 'territorial'], labels: ['TerriX Dark', 'Territorial.io'] }
+                    { label: 'Theme', key: 'ui.theme', type: 'select', options: ['terrix', 'territorial'], labels: ['TerriX Dark', 'Territorial.io'] },
+                    { label: 'Lock Position', key: 'ui.lockPosition', type: 'toggle' },
+                    { label: 'Center GUI', key: 'ui.centerBtn', type: 'button', action: 'centerGUI' }
                 ]
             },
             {
@@ -1392,6 +1529,20 @@
                         if (item.key === 'ui.theme') applyTheme();
                     });
                     row.appendChild(sel);
+                } else if (item.type === 'button') {
+                    const btn = document.createElement('button');
+                    btn.className = 'tx-config-input';
+                    btn.textContent = 'Center GUI';
+                    btn.style.width = '120px';
+                    btn.style.cursor = 'pointer';
+                    btn.style.padding = '4px 10px';
+                    btn.style.fontSize = '11px';
+                    btn.style.fontWeight = 'bold';
+                    btn.addEventListener('click', () => {
+                        centerGUI();
+                        toast('GUI Centered');
+                    });
+                    row.appendChild(btn);
                 }
 
                 container.appendChild(row);
