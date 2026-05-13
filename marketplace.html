@@ -1,258 +1,811 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TerriX Marketplace | Exploits, Scripts, Accounts, Discord Services</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root{--primary:#3a47ff;--glow:rgba(58,71,255,0.4);--gold:#ffd700;--green:#0f0;--bg:#030308;--surf:#0a0a14;--surf2:#111120;--brd:#222240;--txt:#e0e0e8;--dim:#666680}
-        *{box-sizing:border-box;margin:0;padding:0}
-        body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;line-height:1.6;min-height:100vh}
-        .bg-grid{position:fixed;top:0;left:0;width:100%;height:100%;background-image:linear-gradient(rgba(58,71,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(58,71,255,0.03) 1px,transparent 1px);background-size:40px 40px;z-index:-1}
-        .container{max-width:1400px;margin:0 auto;padding:0 24px}
-        header{padding:40px 0 20px;text-align:center;border-bottom:1px solid var(--brd);margin-bottom:30px}
-        .logo{font-size:2.5rem;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#fff 20%,var(--primary) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .logo .ver{font-size:.8rem;color:var(--gold);-webkit-text-fill-color:var(--gold);letter-spacing:2px;vertical-align:super}
-        .tagline{color:var(--dim);font-size:1rem;margin-top:8px}
-        .announcements{background:var(--surf);border:1px solid var(--brd);border-left:3px solid var(--primary);border-radius:8px;padding:16px;margin-bottom:30px}
-        .announcements h3{color:var(--primary);margin-bottom:8px;font-size:14px;text-transform:uppercase;letter-spacing:1px}
-        .announcements-item{background:rgba(255,255,255,0.03);padding:10px;border-radius:4px;margin-bottom:8px;font-size:13px}
-        .announcements-item .date{color:var(--dim);font-size:11px}
-        .announcements-item.expired{opacity:.5;border-left:2px solid var(--brd)}
-        .announcements-item .expires{color:var(--gold);font-size:11px}
-        nav{display:flex;justify-content:center;gap:12px;margin-bottom:30px;flex-wrap:wrap}
-        nav button{padding:8px 20px;background:var(--surf);border:1px solid var(--brd);border-radius:6px;color:var(--txt);cursor:pointer;font-size:13px;transition:all .2s}
-        nav button:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
-        nav button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-        .stats-bar{display:flex;justify-content:center;gap:40px;margin-bottom:20px;font-size:13px;color:var(--dim)}
-        .stats-bar .stat{color:var(--gold)}
-        .items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-bottom:40px}
-        .item-card{background:var(--surf);border:1px solid var(--brd);border-radius:8px;overflow:hidden;transition:all .3s;display:flex;flex-direction:column}
-        .item-card:hover{border-color:var(--primary);box-shadow:0 0 20px var(--glow)}
-        .item-thumb{height:140px;background:var(--surf2);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
-        .item-thumb img{width:100%;height:100%;object-fit:cover}
-        .item-type{position:absolute;top:8px;left:8px;padding:3px 8px;background:rgba(0,0,0,0.7);border-radius:3px;font-size:10px;text-transform:uppercase}
-        .item-type.script{background:rgba(58,71,255,0.8)}
-        .item-type.account{background:rgba(0,229,255,0.8)}
-        .item-type.nitro{background:rgba(114,137,218,0.8)}
-        .item-type.boost{background:rgba(245,108,48,0.8)}
-        .item-content{flex:1;padding:14px;display:flex;flex-direction:column}
-        .item-content h3{font-size:15px;margin-bottom:6px}
-        .item-desc{color:var(--dim);font-size:12px;flex:1;margin-bottom:12px}
-        .item-footer{display:flex;justify-content:space-between;align-items:center}
-        .item-price{font-size:14px;font-weight:bold;color:var(--primary)}
-        .item-price.free{color:var(--green)}
-        .item-price.paid{color:var(--gold)}
-        .item-btn{padding:6px 12px;background:var(--primary);border:none;border-radius:4px;color:#fff;font-size:11px;cursor:pointer;font-weight:bold}
-        .item-btn:hover{background:#4d5cff}
-        .item-btn.free{background:var(--green)}
-        .scan-status{font-size:10px;padding:2px 6px;border-radius:3px;margin-left:8px}
-        .scan-status.clean{background:rgba(0,255,0,0.2);color:var(--green)}
-        .scan-status.scanning{background:rgba(255,255,0,0.2);color:#ff0}
-        .scan-status.flagged{background:rgba(255,0,0,0.2);color:#f55}
-        .load-more{display:block;margin:40px auto;padding:12px 40px;background:var(--surf);border:1px solid var(--brd);border-radius:6px;color:var(--txt);font-size:14px;cursor:pointer}
-        .load-more:hover{background:var(--primary);color:#fff}
-        .profile-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surf);border:1px solid var(--brd);border-radius:8px;padding:20px;width:320px;z-index:10000;display:none}
-        .profile-popup.active{display:block}
-        .profile-popup .close{position:absolute;top:10px;right:10px;color:var(--dim);cursor:pointer;font-size:18px}
-        .profile-popup .avatar{width:60px;height:60px;border-radius:50%;background:var(--primary);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:24px}
-        .profile-popup .username{text-align:center;font-weight:bold;font-size:16px;margin-bottom:4px}
-        .profile-popup .bio{color:var(--dim);font-size:12px;text-align:center;margin-bottom:12px}
-        .profile-popup .stats{display:flex;justify-content:center;gap:20px;font-size:12px}
-        .profile-popup .stat{text-align:center}
-        .profile-popup .stat .val{color:var(--gold);font-weight:bold;display:block}
-        .admin-badge{display:inline-block;padding:2px 6px;background:var(--primary);border-radius:3px;font-size:10px;margin-left:6px}
-        footer{padding:30px 0;text-align:center;color:var(--dim);font-size:12px;border-top:1px solid var(--brd);margin-top:40px}
-        .private-channel-form{background:var(--surf);border:1px solid var(--brd);border-radius:8px;padding:20px;margin-bottom:30px;display:none}
-        .private-channel-form.active{display:block}
-        .private-channel-form input{width:100%;padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--brd);border-radius:4px;color:var(--txt);margin-bottom:10px;outline:none}
-        .private-channel-form input:focus{border-color:var(--primary)}
-        .private-channel-form button{width:100%;padding:10px;background:var(--primary);border:none;border-radius:4px;color:#fff;font-weight:bold;cursor:pointer}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TerriX Marketplace</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--surf:#0f0f16;--surf2:#16161f;--brd:#252535;--brd-light:#35354a;--txt:#e8e8f0;--dim:#7878a0;--muted:#4a4a6a;--accent:#3a47ff;--accent2:#58a6ff;--green:#00e676;--red:#ff5252;--gold:#ffd700;--cyan:#00e5ff;--purple:#b388ff}
+html,body{background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,sans-serif;min-height:100vh}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;color:inherit;cursor:pointer;border:none}
+input,textarea,select{font:inherit;color:inherit;background:var(--surf);border:1px solid var(--brd);border-radius:8px;padding:10px 14px;outline:none;width:100%}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+.nav{position:sticky;top:0;z-index:100;background:rgba(15,15,22,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);padding:0 24px;display:flex;align-items:center;gap:20px;height:56px}
+.nav-logo{font-size:18px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px;white-space:nowrap}
+.nav-links{display:flex;gap:4px;margin-left:8px;flex:1}
+.nav-link{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;color:var(--dim);transition:all .15s;cursor:pointer;background:none;border:none}
+.nav-link:hover,.nav-link.active{color:var(--txt);background:var(--surf2)}
+.nav-link.active{background:rgba(58,71,255,0.12)}
+.nav-search{flex:1;max-width:360px;position:relative}
+.nav-search input{padding:7px 12px 7px 34px;font-size:13px;border-radius:20px}
+.nav-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.nav-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.nav-btn{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:700;transition:all .15s}
+.nav-btn-ghost{background:transparent;border:1px solid var(--brd);color:var(--dim)}
+.nav-btn-ghost:hover{border-color:var(--accent);color:var(--accent2)}
+.nav-btn-primary{background:var(--accent);color:#fff}
+.nav-btn-primary:hover{background:#4d5cff}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--cyan));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;object-fit:cover;cursor:pointer;border:2px solid var(--brd)}
+.container{max-width:1280px;margin:0 auto;padding:24px}
+.section{margin-bottom:48px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.section-title{font-size:20px;font-weight:700;letter-spacing:.5px}
+.section-sub{font-size:13px;color:var(--dim);margin-top:2px}
+.hero{background:linear-gradient(135deg,rgba(58,71,255,0.15),rgba(0,229,255,0.08));border:1px solid var(--brd);border-radius:16px;padding:48px 40px;margin-bottom:32px;position:relative;overflow:hidden}
+.hero h1{font-size:32px;font-weight:900;margin-bottom:8px;letter-spacing:-.5px}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--dim);font-size:15px;max-width:520px;margin-bottom:20px}
+.hero-btns{display:flex;gap:12px}
+.cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.cat-chip{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;background:var(--surf2);border:1px solid var(--brd);color:var(--dim);cursor:pointer;transition:all .15s}
+.cat-chip:hover,.cat-chip.active{background:rgba(58,71,255,0.15);border-color:var(--accent);color:var(--txt)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{background:var(--surf);border:1px solid var(--brd);border-radius:12px;overflow:hidden;transition:all .2s;position:relative}
+.card:hover{border-color:var(--brd-light);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.card-img{width:100%;height:160px;object-fit:cover;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+.card-img img,.card-img video{width:100%;height:100%;object-fit:cover}
+.card-type-badge{position:absolute;top:8px;left:8px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(0,0,0,0.7);color:#fff}
+.card-body{padding:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.card-author{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.card-author-avatar{width:20px;height:20px;border-radius:50%;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;object-fit:cover}
+.card-stats{display:flex;gap:12px;font-size:11px;color:var(--muted)}
+.card-stats span{display:flex;align-items:center;gap:3px}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--brd);background:var(--surf2)}
+.card-price{font-size:16px;font-weight:800}
+.card-price.free{color:var(--green)}
+.card-price.gold{color:var(--gold)}
+.card-price.key{color:var(--purple)}
+.card-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;background:var(--accent);color:#fff}
+.card-btn:hover{background:#4d5cff}
+.card-btn-ghost{background:transparent;border:1px solid var(--brd);color:var(--dim)}
+.scan-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px}
+.scan-clean{background:rgba(0,230,118,0.15);color:var(--green)}
+.scan-pending{background:rgba(255,215,0,0.15);color:var(--gold)}
+.scan-flagged{background:rgba(255,82,82,0.15);color:var(--red)}
+.ann-list{display:flex;flex-direction:column;gap:12px}
+.ann-card{background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:20px 24px}
+.ann-card.pinned{border-color:rgba(255,215,0,0.3)}
+.ann-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.ann-body{font-size:13px;color:var(--dim);line-height:1.6}
+.ann-footer{display:flex;align-items:center;gap:16px;margin-top:12px;font-size:11px;color:var(--muted)}
+.ann-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;background:rgba(58,71,255,0.15);color:var(--accent2)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surf);border:1px solid var(--brd);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;position:relative}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--brd)}
+.modal-title{font-size:18px;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);background:var(--surf2);border:1px solid var(--brd);cursor:pointer}
+.modal-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.modal-body{padding:24px}
+.modal-footer{display:flex;gap:12px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--brd)}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.form-row{display:flex;gap:12px}
+.form-row>*{flex:1}
+.form-hint{font-size:11px;color:var(--muted);margin-top:4px}
+.chat-layout{display:flex;gap:16px;height:calc(100vh - 104px);min-height:500px}
+.chat-sidebar{width:240px;flex-shrink:0;background:var(--surf);border:1px solid var(--brd);border-radius:12px;padding:16px;display:flex;flex-direction:column;overflow-y:auto}
+.chat-sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px}
+.channel-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;font-size:13px;color:var(--dim);cursor:pointer}
+.channel-item:hover,.channel-item.active{background:var(--surf2);color:var(--txt)}
+.channel-item.active{font-weight:600}
+.channel-icon{color:var(--muted);font-size:14px}
+.channel-item.active .channel-icon{color:var(--accent2)}
+.channel-lock{font-size:11px;color:var(--gold)}
+.chat-main{flex:1;display:flex;flex-direction:column;background:var(--surf);border:1px solid var(--brd);border-radius:12px;overflow:hidden}
+.chat-header{padding:14px 20px;border-bottom:1px solid var(--brd);font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;gap:10px}
+.msg-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;object-fit:cover;flex-shrink:0;cursor:pointer}
+.msg-content{flex:1}
+.msg-head{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.msg-author{font-size:13px;font-weight:700;cursor:pointer}
+.msg-author:hover{text-decoration:underline}
+.msg-author.premium{color:var(--gold)}
+.msg-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(58,71,255,0.15);color:var(--accent2)}
+.tag-premium{background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,145,0,0.2));color:var(--gold)}
+.msg-time{font-size:11px;color:var(--muted)}
+.msg-text{font-size:13px;color:var(--txt);line-height:1.5;word-break:break-word}
+.msg-embed{background:var(--surf2);border:1px solid var(--brd);border-radius:8px;padding:12px;margin-top:4px;border-left:3px solid var(--accent)}
+.msg-embed-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.msg-embed-desc{font-size:12px;color:var(--dim)}
+.chat-input{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--brd);background:var(--surf2)}
+.chat-input input{flex:1;padding:10px 14px;border-radius:8px;font-size:13px;background:var(--bg);border:1px solid var(--brd)}
+.chat-input input:focus{border-color:var(--accent)}
+.chat-send{padding:10px 20px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-size:13px}
+.chat-send:hover{background:#4d5cff}
+.profile-popup{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;display:none;align-items:center;justify-content:center;padding:24px}
+.profile-popup.open{display:flex}
+.profile-card{background:var(--surf);border:1px solid var(--brd);border-radius:16px;width:100%;max-width:400px;overflow:hidden}
+.profile-banner{height:100px;background:linear-gradient(135deg,var(--accent),var(--cyan));position:relative}
+.profile-banner-img{width:100%;height:100%;object-fit:cover}
+.profile-card-avatar{width:72px;height:72px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;border:4px solid var(--surf);position:absolute;bottom:-36px;left:20px;object-fit:cover}
+.profile-card-body{padding:44px 20px 20px}
+.profile-card-name{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.profile-card-bio{font-size:13px;color:var(--dim);margin-top:4px}
+.profile-card-stats{display:flex;gap:20px;margin-top:16px;padding-top:16px;border-top:1px solid var(--brd)}
+.profile-card-stat{text-align:center}
+.profile-card-stat-val{font-size:18px;font-weight:700}
+.profile-card-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase}
+.profile-card-actions{display:flex;gap:8px;margin-top:16px}
+.badge-premium{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;background:linear-gradient(135deg,#ffd700,#ff9100);color:#000}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--brd-light);border-radius:3px}
+.hidden{display:none!important}
+.flex{display:flex}.flex-col{display:flex;flex-direction:column}
+.gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}
+.flex-1{flex:1}
+.text-dim{color:var(--dim)}.text-muted{color:var(--muted)}
+.text-green{color:var(--green)}.text-gold{color:var(--gold)}.text-red{color:var(--red)}
+.text-sm{font-size:12px}.text-xs{font-size:11px}
+.font-bold{font-weight:700}
+.items-center{align-items:center}
+.justify-between{justify-content:space-between}
+.ml-auto{margin-left:auto}
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mb-16{margin-bottom:16px}
+.w-full{width:100%}
+.text-center{text-align:center}
+</style>
 </head>
 <body>
-    <div class="bg-grid"></div>
-    <div class="container">
-        <header>
-            <div class="logo">TERRIX <span class="ver">MARKETPLACE</span></div>
-            <div class="tagline">Exploits • Scripts • Accounts • Discord Services</div>
-        </header>
-
-        <div class="announcements" id="announcementsContainer">
-            <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
-            <div class="announcements-item">
-                <div class="expires"><i class="fas fa-clock"></i> Expires: In 5 days</div>
-                <div>New Marketplace update! Added Discord Nitro and Server Boosts!</div>
-                <div class="date">Posted 2 hours ago</div>
-            </div>
-            <div class="announcements-item expired">
-                <div>Marketplace Beta Launch - Thank you for 1000+ users!</div>
-                <div class="date">Expired</div>
-            </div>
+<nav class="nav">
+<div class="nav-logo">TERRIX MARKETPLACE</div>
+<div class="nav-links">
+<button class="nav-link active" data-view="home">Home</button>
+<button class="nav-link" data-view="chat">Chat</button>
+<button class="nav-link" data-view="profile">Profile</button>
+<button class="nav-link" data-view="announcements">Announcements</button>
+</div>
+<div class="nav-search">
+<span class="nav-search-icon">🔍</span>
+<input type="text" placeholder="Search items..." id="search-input">
+</div>
+<div class="nav-actions">
+<button class="nav-btn nav-btn-ghost" id="theme-toggle">Theme</button>
+<button class="nav-btn nav-btn-primary" id="login-btn">Login</button>
+<img class="nav-avatar hidden" id="user-avatar" src="" alt="">
+</div>
+</nav>
+<div class="container">
+<section class="section" id="home-view">
+<div class="hero">
+<h1>Welcome to <span>TerriX Marketplace</span></h1>
+<p>The ultimate platform for TerriX scripts, exploits, Territorial.io accounts, and more. All items scanned for safety.</p>
+<div class="hero-btns">
+<button class="nav-btn nav-btn-primary" onclick="showModal('create-item')">Sell Item</button>
+<button class="nav-btn nav-btn-ghost" onclick="document.querySelector('.cat-chip[data-category=exploits]').click()">Browse</button>
+</div>
+</div>
+<div class="cats" id="category-filters">
+<div class="cat-chip active" data-category="all">All</div>
+<div class="cat-chip" data-category="exploits">Exploits/Scripts</div>
+<div class="cat-chip" data-category="accounts">Territorial.io Accounts</div>
+<div class="cat-chip" data-category="discord">Discord Nitro</div>
+<div class="cat-chip" data-category="boosts">Server Boosts</div>
+</div>
+<div class="grid" id="item-grid"></div>
+</section>
+<section class="section hidden" id="chat-view">
+<div class="chat-layout">
+<div class="chat-sidebar">
+<div class="chat-sidebar-title">Channels</div>
+<div id="channel-list"></div>
+<button class="nav-btn nav-btn-ghost text-sm w-full text-center mt-8" onclick="showModal('create-channel')">+ Create Channel</button>
+<button class="nav-btn nav-btn-ghost text-sm w-full text-center mt-8" onclick="showModal('join-channel')">+ Join Private</button>
+</div>
+<div class="chat-main">
+<div class="chat-header" id="chat-header"># general</div>
+<div class="chat-messages" id="chat-messages"></div>
+<div class="chat-input">
+<input type="text" id="chat-input" placeholder="Type a message... (Premium: /emoji, /sticker, /embed, /file)">
+<button class="chat-send" id="chat-send">Send</button>
+</div>
+</div>
+</div>
+</section>
+<section class="section hidden" id="profile-view">
+<div class="profile-card" style="max-width:800px;margin:0 auto;">
+<div class="profile-banner" id="profile-banner"></div>
+<div class="profile-card-avatar" id="profile-avatar"></div>
+<div class="profile-card-body">
+<div class="profile-card-name">
+<span id="profile-username">Username</span>
+<span class="badge-premium hidden" id="profile-premium-badge">PREMIUM</span>
+</div>
+<div class="profile-card-bio" id="profile-bio">No bio set</div>
+<div class="profile-card-stats">
+<div class="profile-card-stat">
+<div class="profile-card-stat-val" id="profile-gold">0</div>
+<div class="profile-card-stat-label">Gold</div>
+</div>
+<div class="profile-card-stat">
+<div class="profile-card-stat-val" id="profile-linked">No</div>
+<div class="profile-card-stat-label">Linked Account</div>
+</div>
+</div>
+<div class="profile-card-actions mt-16">
+<button class="nav-btn nav-btn-primary" onclick="showModal('edit-profile')">Edit Profile</button>
+<button class="nav-btn nav-btn-ghost" onclick="showModal('link-territorial')">Link Territorial.io</button>
+<button class="nav-btn nav-btn-ghost" id="premium-btn">Get Premium</button>
+</div>
+</div>
+</div>
+</section>
+<section class="section hidden" id="announcements-view">
+<div class="ann-list" id="announcements-list"></div>
+</section>
+</div>
+<div class="modal-overlay" id="modal-overlay">
+<div class="modal" id="modal-content">
+<div class="modal-head">
+<div class="modal-title" id="modal-title">Modal</div>
+<div class="modal-close" onclick="closeModal()">✕</div>
+</div>
+<div class="modal-body" id="modal-body"></div>
+<div class="modal-footer" id="modal-footer"></div>
+</div>
+</div>
+<div class="profile-popup" id="profile-popup">
+<div class="profile-card" id="profile-popup-card"></div>
+</div>
+<script>
+const SUPABASE_URL = 'https://yyoiojuhsoqeoyvqdzow.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_R3otBb20oWkvfY2IX1r_0A_OsOx0W4G';
+let currentUser = null;
+let supabase = null;
+let chatSocket = null;
+let currentChannel = 'general';
+const state = {
+  items: [],
+  channels: [],
+  messages: {},
+  announcements: []
+};
+document.addEventListener('DOMContentLoaded', async () => {
+  await initSupabase();
+  await loadState();
+  renderItems();
+  renderChannels();
+  renderAnnouncements();
+  setupEventListeners();
+  if (currentUser) updateUIForUser();
+});
+async function initSupabase() {
+  supabase = window.supabase || (await import('https://unpkg.com/@supabase/supabase-js@2')).createClient(SUPABASE_URL, SUPABASE_KEY);
+  const { data: { user } } = await supabase.auth.getUser();
+  currentUser = user;
+  if (user) {
+    const { data } = await supabase.from('terrix_accounts').select('*').eq('id', user.id).single();
+    if (data) currentUser.profile = data;
+  }
+}
+async function loadState() {
+  const [itemsRes, channelsRes, annRes] = await Promise.all([
+    supabase.from('marketplace_items').select('*').eq('approved', true).order('created_at', { ascending: false }),
+    supabase.from('chat_channels').select('*').order('is_private', { ascending: true }),
+    supabase.from('announcements').select('*').eq('published', true).order('pinned', { ascending: false }).order('created_at', { ascending: false })
+  ]);
+  state.items = itemsRes.data || [];
+  state.channels = channelsRes.data || [];
+  state.announcements = annRes.data || [];
+}
+function renderItems() {
+  const grid = document.getElementById('item-grid');
+  grid.innerHTML = '';
+  const filter = document.querySelector('.cat-chip.active').dataset.category;
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const items = state.items.filter(item => {
+    if (filter !== 'all' && item.category !== filter) return false;
+    if (search && !item.title.toLowerCase().includes(search) && !item.description.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-img">
+        ${item.thumbnail ? `<img src="${item.thumbnail}" alt="">` : '📦'}
+      </div>
+      <div class="card-type-badge">${item.category}</div>
+      <div class="card-body">
+        <div class="card-title">${escapeHtml(item.title)}</div>
+        <div class="card-meta">
+          <div class="card-author">
+            <div class="card-author-avatar">${item.author_username ? item.author_username[0].toUpperCase() : '?'}</div>
+            ${escapeHtml(item.author_username || 'Unknown')}
+          </div>
+          <div class="card-stats">
+            <span>⬆ ${item.upvotes || 0}</span>
+            <span>💬 ${item.comment_count || 0}</span>
+          </div>
         </div>
-
-        <nav id="categoryNav">
-            <button class="active" data-category="all">All Items</button>
-            <button data-category="script">Scripts</button>
-            <button data-category="account">Accounts</button>
-            <button data-category="nitro">Discord Nitro</button>
-            <button data-category="boost">Server Boosts</button>
-            <button data-category="free">Free Items</button>
-            <button data-category="premium">Premium Only</button>
-        </nav>
-
-        <div class="stats-bar">
-            <span>Items: <span class="stat" id="statItems">0</span></span>
-            <span>Free: <span class="stat" id="statFree">0</span></span>
-            <span>Paid: <span class="stat" id="statPaid">0</span></span>
-            <span>Avg Price: <span class="stat" id="statAvg">0</span> Gold</span>
+        <div class="card-footer">
+          <div class="card-price ${item.price_type}">${item.price_type === 'free' ? 'FREE' : item.price_type === 'key' ? 'KEY' : item.price + ' Gold'}</div>
+          <button class="card-btn" onclick="purchaseItem('${item.id}')">${item.price_type === 'key' ? 'Request Key' : 'Purchase'}</button>
         </div>
-
-        <div class="private-channel-form" id="privateChannelForm">
-            <h3 style="margin-bottom:10px"><i class="fas fa-lock"></i> Join Private Channel</h3>
-            <input type="text" id="channelName" placeholder="Channel Name">
-            <input type="password" id="channelPassword" placeholder="Password (if required)">
-            <button onclick="joinPrivateChannel()">JOIN CHANNEL</button>
-        </div>
-
-        <div class="items-grid" id="itemsGrid">
-            <div class="item-card" onclick="viewItem('terrix-godbot-pro')">
-                <div class="item-thumb">
-                    <span class="item-type script">Script</span>
-                    <img src="https://placehold.co/280x140/3a47ff/ffffff?text=TerriX+GodBot+Pro" alt="TerriX GodBot Pro">
-                </div>
-                <div class="item-content">
-                    <h3>TerriX GodBot Pro <span class="scan-status clean">✓ Clean</span></h3>
-                    <div class="item-desc">Advanced automation for Territorial.io. Auto-farm, smart targeting, territory expansion.</div>
-                    <div class="item-footer">
-                        <span class="item-price paid">500 Gold</span>
-                        <button class="item-btn">BUY NOW</button>
-                    </div>
-                </div>
-            </div>
-            <div class="item-card" onclick="viewItem('territorial-account-vip')">
-                <div class="item-thumb">
-                    <span class="item-type account">Account</span>
-                    <img src="https://placehold.co/280x140/00e5ff/ffffff?text=VIP+Account" alt="VIP Account">
-                </div>
-                <div class="item-content">
-                    <h3>VIP Territorial Account <span class="scan-status clean">✓ Clean</span></h3>
-                    <div class="item-desc">Rank 8 account with 15000+ gold. Verified and ready to play.</div>
-                    <div class="item-footer">
-                        <span class="item-price paid">2500 Gold</span>
-                        <button class="item-btn">BUY NOW</button>
-                    </div>
-                </div>
-            </div>
-            <div class="item-card" onclick="viewItem('discord-nitro-1m')">
-                <div class="item-thumb">
-                    <span class="item-type nitro">Nitro</span>
-                    <img src="https://placehold.co/280x140/7289da/ffffff?text=Discord+Nitro" alt="Discord Nitro">
-                </div>
-                <div class="item-content">
-                    <h3>Discord Nitro 1 Month</h3>
-                    <div class="item-desc">Full Discord Nitro subscription for 1 month. Non-transferable.</div>
-                    <div class="item-footer">
-                        <span class="item-price paid">300 Gold</span>
-                        <button class="item-btn">BUY NOW</button>
-                    </div>
-                </div>
-            </div>
-            <div class="item-card" onclick="viewItem('terrix-free-script')">
-                <div class="item-thumb">
-                    <span class="item-type script">Script</span>
-                    <img src="https://placehold.co/280x140/0f0/000000?text=Free+Script" alt="Free Script">
-                </div>
-                <div class="item-content">
-                    <h3>TerriX Basic Helper <span class="scan-status clean">✓ Clean</span></h3>
-                    <div class="item-desc">Basic automation features for new players. Attack helper, tile detector.</div>
-                    <div class="item-footer">
-                        <span class="item-price free">FREE</span>
-                        <button class="item-btn free">GET NOW</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <button class="load-more" onclick="loadMoreItems()">LOAD MORE ITEMS</button>
-
-        <footer>
-            <div>TerriX Marketplace - Powered by Supabase</div>
-            <div style="margin-top:8px">Users: <span id="statUsers">1,247</span> | Transactions: <span id="statTx">3,482</span></div>
-        </footer>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+function renderChannels() {
+  const list = document.getElementById('channel-list');
+  list.innerHTML = '';
+  state.channels.forEach(ch => {
+    const div = document.createElement('div');
+    div.className = 'channel-item' + (ch.id === currentChannel ? ' active' : '');
+    div.innerHTML = `<span class="channel-icon">#</span> ${escapeHtml(ch.name)}`;
+    if (ch.is_private) div.innerHTML += ' <span class="channel-lock">🔒</span>';
+    div.onclick = () => joinChannel(ch.id);
+    list.appendChild(div);
+  });
+}
+async function joinChannel(channelId) {
+  const channel = state.channels.find(c => c.id === channelId);
+  if (channel.is_private) {
+    const pwd = prompt('This channel is private. Enter password:');
+    if (!pwd) return;
+    const { error } = await supabase.rpc('verify_channel_password', { ch_id: channelId, password: pwd });
+    if (error) return alert('Invalid password');
+  }
+  currentChannel = channelId;
+  document.getElementById('chat-header').textContent = '#' + channel.name;
+  renderChannels();
+  loadMessages(channelId);
+}
+async function loadMessages(channelId) {
+  const { data } = await supabase.from('chat_messages').select('*').eq('channel_id', channelId).order('created_at', { ascending: true }).limit(100);
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+  if (!data || data.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--dim);padding:40px;">No messages yet. Be the first!</div>';
+    return;
+  }
+  data.forEach(msg => {
+    container.appendChild(createMessageElement(msg));
+  });
+  container.scrollTop = container.scrollHeight;
+}
+function createMessageElement(msg) {
+  const div = document.createElement('div');
+  div.className = 'msg';
+  const avatarUrl = msg.user_avatar ? msg.user_avatar : null;
+  const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" class="msg-avatar">` : `<div class="msg-avatar">${msg.user_username ? msg.user_username[0].toUpperCase() : '?'}</div>`;
+  div.innerHTML = `
+    ${avatarHtml}
+    <div class="msg-content">
+      <div class="msg-head">
+        <span class="msg-author${msg.user_is_premium ? ' premium' : ''}" onclick="showProfile('${msg.user_id}')">${escapeHtml(msg.user_username)}</span>
+        <span class="msg-tag tag-premium">PREMIUM</span>
+        <span class="msg-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+      </div>
+      <div class="msg-text">${formatMessage(msg.content)}</div>
     </div>
-
-    <div class="profile-popup" id="profilePopup">
-        <span class="close" onclick="closeProfilePopup()">&times;</span>
-        <div class="avatar"><i class="fas fa-user"></i></div>
-        <div class="username">PlayerName <span class="admin-badge" style="display:none">ADMIN</span></div>
-        <div class="bio">Professional strategist. Clan leader. Script developer.</div>
-        <div class="stats">
-            <div class="stat"><span class="val">1,250</span>Gold</div>
-            <div class="stat"><span class="val">42</span>Purchases</div>
-            <div class="stat"><span class="val">Gold III</span>Title</div>
+  `;
+  return div;
+}
+function formatMessage(text) {
+  return escapeHtml(text).replace(/:(\w+):/g, '<span style="color:var(--gold)">:$1:</span>').replace(/\n/g, '<br>');
+}
+function renderAnnouncements() {
+  const list = document.getElementById('announcements-list');
+  list.innerHTML = '';
+  state.announcements.forEach(ann => {
+    const card = document.createElement('div');
+    card.className = 'ann-card' + (ann.pinned ? ' pinned' : '');
+    card.innerHTML = `
+      <div class="ann-title">${escapeHtml(ann.title)}</div>
+      <div class="ann-body">${escapeHtml(ann.body)}</div>
+      <div class="ann-footer">
+        <span class="ann-tag">${ann.category || 'announcement'}</span>
+        <span>Posted by ${ann.author_username}</span>
+        <span>${new Date(ann.created_at).toLocaleDateString()}</span>
+        ${ann.expires_at ? `<span>Expires: ${new Date(ann.expires_at).toLocaleDateString()}</span>` : ''}
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+function setupEventListeners() {
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      const view = link.dataset.view;
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(`${view}-view`).classList.remove('hidden');
+      if (view === 'chat') loadMessages(currentChannel);
+    });
+  });
+  document.getElementById('search-input').addEventListener('input', renderItems);
+  document.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderItems();
+    });
+  });
+  document.getElementById('login-btn').addEventListener('click', () => {
+    if (currentUser) {
+      supabase.auth.signOut();
+      currentUser = null;
+      updateUIForUser();
+    } else {
+      showModal('login');
+    }
+  });
+  document.getElementById('chat-send').addEventListener('click', sendMessage);
+  document.getElementById('chat-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+}
+function updateUIForUser() {
+  const loginBtn = document.getElementById('login-btn');
+  const avatar = document.getElementById('user-avatar');
+  if (currentUser) {
+    loginBtn.textContent = 'Logout';
+    avatar.src = currentUser.user_metadata?.avatar_url || '';
+    avatar.classList.remove('hidden');
+  } else {
+    loginBtn.textContent = 'Login';
+    avatar.classList.add('hidden');
+  }
+}
+function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content) return;
+  if (!currentUser) return showModal('login');
+  supabase.from('chat_messages').insert([{
+    channel_id: currentChannel,
+    user_id: currentUser.id,
+    user_username: currentUser.user_metadata?.username || 'Anonymous',
+    user_avatar: currentUser.user_metadata?.avatar_url || null,
+    user_is_premium: currentUser.user_metadata?.is_premium || false,
+    content
+  }]);
+  input.value = '';
+}
+function showModal(type, data = {}) {
+  const overlay = document.getElementById('modal-overlay');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  const footer = document.getElementById('modal-footer');
+  overlay.classList.add('open');
+  footer.innerHTML = '';
+  switch(type) {
+    case 'login':
+      title.textContent = 'Login / Register';
+      body.innerHTML = `
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email (optional for register)</label>
+            <input type="email" name="email">
+          </div>
+        </form>
+      `;
+      footer.innerHTML = '<button class="nav-btn nav-btn-primary" onclick="handleLogin()">Login</button><button class="nav-btn nav-btn-ghost" onclick="handleRegister()">Register</button>';
+      break;
+    case 'create-channel':
+      title.textContent = 'Create Channel';
+      body.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">Channel Name</label>
+          <input type="text" id="new-channel-name" placeholder="my-channel">
         </div>
-    </div>
-
-    <script>
-        let currentCategory = 'all';
-        let visibleItems = 4;
-        const allItems = [
-            {id:'terrix-godbot-pro', type:'script', name:'TerriX GodBot Pro', price:500, free:false, desc:'Advanced automation for Territorial.io. Auto-farm, smart targeting, territory expansion.', scan:'clean'},
-            {id:'territorial-account-vip', type:'account', name:'VIP Territorial Account', price:2500, free:false, desc:'Rank 8 account with 15000+ gold. Verified and ready to play.', scan:'clean'},
-            {id:'discord-nitro-1m', type:'nitro', name:'Discord Nitro 1 Month', price:300, free:false, desc:'Full Discord Nitro subscription for 1 month. Non-transferable.', scan:'clean'},
-            {id:'terrix-free-script', type:'script', name:'TerriX Basic Helper', price:0, free:true, desc:'Basic automation features for new players. Attack helper, tile detector.', scan:'clean'}
-        ];
-
-        function updateStats() {
-            const total = allItems.length;
-            const free = allItems.filter(i=>i.free).length;
-            const paid = total - free;
-            const avg = Math.round(allItems.reduce((sum,i)=>sum+i.price,0) / total);
-            document.getElementById('statItems').textContent = total;
-            document.getElementById('statFree').textContent = free;
-            document.getElementById('statPaid').textContent = paid;
-            document.getElementById('statAvg').textContent = avg;
-        }
-
-        function loadMoreItems() {
-            visibleItems += 4;
-        }
-
-        function viewItem(id) {
-            alert('Opening item: ' + id + '\n\n(Purchase flow would appear here)');
-        }
-
-        function joinPrivateChannel() {
-            const name = document.getElementById('channelName').value;
-            const pass = document.getElementById('channelPassword').value;
-            if(name) {
-                alert('Joining channel: ' + name + (pass ? ' (with password)' : ''));
-                document.getElementById('privateChannelForm').classList.remove('active');
-            }
-        }
-
-        document.getElementById('categoryNav').addEventListener('click', e=>{
-            if(e.target.tagName==='BUTTON'){
-                document.querySelectorAll('#categoryNav button').forEach(b=>b.classList.remove('active'));
-                e.target.classList.add('active');
-                currentCategory = e.target.dataset.category;
-            }
-        });
-
-        document.querySelectorAll('.item-card').forEach(card=>{
-            card.addEventListener('dblclick', ()=>{
-                closeProfilePopup();
-                document.getElementById('profilePopup').classList.add('active');
-            });
-        });
-
-        function closeProfilePopup(){
-            document.getElementById('profilePopup').classList.remove('active');
-        }
-
-        updateStats();
-    </script>
+        <div class="form-group">
+          <label class="form-label">
+            <input type="checkbox" id="new-channel-private"> Private (password required)
+          </label>
+        </div>
+        <div class="form-group hidden" id="new-channel-password-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="new-channel-password">
+        </div>
+      `;
+      footer.innerHTML = '<button class="nav-btn nav-btn-primary" onclick="createChannel()">Create</button>';
+      break;
+    case 'join-channel':
+      title.textContent = 'Join Private Channel';
+      body.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">Channel ID</label>
+          <input type="text" id="join-channel-id" placeholder="Channel ID or name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="join-channel-password">
+        </div>
+      `;
+      footer.innerHTML = '<button class="nav-btn nav-btn-primary" onclick="joinChannelById()">Join</button>';
+      break;
+    case 'edit-profile':
+      title.textContent = 'Edit Profile';
+      body.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="profile-username-edit" value="${currentUser?.user_metadata?.username || ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bio</label>
+          <textarea id="profile-bio-edit" rows="3">${currentUser?.profile?.bio || ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Profile Picture URL</label>
+          <input type="url" id="profile-avatar-edit" value="${currentUser?.user_metadata?.avatar_url || ''}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Profile Banner URL (Premium)</label>
+          <input type="url" id="profile-banner-edit" value="${currentUser?.profile?.banner_url || ''}" ${!currentUser?.user_metadata?.is_premium ? 'disabled' : ''}>
+        </div>
+      `;
+      footer.innerHTML = '<button class="nav-btn nav-btn-primary" onclick="saveProfile()">Save</button>';
+      break;
+    case 'create-item':
+      title.textContent = 'Sell Item';
+      body.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input type="text" id="item-title">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="item-desc" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select id="item-category">
+            <option value="exploits">Exploits/Scripts</option>
+            <option value="accounts">Territorial.io Accounts</option>
+            <option value="discord">Discord Nitro</option>
+            <option value="boosts">Server Boosts</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price Type</label>
+          <select id="item-price-type" onchange="document.getElementById('item-price-gold-section').classList.toggle(this.value === 'gold')">
+            <option value="free">Free</option>
+            <option value="gold">Paid (Gold)</option>
+            <option value="key">Key System</option>
+          </select>
+        </div>
+        <div class="form-group" id="item-price-gold-section">
+          <label class="form-label">Price (Gold)</label>
+          <input type="number" id="item-price-gold" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Thumbnail URL (optional)</label>
+          <input type="url" id="item-thumbnail">
+        </div>
+      `;
+      footer.innerHTML = '<button class="nav-btn nav-btn-primary" onclick="createItem()">List Item</button>';
+      break;
+    case 'link-territorial':
+      title.textContent = 'Link Territorial.io Account';
+      body.innerHTML = `
+        <p class="text-dim">Link your Territorial.io account to pay with gold. We'll use the official API.</p>
+        <div class="form-group">
+          <label class="form-label">Territorial.io Username</label>
+          <input type="text" id="terr-username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">API Password (from game settings)</label>
+          <input type="password" id="terr-password">
+        </div>
+      `;
+      footer.innerHTML = '<button class="nav-btn nav-btn-primary" onclick="linkTerritorial()">Link Account</button>';
+      break;
+  }
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+async function handleLogin() {
+  const form = document.getElementById('login-form');
+  const username = form.username.value;
+  const password = form.password.value;
+  const email = form.email.value;
+  if (!username || !password) return alert('Username and password required');
+  const { data, error } = await supabase
+    .from('terrix_accounts')
+    .select('id, password_hash, username, bio, avatar_url, banner_url, is_premium, linked_territorial_username')
+    .eq('username', username)
+    .single();
+  if (error || !data) {
+    alert('User not found');
+    return;
+  }
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''));
+  if (hash !== data.password_hash) return alert('Invalid password');
+  currentUser = { id: data.id, user_metadata: { username: data.username, avatar_url: data.avatar_url, is_premium: data.is_premium }, profile: data };
+  updateUIForUser();
+  closeModal();
+  if (currentUser.user_metadata.is_premium) document.getElementById('premium-btn').classList.add('hidden');
+}
+async function handleRegister() {
+  const form = document.getElementById('login-form');
+  const username = form.username.value;
+  const password = form.password.value;
+  const email = form.email.value;
+  if (!username || !password) return alert('Username and password required');
+  const { data: existing } = await supabase.from('terrix_accounts').select('id').eq('username', username).single();
+  if (existing) return alert('Username taken');
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''));
+  const { data, error } = await supabase.from('terrix_accounts').insert([{
+    username,
+    password_hash: hash,
+    bio: '',
+    is_premium: false,
+    gold_balance: 0,
+    created_at: new Date().toISOString()
+  }]).select('id, username, bio, avatar_url, banner_url, is_premium').single();
+  if (error) return alert('Registration failed: ' + error.message);
+  currentUser = { id: data.id, user_metadata: { username: data.username, avatar_url: null, is_premium: data.is_premium }, profile: data };
+  updateUIForUser();
+  closeModal();
+}
+async function createChannel() {
+  if (!currentUser) return showModal('login');
+  const name = document.getElementById('new-channel-name').value.trim();
+  const isPrivate = document.getElementById('new-channel-private').checked;
+  const password = document.getElementById('new-channel-password').value;
+  if (!name) return alert('Channel name required');
+  const { data, error } = await supabase.from('chat_channels').insert([{
+    name,
+    created_by: currentUser.id,
+    is_private: isPrivate,
+    password_hash: isPrivate ? await hashPassword(password) : null
+  }]).select('*').single();
+  if (error) return alert('Failed: ' + error.message);
+  state.channels.push(data);
+  renderChannels();
+  closeModal();
+  alert('Channel created!');
+}
+function hashPassword(pwd) {
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd)).then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join(''));
+}
+async function joinChannelById() {
+  const id = document.getElementById('join-channel-id').value.trim();
+  const password = document.getElementById('join-channel-password').value;
+  const channel = state.channels.find(c => c.id === id || c.name === id);
+  if (!channel) return alert('Channel not found');
+  if (channel.is_private) {
+    const { error } = await supabase.rpc('verify_channel_password', { ch_id: channel.id, password });
+    if (error) return alert('Invalid password');
+  }
+  joinChannel(channel.id);
+  closeModal();
+}
+async function saveProfile() {
+  if (!currentUser) return;
+  const username = document.getElementById('profile-username-edit').value.trim();
+  const bio = document.getElementById('profile-bio-edit').value.trim();
+  const avatar = document.getElementById('profile-avatar-edit').value.trim();
+  const banner = document.getElementById('profile-banner-edit').value.trim();
+  const { error } = await supabase.from('terrix_accounts').update({
+    username,
+    bio,
+    avatar_url: avatar,
+    banner_url: banner
+  }).eq('id', currentUser.id);
+  if (error) return alert('Failed: ' + error.message);
+  currentUser.profile = { ...currentUser.profile, username, bio, avatar_url: avatar, banner_url: banner };
+  updateProfileView();
+  closeModal();
+}
+function showProfile(userId) {
+  fetchUserProfile(userId).then(user => {
+    const popup = document.getElementById('profile-popup');
+    const card = document.getElementById('profile-popup-card');
+    card.innerHTML = `
+      <div class="profile-banner" style="background-image:url('${user.banner_url || ''}');background-size:cover;background-position:center;"></div>
+      <div class="profile-card-avatar">${user.username ? user.username[0].toUpperCase() : '?'}</div>
+      <div class="profile-card-body">
+        <div class="profile-card-name">
+          <span>${escapeHtml(user.username)}</span>
+          ${user.is_premium ? '<span class="badge-premium">PREMIUM</span>' : ''}
+        </div>
+        <div class="profile-card-bio">${user.bio || 'No bio'}</div>
+        <div class="profile-card-stats">
+          <div class="profile-card-stat">
+            <div class="profile-card-stat-val">${user.gold_balance || 0}</div>
+            <div class="profile-card-stat-label">Gold</div>
+          </div>
+          <div class="profile-card-stat">
+            <div class="profile-card-stat-val">${user.linked_territorial_username ? 'Yes' : 'No'}</div>
+            <div class="profile-card-stat-label">Linked</div>
+          </div>
+        </div>
+      </div>
+    `;
+    popup.classList.add('open');
+    popup.onclick = (e) => { if (e.target === popup) popup.classList.remove('open'); };
+  });
+}
+async function fetchUserProfile(userId) {
+  const { data, error } = await supabase.from('terrix_accounts').select('*').eq('id', userId).single();
+  if (error) throw error;
+  return data;
+}
+function updateProfileView() {
+  if (!currentUser) return;
+  document.getElementById('profile-username').textContent = currentUser.profile.username;
+  document.getElementById('profile-bio').textContent = currentUser.profile.bio || 'No bio set';
+  document.getElementById('profile-gold').textContent = currentUser.profile.gold_balance || 0;
+  document.getElementById('profile-avatar').textContent = currentUser.profile.avatar_url ? '' : (currentUser.profile.username ? currentUser.profile.username[0].toUpperCase() : '?');
+  if (currentUser.profile.avatar_url) document.getElementById('profile-avatar').innerHTML = `<img src="${currentUser.profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;">`;
+  if (currentUser.profile.banner_url) document.getElementById('profile-banner').style.backgroundImage = `url(${currentUser.profile.banner_url})`;
+  if (currentUser.user_metadata.is_premium) document.getElementById('profile-premium-badge').classList.remove('hidden');
+}
+async function linkTerritorial() {
+  if (!currentUser) return showModal('login');
+  const username = document.getElementById('terr-username').value.trim();
+  const password = document.getElementById('terr-password').value;
+  if (!username || !password) return alert('Credentials required');
+  try {
+    const resp = await fetch('https://yyoiojuhsoqeoyvqdzow.supabase.co/functions/v1/verify-territorial', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ username, password })
+    });
+    const result = await resp.json();
+    if (result.success) {
+      await supabase.from('terrix_accounts').update({ linked_territorial_username: username }).eq('id', currentUser.id);
+      currentUser.profile.linked_territorial_username = username;
+      alert('Account linked successfully!');
+      closeModal();
+    } else {
+      alert('Link failed: ' + result.error);
+    }
+  } catch(e) {
+    alert('Network error');
+  }
+}
+async function purchaseItem(itemId) {
+  if (!currentUser) return showModal('login');
+  const item = state.items.find(i => i.id === itemId);
+  if (!item) return;
+  if (item.price_type === 'free') {
+    alert('Free items are automatically delivered (or contact seller).');
+    return;
+  }
+  if (item.price_type === 'gold') {
+    if ((currentUser.profile.gold_balance || 0) < item.price) return alert('Insufficient gold');
+    if (!confirm(`Purchase ${item.title} for ${item.price} gold?`)) return;
+    const { error } = await supabase.rpc('purchase_item', { p_item_id: itemId, p_buyer_id: currentUser.id });
+    if (error) return alert('Purchase failed: ' + error.message);
+    alert('Purchase successful! Check your email/deliverables.');
+    loadState();
+    renderItems();
+  } else if (item.price_type === 'key') {
+    alert('Contact seller to request a key. This will open a chat thread.');
+  }
+}
+function showModal(type, data) {
+  const overlay = document.getElementById('modal-overlay');
+  if (overlay.classList.contains('open')) closeModal();
+  setTimeout(() => openModal(type, data), 10);
+}
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
 </body>
 </html>
