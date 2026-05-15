@@ -231,13 +231,13 @@
                         </div>
                         <div class="mock-main">
                             <div class="mock-editor">
-                                <div class="mock-line"><span class="kw">const</span> target = <span class="fn">GI</span>.<span class="fn">getWeakestNeighbor</span>();</div>
-                                <div class="mock-line"><span class="kw">if</span> (target &amp;&amp; <span class="fn">GI</span>.<span class="fn">getMyTroops</span>() &gt; <span class="num">500</span>) {</div>
-                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">GI</span>.<span class="fn">sendAttack</span>(<span class="num">0.8</span>, target);</div>
-                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">Logger</span>.<span class="fn">log</span>(<span class="str">"Attacking "</span> + target);</div>
+                                <div class="mock-line"><span class="kw">const</span> tick = <span class="fn">GI</span>.<span class="fn">getCycleTick</span>();</div>
+                                <div class="mock-line"><span class="kw">const</span> d = <span class="fn">GI</span>.<span class="fn">getDensity</span>();</div>
+                                <div class="mock-line"><span class="kw">if</span> (tick &gt; <span class="num">85</span> &amp;&amp; <span class="fn">GI</span>.<span class="fn">shouldSnipe</span>(e.id)) {</div>
+                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">GI</span>.<span class="fn">sendAttackTile</span>(<span class="num">0.4</span>, tile, e.id);</div>
                                 <div class="mock-line">}</div>
                             </div>
-                            <div class="mock-output">[TerriX] Executed successfully</div>
+                            <div class="mock-output">[TerriX] Snipe at tick 92 — intensity 512</div>
                         </div>
                     </div>
                     <div class="mock-footer">
@@ -345,7 +345,7 @@
                     <div class="guide-card">
                         <i class="fa-solid fa-sliders"></i>
                         <strong>CONFIG</strong>
-                        <span>Toggles and numeric inputs for GodBot ratios, ESP overlay, minimap position, and more. All settings persist across sessions.</span>
+                        <span>GodBot v5.0 settings (cycle windows, density parity, snipe intensity), ESP overlay, minimap, GUI position controls, and theme switching. All settings persist across sessions.</span>
                     </div>
                     <div class="guide-card">
                         <i class="fa-solid fa-camera"></i>
