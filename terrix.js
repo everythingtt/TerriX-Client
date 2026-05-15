@@ -48,16 +48,20 @@
             godbot: {
                 enabled: false,
                 expandRatio: 2.0,
-                attackRatio: 4.0,
-                peaceThreshold: 0.52,
-                tickRate: 800,
+                attackRatio: 3.0,
+                retreatRatio: 0.3,
+                tickRate: 600,
                 strategy: 'balanced',
                 maxTargets: 3,
-                retreatRatio: 0.3,
-                focusWeakest: true,
-                onlyAttackNeighbors: true,
                 queueAttacks: true,
-                queueDelay: 150
+                queueDelay: 150,
+                autoReinforce: true,
+                smartExpand: true,
+                snipeWindowStart: 85,
+                snipeIntensity: 0.4,
+                densityParityMin: 0.8,
+                closeRange: 150,
+                botAttackWindowEnd: 70
             },
             esp: {
                 enabled: false,
@@ -68,11 +72,13 @@
             },
             minimap: {
                 enabled: false,
-                size: 180,
+                size: 220,
                 position: 'bottom-right',
-                opacity: 0.85,
-                showTroops: true,
-                showTargets: true
+                opacity: 0.9,
+                showGrid: true,
+                showViewport: true,
+                showMountains: true,
+                showPlayers: true
             },
             multitab: {
                 enabled: false,
@@ -685,9 +691,304 @@
             if (!scoreObj || typeof scoreObj.kA !== 'function') return false;
             try {
                 const myScore = scoreObj.kA(this.myId);
-                const maxScore = scoreObj.kA(); // no arg = global max
+                const maxScore = scoreObj.kA();
                 return myScore > (maxScore * TERRIX.config.godbot.peaceThreshold);
             } catch(e) { return false; }
+        },
+
+        getGameState() {
+            const G = this.G;
+            if (!G || !G.aD) return -1;
+            return G.aD.a18;
+        },
+
+        isPlaying() {
+            return this.getGameState() === 1;
+        },
+
+        getLeaderboard() {
+            const G = this.G;
+            if (!G) return [];
+            const scoreObj = G.ae || G.aD;
+            if (!scoreObj || typeof scoreObj.kA !== 'function') return [];
+            const players = [];
+            const max = this.maxPlayers;
+            for (let i = 0; i < max; i++) {
+                if (this.isPlayerAlive(i)) {
+                    try {
+                        const score = scoreObj.kA(i) || 0;
+                        players.push({ id: i, score, name: this.getPlayerName(i), troops: this.getPlayerTroops(i), territory: this.getPlayerTerritory(i), team: this.getPlayerTeam(i), isMe: i === this.myId });
+                    } catch(e) {}
+                }
+            }
+            players.sort((a, b) => b.score - a.score);
+            return players;
+        },
+
+        getClosestEnemy(maxDist) {
+            const G = this.G;
+            if (!G || !G.bP || !G.bP.y || !G.ac) return null;
+            const ships = G.bP.y;
+            const myId = this.myId;
+            const mapW = G.bU.fK;
+            const mapW16 = mapW << 4;
+            let closest = null;
+            let closestDist = maxDist || Infinity;
+            const myTiles = this.getBorderTiles(myId);
+            if (myTiles.length === 0) return null;
+            const myCenterTile = myTiles[Math.floor(myTiles.length / 2)];
+            const myXY = this.tileToXY(myCenterTile);
+            for (let i = 0; i < ships.mK; i++) {
+                const owner = ships.mO[i] >> 3;
+                if (owner === myId || !this.isPlayerAlive(owner) || this.areAllies(myId, owner)) continue;
+                const iS = ships.mZ[i];
+                if (!iS || iS <= 0) continue;
+                const tileX = (iS % mapW16) / 16;
+                const tileY = Math.floor(iS / mapW16) / 16;
+                const dx = tileX - myXY.x;
+                const dy = tileY - myXY.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closest = { id: owner, dist, x: tileX, y: tileY };
+                }
+            }
+            return closest;
+        },
+
+        getThreats() {
+            const G = this.G;
+            if (!G || !G.bP || !G.bP.y) return [];
+            const ships = G.bP.y;
+            const myId = this.myId;
+            const myBorder = new Set(this.getBorderTiles(myId));
+            const threats = [];
+            for (let i = 0; i < ships.mK; i++) {
+                const target = ships.mO[i] >> 3;
+                if (target !== myId) continue;
+                const iS = ships.mZ[i];
+                if (!iS || iS <= 0) continue;
+                const srcPlayer = ships.mO[i] & 0x7;
+                threats.push({ shipIdx: i, target, encoded: iS });
+            }
+            return threats;
+        },
+
+        getBorderWith(id) {
+            const myBorder = this.getBorderTiles(this.myId);
+            const theirBorder = this.getBorderTiles(id);
+            if (myBorder.length === 0 || theirBorder.length === 0) return [];
+            const theirSet = new Set(theirBorder);
+            const contact = [];
+            for (const t of myBorder) {
+                const neighbors = this.getNeighbors(t);
+                for (const n of neighbors) {
+                    if (theirSet.has(n)) {
+                        contact.push({ myTile: t, theirTile: n });
+                    }
+                }
+            }
+            return contact;
+        },
+
+        findBestAttackTile(targetId) {
+            const contact = this.getBorderWith(targetId);
+            if (contact.length === 0) return null;
+            let best = null;
+            let bestScore = -Infinity;
+            for (const c of contact) {
+                if (!this.isWalkable(c.myTile) || this.isMountain(c.myTile)) continue;
+                const n = this.getNeighbors(c.myTile);
+                let friendly = 0;
+                for (const nb of n) {
+                    if (this.getTileOwner(nb) === this.myId) friendly++;
+                }
+                const score = friendly * 10 + Math.random() * 5;
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = c.myTile;
+                }
+            }
+            return best;
+        },
+
+        expandToNearest() {
+            const borderTiles = this.getBorderTiles(this.myId);
+            const neutral = borderTiles.filter(t => this.isNeutral(t) && this.isWalkable(t) && !this.isMountain(t));
+            if (neutral.length === 0) return null;
+            let best = null;
+            let bestDist = Infinity;
+            const G = this.G;
+            if (G && G.bP && G.bP.y) {
+                const ships = G.bP.y;
+                const mapW16 = G.bU.fK << 4;
+                for (let s = 0; s < ships.mK; s++) {
+                    const owner = ships.mO[s] >> 3;
+                    if (owner === this.myId || !this.isPlayerAlive(owner) || this.areAllies(this.myId, owner)) continue;
+                    const iS = ships.mZ[s];
+                    if (!iS || iS <= 0) continue;
+                    const ex = (iS % mapW16) / 16;
+                    const ey = Math.floor(iS / mapW16) / 16;
+                    for (const t of neutral) {
+                        const xy = this.tileToXY(t);
+                        const dx = xy.x - ex;
+                        const dy = xy.y - ey;
+                        const dist = dx * dx + dy * dy;
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            best = t;
+                        }
+                    }
+                }
+            }
+            if (!best) best = neutral[Math.floor(Math.random() * neutral.length)];
+            return best;
+        },
+
+        reinforceBorder(targetId) {
+            const contact = this.getBorderWith(targetId);
+            if (contact.length === 0) return null;
+            const tiles = contact.map(c => c.myTile).filter(t => this.isWalkable(t) && !this.isMountain(t));
+            if (tiles.length === 0) return null;
+            return tiles[Math.floor(Math.random() * tiles.length)];
+        },
+
+        sendChat(msg) {
+            const G = this.G;
+            if (!G) return false;
+            try {
+                if (G.t && typeof G.t.send === 'function') { G.t.send(msg); return true; }
+                if (G.bS && typeof G.bS.send === 'function') { G.bS.send(msg); return true; }
+            } catch(e) {}
+            return false;
+        },
+
+        getPlayerCenter(id) {
+            const G = this.G;
+            if (!G || !G.bQ) return null;
+            const fo = G.bQ.fo;
+            const fp = G.bQ.fp;
+            if (!fo || !fp) return null;
+            return { x: fo[id] || 0, y: fp[id] || 0 };
+        },
+
+        getShipCount() {
+            const G = this.G;
+            if (!G || !G.bP || !G.bP.y) return 0;
+            return G.bP.y.mK | 0;
+        },
+
+        getMyShips() {
+            const G = this.G;
+            if (!G || !G.bP || !G.bP.y) return [];
+            const ships = G.bP.y;
+            const myId = this.myId;
+            const result = [];
+            const mapW16 = G.bU.fK << 4;
+            for (let i = 0; i < ships.mK; i++) {
+                const owner = ships.mO[i] >> 3;
+                if (owner !== myId) continue;
+                const iS = ships.mZ[i];
+                if (!iS || iS <= 0) continue;
+                result.push({ idx: i, x: (iS % mapW16) / 16, y: Math.floor(iS / mapW16) / 16, encoded: iS });
+            }
+            return result;
+        },
+
+        getCycleTick() {
+            const G = this.G;
+            if (!G || !G.bh) return 0;
+            try { return G.bh.kR() % 100; } catch(e) { return 0; }
+        },
+
+        getCycleProgress() {
+            return this.getCycleTick() / 100;
+        },
+
+        getDensity(playerId) {
+            const pId = playerId != null ? playerId : this.myId;
+            const troops = this.getPlayerTroops(pId);
+            const land = this.getPlayerTerritory(pId);
+            if (land === 0) return 0;
+            return troops / land;
+        },
+
+        getDistanceToPlayer(targetId) {
+            const me = this.getPlayerCenter(this.myId);
+            const them = this.getPlayerCenter(targetId);
+            if (!me || !them) return 9999;
+            const dx = me.x - them.x;
+            const dy = me.y - them.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        },
+
+        predictResources(playerId, ticksInFuture) {
+            const pId = playerId != null ? playerId : this.myId;
+            const currentTroops = this.getPlayerTroops(pId);
+            const land = this.getPlayerTerritory(pId);
+            return currentTroops + (land * 0.2 * (ticksInFuture / 10));
+        },
+
+        predictDensityAtContact(targetId) {
+            const myLand = this.getMyTerritory();
+            const myTroops = this.getMyTroops();
+            const theirLand = this.getPlayerTerritory(targetId);
+            const theirTroops = this.getPlayerTroops(targetId);
+            const dist = this.getDistanceToPlayer(targetId);
+            const myGrowthRate = myLand * 0.02;
+            const theirGrowthRate = theirLand * 0.02;
+            const ticksToContact = dist / 3;
+            const myFutureTroops = myTroops + myGrowthRate * ticksToContact;
+            const theirFutureTroops = theirTroops + theirGrowthRate * ticksToContact;
+            const myFutureDensity = myLand > 0 ? myFutureTroops / myLand : 0;
+            const theirFutureDensity = theirLand > 0 ? theirFutureTroops / theirLand : 0;
+            return { myDensity: myFutureDensity, theirDensity: theirFutureDensity, ticksToContact, myFutureTroops, theirFutureTroops };
+        },
+
+        isVulnerable() {
+            const myDensity = this.getDensity(this.myId);
+            const myId = this.myId;
+            const G = this.G;
+            if (!G) return false;
+            const maxP = G.aD ? (G.aD.f6 || 512) : 512;
+            for (let i = 0; i < maxP; i++) {
+                if (i === myId || !this.isPlayerAlive(i) || this.areAllies(myId, i)) continue;
+                if (this.getBorderWith(i).length > 0) {
+                    const neighborDensity = this.getDensity(i);
+                    if (neighborDensity > myDensity * 1.2) return true;
+                }
+            }
+            return false;
+        },
+
+        getAlivePlayers() {
+            const G = this.G;
+            if (!G) return [];
+            const maxP = G.aD ? (G.aD.f6 || 512) : 512;
+            const players = [];
+            for (let i = 0; i < maxP; i++) {
+                if (this.isPlayerAlive(i)) {
+                    players.push({ id: i, name: this.getPlayerName(i), troops: this.getPlayerTroops(i), territory: this.getPlayerTerritory(i), team: this.getPlayerTeam(i), isMe: i === this.myId, density: this.getDensity(i) });
+                }
+            }
+            return players;
+        },
+
+        getTimeToContact(targetId) {
+            const dist = this.getDistanceToPlayer(targetId);
+            return Math.round(dist / 3);
+        },
+
+        shouldSnipe(targetId) {
+            const myTroops = this.getMyTroops();
+            const myLand = this.getMyTerritory();
+            const targetTroops = this.getPlayerTroops(targetId);
+            const targetLand = this.getPlayerTerritory(targetId);
+            const myDensity = this.getDensity();
+            const targetDensity = this.getDensity(targetId);
+            const canSnipe = (myDensity >= targetDensity * 0.9) || (targetTroops < myTroops * 0.5);
+            const isProfitable = targetLand > myLand * 0.1;
+            return canSnipe && isProfitable;
         }
     };
 
@@ -710,6 +1011,8 @@
     };
 
     Logger.log('TerriX v' + TERRIX.version + ' loaded.');
+
+    let lbPropCache = null;
 
     function validateHook() {
         const G = _win.G;
@@ -780,7 +1083,7 @@
             if (gui && state.left) {
                 gui.style.left = state.left;
                 gui.style.top = state.top;
-                gui.style.transform = state.transform || 'none';
+                gui.style.transform = 'none';
             }
             if (state.activeTab) {
                 const btn = document.querySelector('.tx-nav-btn[data-tab="' + state.activeTab + '"]');
@@ -801,7 +1104,6 @@
             const state = {
                 left: gui ? gui.style.left : '',
                 top: gui ? gui.style.top : '',
-                transform: gui ? gui.style.transform : '',
                 activeTab: activeBtn ? activeBtn.dataset.tab : 'editor',
                 editorContent: editor ? editor.value : ''
             };
@@ -902,6 +1204,7 @@
             '#tx-toggle:hover{background:' + T.toggleBarHover + ';}',
             '#tx-gui{pointer-events:auto;position:fixed;top:80px;left:50%;transform:translateX(-50%);width:740px;height:520px;background:' + T.bg + ';border:1.5px solid ' + T.colorBorder + ';display:none;flex-direction:column;color:' + T.colorText + ';box-shadow:0 0 40px ' + T.shadowGlow + ',0 20px 60px ' + T.shadowBox + ';border-radius:6px;overflow:hidden;}',
             '#tx-header{padding:10px 18px;background:' + T.bgHeader + ';display:flex;justify-content:space-between;align-items:center;cursor:move;border-bottom:1px solid ' + T.colorBorderLight + ';font-size:13px;font-weight:bold;}',
+            '#tx-header.locked{cursor:default;}',
             '#tx-header .tx-ver{color:' + T.verColor + ';font-size:10px;margin-left:8px;}',
             '#tx-close{cursor:pointer;color:' + T.colorTextMuted + ';font-size:16px;padding:2px 6px;}',
             '#tx-close:hover{color:' + T.closeHover + ';}',
@@ -916,7 +1219,14 @@
             '#tx-tab-scripts{flex:1;display:none;flex-direction:column;gap:4px;overflow-y:auto;padding:10px;}',
             '#tx-tab-config{flex:1;display:none;flex-direction:column;gap:4px;overflow-y:auto;padding:10px;}',
             '#tx-tab-esp{flex:1;display:none;overflow:hidden;}',
-            '#tx-editor{flex:1;background:' + T.bgEditor + ';color:' + T.editorText + ';border:none;padding:12px;font-family:Consolas,monospace;font-size:12px;resize:none;outline:none;line-height:1.5;}',
+            '#tx-tab-editor{flex:1;display:none;flex-direction:column;overflow:hidden;}',
+            '#tx-editor-wrap{flex:1;display:flex;overflow:hidden;position:relative;}',
+            '#tx-line-nums{width:36px;flex-shrink:0;background:' + T.bgEditor + '99;border-right:1px solid ' + T.outputBorder + ';color:' + T.colorTextMuted + ';font-family:Consolas,monospace;font-size:11px;line-height:1.5;padding:8px 4px 8px 0;text-align:right;overflow:hidden;user-select:none;}',
+            '#tx-line-nums div{height:16.8px;}',
+            '#tx-editor{flex:1;background:' + T.bgEditor + ';color:' + T.editorText + ';border:none;padding:8px 12px;font-family:Consolas,monospace;font-size:12px;resize:none;outline:none;line-height:1.5;tab-size:2;overflow:auto;}',
+            '#tx-code-toolbar{display:flex;align-items:center;gap:6px;padding:4px 8px;background:' + T.bgEditor + 'cc;border-top:1px solid ' + T.outputBorder + ';flex-shrink:0;}',
+            '#tx-cursor-pos{margin-left:auto;font-size:9px;color:' + T.colorTextMuted + ';font-family:monospace;}',
+            '.tx-btn-sm{padding:3px 10px;font-size:10px;}',
             '.tx-bar-row{display:flex;align-items:center;gap:8px;height:26px;width:100%;flex-shrink:0;}',
             '.tx-bar-rank{width:30px;font-size:11px;color:' + T.barRank + ';font-weight:bold;text-align:right;}',
             '.tx-bar-name{width:120px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:' + T.barName + ';}',
@@ -948,11 +1258,12 @@
             '.tx-toggle-switch.on{background:' + T.toggleTrackOn + ';border-color:' + T.toggleBorderOn + ';}',
             '.tx-toggle-switch::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;background:' + T.toggleKnobOff + ';border-radius:50%;transition:all 0.2s;}',
             '.tx-toggle-switch.on::after{left:19px;background:' + T.toggleKnobOn + ';}',
-            '#tx-minimap{position:fixed;z-index:2147483646;pointer-events:none;border:1px solid ' + T.minimapBorder + ';border-radius:4px;overflow:hidden;box-shadow:0 0 10px ' + T.minimapShadow + ';}',
             '#tx-minimap canvas{display:block;}',
             '#tx-debug-log{position:fixed;bottom:0;left:0;width:400px;max-height:200px;z-index:2147483647;background:' + T.debugBg + ';border:1px solid ' + T.debugBorder + ';color:' + T.debugText + ';font-family:monospace;font-size:10px;overflow-y:auto;padding:6px;display:none;}',
             '.tx-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:' + T.toastBg + ';color:' + T.toastText + ';padding:8px 16px;border-radius:4px;font-size:12px;z-index:2147483647;border:1px solid ' + T.toastBorder + ';transition:opacity 0.3s;}',
-            '#tx-code-output{flex:0 0 100px;background:' + T.bgOutput + ';border-top:1px solid ' + T.outputBorder + ';padding:8px;font-family:monospace;font-size:10px;color:' + T.outputText + ';overflow-y:auto;white-space:pre-wrap;}'
+            '#tx-code-output{flex:0 0 120px;background:' + T.bgOutput + ';border-top:1px solid ' + T.outputBorder + ';padding:6px 8px;font-family:monospace;font-size:10px;color:' + T.outputText + ';overflow-y:auto;}',
+            '.tx-log-line{padding:1px 0;border-bottom:1px solid ' + T.outputBorder + '40;word-break:break-all;}',
+            '.tx-log-err{color:#f44;}'
         ].join('');
         document.head.appendChild(s);
     }
@@ -1140,27 +1451,28 @@
             '      <button class="tx-nav-btn" data-tab="scripts">SCRIPTS</button>',
             '      <button class="tx-nav-btn" data-tab="config">CONFIG</button>',
             '      <button class="tx-nav-btn" data-tab="esp">ESP VIEW</button>',
-            '      <button class="tx-nav-btn" data-tab="chat">CHAT</button>',
-            '      <button class="tx-nav-btn" data-tab="market">MARKET</button>',
-            '      <button class="tx-nav-btn" data-tab="account">ACCOUNT</button>',
-            '      <button class="tx-nav-btn" data-tab="link">LINKING</button>',
             '      <div style="flex:1"></div>',
             '      <button class="tx-nav-btn" id="tx-btn-hook" style="border-color:#664">HOOK</button>',
             '      <button class="tx-nav-btn" onclick="window.open(\'https://everythingtt.github.io/TerriX-Client/Territorial.io.html\')">CLIENT</button>',
             '    </div>',
             '    <div id="tx-main">',
             '      <div id="tx-tab-editor">',
-            '        <textarea id="tx-editor" spellcheck="false">/* TerriX v3.0 Code Executor */\n/* Use GameInterface API: */\n/* GameInterface.myId, .getMyTroops(), .getMyTerritory() */\n/* GameInterface.sendAttack(intensity, targetId) */\n/* GameInterface.sendAttackTile(intensity, tile, targetId) */\n/* Full game state: window.G */</textarea>',
+            '        <div id="tx-editor-wrap">',
+            '          <div id="tx-line-nums"></div>',
+            '          <textarea id="tx-editor" spellcheck="false" wrap="off">/* TerriX v5.0 Code Executor */\n/* GI = GameInterface, G = game state, Logger = Logger */\n/* === CORE === */\n/* GI.myId, GI.getMyTroops(), GI.getMyTerritory() */\n/* GI.sendAttack(intensity, targetId) */\n/* GI.sendAttackTile(intensity, tile, targetId) */\n/* GI.getLeaderboard(), GI.getClosestEnemy() */\n/* GI.findBestAttackTile(targetId) */\n/* GI.expandToNearest(), GI.reinforceBorder(targetId) */\n/* === v5.0 STRATEGIC === */\n/* GI.getCycleTick() — 0-99 interest cycle position */\n/* GI.getDensity(id) — troops/land ratio */\n/* GI.getDistanceToPlayer(id) — pixel distance */\n/* GI.predictDensityAtContact(id) — future density */\n/* GI.getTimeToContact(id) — estimated ticks */\n/* GI.shouldSnipe(id) — late-cycle snipe check */\n/* GI.isVulnerable() — bordering strong neighbor */\n/* GI.getAlivePlayers() — array of player objects */\n/* Full game state: window.G */</textarea>',
+            '        </div>',
+            '        <div id="tx-code-toolbar">',
+            '          <button class="tx-btn tx-btn-sm" id="tx-btn-format" title="Format code">FORMAT</button>',
+            '          <button class="tx-btn tx-btn-sm" id="tx-btn-clear-editor" title="Clear editor">CLEAR</button>',
+            '          <button class="tx-btn tx-btn-sm" id="tx-btn-snippet" title="Insert snippet">SNIPPET</button>',
+            '          <span id="tx-cursor-pos">Ln 1, Col 1</span>',
+            '        </div>',
             '        <div id="tx-code-output"></div>',
             '      </div>',
             '      <div id="tx-tab-chart"></div>',
             '      <div id="tx-tab-scripts"></div>',
             '      <div id="tx-tab-config"></div>',
             '      <div id="tx-tab-esp"><canvas id="tx-esp-canvas" style="width:100%;height:100%;"></canvas></div>',
-            '      <div id="tx-tab-chat" style="flex:1;display:none;flex-direction:column;background:#0a0a14;"></div>',
-            '      <div id="tx-tab-market" style="flex:1;display:none;overflow:auto;"></div>',
-            '      <div id="tx-tab-account" style="flex:1;display:none;overflow:auto;"></div>',
-            '      <div id="tx-tab-link" style="flex:1;display:none;overflow:auto;"></div>',
             '    </div>',
             '  </div>',
             '  <div id="tx-footer">',
@@ -1185,15 +1497,10 @@
                 document.querySelectorAll('.tx-nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const tab = btn.dataset.tab;
-                const tabs = ['editor','chart','scripts','config','esp','chat','market','account','link'];
-                tabs.forEach(t => {
+                ['editor','chart','scripts','config','esp'].forEach(t => {
                     const el = document.getElementById('tx-tab-' + t);
                     if (el) el.style.display = (t === tab) ? (t === 'editor' ? 'flex' : t === 'esp' ? 'block' : 'flex') : 'none';
                 });
-                if (tab === 'chat') initChat();
-                if (tab === 'market') initMarket();
-                if (tab === 'account') initAccount();
-                if (tab === 'link') initLinking();
                 persistGUIState();
             });
         });
@@ -1210,18 +1517,74 @@
             }
         });
 
-        document.getElementById('tx-btn-execute').addEventListener('click', () => {
-            const code = document.getElementById('tx-editor').value;
-            const output = document.getElementById('tx-code-output');
-            try {
-                const fn = new Function('G', 'GI', 'TERRIX', 'Logger', code);
-                fn(_win.G, GameInterface, TERRIX, Logger);
-                output.textContent = '✓ Executed successfully';
-                output.style.color = '#0f0';
-            } catch(e) {
-                output.textContent = '✗ ' + e.message;
-                output.style.color = '#f44';
+        const txEditor = document.getElementById('tx-editor');
+        const txLineNums = document.getElementById('tx-line-nums');
+        const txOutput = document.getElementById('tx-code-output');
+        const txCursorPos = document.getElementById('tx-cursor-pos');
+
+        function updateLineNums() {
+            if (!txLineNums || !txEditor) return;
+            const lines = txEditor.value.split('\n').length;
+            txLineNums.innerHTML = '';
+            for (let i = 1; i <= lines; i++) {
+                const d = document.createElement('div');
+                d.textContent = i;
+                txLineNums.appendChild(d);
             }
+        }
+
+        function updateCursorPos() {
+            if (!txCursorPos || !txEditor) return;
+            const pos = txEditor.selectionStart;
+            const text = txEditor.value.substring(0, pos);
+            const lines = text.split('\n');
+            const ln = lines.length;
+            const col = lines[lines.length - 1].length + 1;
+            txCursorPos.textContent = 'Ln ' + ln + ', Col ' + col;
+        }
+
+        function execCode(code) {
+            const logs = [];
+            const cappedLog = function() {
+                const msg = Array.from(arguments).join(' ');
+                logs.push(msg);
+                if (logs.length > 50) logs.shift();
+            };
+            const execLogger = {
+                log: cappedLog, warn: cappedLog, error: cappedLog, debug: cappedLog,
+                prefix: '[TerriX:Exec]'
+            };
+            try {
+                const fn = new Function('G', 'GI', 'TERRIX', 'Logger', 'console', code);
+                const result = fn(_win.G, GameInterface, TERRIX, execLogger, { log: cappedLog, warn: cappedLog, error: cappedLog });
+                if (logs.length > 0) {
+                    txOutput.innerHTML = logs.map(l => '<div class="tx-log-line">' + l.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>').join('');
+                    txOutput.style.color = '#0f0';
+                } else {
+                    txOutput.innerHTML = '<div class="tx-log-line">✓ Executed successfully' + (result !== undefined ? ' → ' + String(result).substring(0, 200) : '') + '</div>';
+                    txOutput.style.color = '#0f0';
+                }
+            } catch(e) {
+                let errMsg = e.message || String(e);
+                if (e.stack) {
+                    const stackLines = e.stack.split('\n');
+                    for (const sl of stackLines) {
+                        if (sl.indexOf('>') !== -1 || sl.indexOf('Function') !== -1) {
+                            const match = sl.match(/<anonymous>:(\d+):(\d+)/);
+                            if (match) errMsg += ' [at line ' + (parseInt(match[1]) - 4) + ':' + match[2] + ']';
+                            break;
+                        }
+                    }
+                }
+                txOutput.innerHTML = '<div class="tx-log-line tx-log-err">✗ ' + errMsg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+                txOutput.style.color = '#f44';
+            }
+        }
+
+        document.getElementById('tx-btn-execute').addEventListener('click', () => {
+            const code = txEditor.value;
+            if (!code.trim()) { txOutput.textContent = '⚠ No code to execute'; txOutput.style.color = '#fa0'; return; }
+            execCode(code);
         });
 
         document.getElementById('tx-btn-stop').addEventListener('click', () => {
@@ -1233,19 +1596,78 @@
             toast('All loops stopped');
         });
 
-        document.getElementById('tx-editor').addEventListener('input', () => {
+        document.getElementById('tx-btn-clear-editor').addEventListener('click', () => {
+            txEditor.value = '';
+            updateLineNums();
+            txOutput.innerHTML = '';
             persistGUIState();
         });
+
+        document.getElementById('tx-btn-format').addEventListener('click', () => {
+            const code = txEditor.value;
+            let formatted = code.replace(/;/g, ';\n').replace(/{/g, ' {\n').replace(/}/g, '\n}\n');
+            const lines = formatted.split('\n');
+            let indent = 0;
+            const result = [];
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                if (line === '}') indent = Math.max(0, indent - 1);
+                result.push('  '.repeat(indent) + line);
+                if (line.endsWith('{')) indent++;
+                if (line === '}') indent = Math.max(0, indent - 1);
+            }
+            txEditor.value = result.join('\n');
+            updateLineNums();
+            persistGUIState();
+        });
+
+        document.getElementById('tx-btn-snippet').addEventListener('click', () => {
+            const snippets = [
+                { label: 'Auto-Expand', code: '// Auto-Expand v5.0 — Cycle-aware expansion\nconst cycleTick = GI.getCycleTick();\nconst troops = GI.getMyTroops();\nconst territory = GI.getMyTerritory();\nconst density = GI.getDensity();\nLogger.log("Tick:", cycleTick, "Density:", density.toFixed(2));\nif (territory > 0 && troops > territory * 2) {\n  const tile = GI.expandToNearest();\n  if (tile) GI.sendAttackTile(troops * 0.3, tile, -1);\n}' },
+                { label: 'Density Analysis', code: '// Density Analysis — Win Pressure check\nconst myDensity = GI.getDensity();\nconst players = GI.getAlivePlayers();\nconst enemies = players.filter(p => !p.isMe);\nLogger.log("My density:", myDensity.toFixed(2));\nfor (const e of enemies) {\n  const dist = GI.getDistanceToPlayer(e.id);\n  const ttc = GI.getTimeToContact(e.id);\n  const pred = GI.predictDensityAtContact(e.id);\n  Logger.log(e.name, "dist:", dist.toFixed(0),\n    "density:", e.density.toFixed(2),\n    "TTC:", ttc.toFixed(0),\n    "myFuture:", pred.myDensity.toFixed(2),\n    "theirFuture:", pred.theirDensity.toFixed(2));\n}\nLogger.log("Vulnerable:", GI.isVulnerable());' },
+                { label: 'Cycle Snipe', code: '// Late-Cycle Snipe — Attack enemies before income tick\nconst cycleTick = GI.getCycleTick();\nif (cycleTick < 85) { Logger.log("Too early for snipe. Tick:", cycleTick); return; }\nconst enemies = GI.getAlivePlayers().filter(p => !p.isMe);\nfor (const e of enemies) {\n  if (!GI.shouldSnipe(e.id)) continue;\n  const tile = GI.findBestAttackTile(e.id);\n  if (!tile) continue;\n  const troops = GI.getMyTroops();\n  const intensity = Math.min(troops * 0.4, 1024);\n  GI.sendAttackTile(intensity, tile, e.id);\n  Logger.log("Snipe!", e.name, "tick:", cycleTick);\n  break;\n}' },
+                { label: 'Threat Radar', code: '// Threat Radar — Find and log all threats\nconst threats = GI.getThreats();\nconst neighbors = GI.getBorderTiles(GI.myId);\nLogger.log("Incoming ships:", threats.length);\nLogger.log("Border tiles:", neighbors.length);\nconst closeEnemies = GI.getAlivePlayers().filter(p => {\n  if (p.isMe) return false;\n  return GI.getDistanceToPlayer(p.id) < 150;\n});\ncloseEnemies.forEach(e => {\n  Logger.log("CLOSE:", e.name, "dist:", GI.getDistanceToPlayer(e.id).toFixed(0));\n});' },
+                { label: 'Leaderboard', code: '// Print Leaderboard\nconst lb = GI.getLeaderboard();\nlb.slice(0, 10).forEach((p, i) => {\n  Logger.log("#" + (i+1) + " " + p.name + " Score:" + p.score + " Territory:" + p.territory);\n});' },
+                { label: 'Debug Dump v5', code: '// Debug Game State v5.0 — Full strategic dump\nLogger.log("=== TERRIX v5.0 DEBUG ===");\nLogger.log("myId:", GI.myId);\nLogger.log("troops:", GI.getMyTroops());\nLogger.log("territory:", GI.getMyTerritory());\nLogger.log("density:", GI.getDensity().toFixed(2));\nLogger.log("cycleTick:", GI.getCycleTick());\nLogger.log("cycleProgress:", (GI.getCycleProgress() * 100).toFixed(0) + "%");\nLogger.log("alive:", GI.isPlayerAlive(GI.myId));\nLogger.log("playing:", GI.isPlaying());\nLogger.log("vulnerable:", GI.isVulnerable());\nLogger.log("gameState:", GI.getGameState());\nLogger.log("mapSize:", JSON.stringify(GI.getMapSize()));\nLogger.log("alivePlayers:", GI.getAlivePlayers().length);\nLogger.log("ships:", GI.getShipCount());' }
+            ];
+            const labels = snippets.map(s => s.label);
+            const choice = prompt('Choose snippet:\n' + labels.map((l, i) => (i+1) + '. ' + l).join('\n'));
+            const idx = parseInt(choice) - 1;
+            if (idx >= 0 && idx < snippets.length) {
+                txEditor.value = snippets[idx].code;
+                updateLineNums();
+                persistGUIState();
+            }
+        });
+
+        txEditor.addEventListener('input', () => {
+            updateLineNums();
+            updateCursorPos();
+            persistGUIState();
+        });
+        txEditor.addEventListener('click', updateCursorPos);
+        txEditor.addEventListener('keyup', updateCursorPos);
+        txEditor.addEventListener('scroll', () => {
+            if (txLineNums) txLineNums.scrollTop = txEditor.scrollTop;
+        });
+
+        updateLineNums();
 
         TERRIX.loops.autoSave = setInterval(() => {
             persistGUIState();
             saveConfig();
         }, 5000);
 
+        if (TERRIX.config.ui.lockPosition) {
+            const hdr = document.getElementById('tx-header');
+            if (hdr) hdr.classList.add('locked');
+        }
+
         let dragging = false, dragX, dragY;
         document.getElementById('tx-header').addEventListener('mousedown', (e) => {
             if (e.target.id === 'tx-close') return;
-            if (TERRIX.config.ui && TERRIX.config.ui.lockPosition) return;
+            if (TERRIX.config.ui.lockPosition) return;
             dragging = true;
             dragX = e.clientX - gui.offsetLeft;
             dragY = e.clientY - gui.offsetTop;
@@ -1259,128 +1681,16 @@
         });
         document.addEventListener('mouseup', () => { dragging = false; persistGUIState(); });
 
+        TERRIX.centerGUI = function() {
+            gui.style.left = '50%';
+            gui.style.top = '80px';
+            gui.style.transform = 'translateX(-50%)';
+            persistGUIState();
+        };
+
         buildScriptsTab();
         buildConfigTab();
         updateStatus('READY', true);
-    }
-
-    function loginOrRegister() {
-        const username = document.getElementById('tx-username').value;
-        const email = document.getElementById('tx-email').value;
-        if (!username || !email) return toast('Username and email required');
-        toast('Account created! Welcome ' + username);
-    }
-
-    function linkTerritorialAccount() {
-        const name = document.getElementById('tx-tio-name').value;
-        const pass = document.getElementById('tx-tio-pass').value;
-        if (!name || !pass) return toast('Territorial.io credentials required');
-        toast('Account linked! Gold balance synced.');
-    }
-
-    function centerGUI() {
-        const gui = document.getElementById('tx-gui');
-        if (!gui) return;
-        gui.style.left = '50%';
-        gui.style.top = '80px';
-        gui.style.transform = 'translateX(-50%)';
-        persistGUIState();
-    }
-
-    function initChat() {
-        const container = document.getElementById('tx-tab-chat');
-        if (!container || container.innerHTML) return;
-        container.innerHTML = [
-            '<div style="flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;">',
-            '  <div class="tx-chat-msg" style="color:#666;font-size:11px;">Welcome to TerriX Chat! Select a channel below.</div>',
-            '</div>',
-            '<div style="padding:10px;border-top:1px solid rgba(255,255,255,0.1);display:flex;gap:8px;">',
-            '  <input id="tx-chat-input" type="text" placeholder="Type message..." style="flex:1;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:12px;">',
-            '  <button id="tx-chat-send" class="tx-btn" style="padding:0 16px;">SEND</button>',
-            '</div>',
-            '<div style="padding:8px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.05);">',
-            '  <button class="tx-btn" data-channel="general" style="font-size:10px;padding:4px 10px;">general</button>',
-            '  <button class="tx-btn" data-channel="scripts" style="font-size:10px;padding:4px 10px;">scripts</button>',
-            '  <button class="tx-btn" data-channel="premium" style="font-size:10px;padding:4px 10px;">premium</button>',
-            '  <button class="tx-btn" style="font-size:10px;padding:4px 10px;" onclick="createPrivateChannel()">+ Private</button>',
-            '</div>'
-        ].join('');
-        document.getElementById('tx-chat-send').addEventListener('click', sendChat);
-        document.getElementById('tx-chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
-        container.querySelectorAll('[data-channel]').forEach(btn => {
-            btn.addEventListener('click', () => toast('Switched to #' + btn.dataset.channel));
-        });
-    }
-
-    function sendChat() {
-        const input = document.getElementById('tx-chat-input');
-        if (input && input.value.trim()) {
-            const msgDiv = document.createElement('div');
-            msgDiv.style.color = '#fff';
-            msgDiv.style.fontSize = '12px';
-            msgDiv.textContent = 'You: ' + input.value;
-            document.querySelector('#tx-tab-chat div:first-child').appendChild(msgDiv);
-            input.value = '';
-        }
-    }
-
-    function createPrivateChannel() {
-        const name = prompt('Enter channel name:');
-        if (name) toast('Created private channel: ' + name);
-    }
-
-    function initMarket() {
-        const container = document.getElementById('tx-tab-market');
-        if (!container || container.innerHTML) return;
-        container.innerHTML = '<iframe src="marketplace.html" style="width:100%;height:100%;border:none;"></iframe>';
-    }
-
-    function initAccount() {
-        const container = document.getElementById('tx-tab-account');
-        if (!container || container.innerHTML) return;
-        container.innerHTML = [
-            '<div style="padding:20px;color:#fff;">',
-            '  <h3 style="color:var(--primary);margin-bottom:12px;">TerriX Account</h3>',
-            '  <div style="margin-bottom:12px;">',
-            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Username</label>',
-            '    <input id="tx-username" type="text" placeholder="Choose username" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
-            '  </div>',
-            '  <div style="margin-bottom:12px;">',
-            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Email</label>',
-            '    <input id="tx-email" type="email" placeholder="email@terrix.local" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
-            '  </div>',
-            '  <div style="margin-bottom:12px;">',
-            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Password</label>',
-            '    <input id="tx-password" type="password" placeholder="Password" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
-            '  </div>',
-            '  <button class="tx-btn tx-btn-primary" onclick="loginOrRegister()" style="width:100%;padding:10px;">LOGIN / REGISTER</button>',
-            '  <div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.03);border-radius:4px;font-size:11px;color:#666;">',
-            '    Profile Theme: <span style="color:var(--gold);">TerriX Dark (Free) / Territorial.io + Banner (Premium)</span>',
-            '  </div>',
-            '</div>'
-        ].join('');
-    }
-
-    function initLinking() {
-        const container = document.getElementById('tx-tab-link');
-        if (!container || container.innerHTML) return;
-        container.innerHTML = [
-            '<div style="padding:20px;color:#fff;">',
-            '  <h3 style="color:var(--primary);margin-bottom:12px;">Territorial.io Account Linking</h3>',
-            '  <div style="margin-bottom:12px;">',
-            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Territorial.io Username</label>',
-            '    <input id="tx-tio-name" type="text" placeholder="Your Territorial.io name" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
-            '  </div>',
-            '  <div style="margin-bottom:12px;">',
-            '    <label style="display:block;font-size:11px;color:#666;margin-bottom:4px;">Territorial.io Password</label>',
-            '    <input id="tx-tio-pass" type="password" placeholder="Your Territorial.io password" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:4px;padding:8px;color:#fff;font-size:13px;margin-bottom:8px;">',
-            '  </div>',
-            '  <button class="tx-btn tx-btn-primary" onclick="linkTerritorialAccount()" style="width:100%;padding:10px;">LINK ACCOUNT</button>',
-            '  <div style="margin-top:12px;padding:12px;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);border-radius:4px;font-size:11px;color:#0ff;">',
-            '    Linked accounts can be used for marketplace purchases. Gold balances are synced automatically.',
-            '  </div>',
-            '</div>'
-        ].join('');
     }
 
     function updateStatus(text, online) {
@@ -1436,24 +1746,28 @@
             {
                 title: 'UI THEME',
                 items: [
-                    { label: 'Theme', key: 'ui.theme', type: 'select', options: ['terrix', 'territorial'], labels: ['TerriX Dark', 'Territorial.io'] },
-                    { label: 'Lock Position', key: 'ui.lockPosition', type: 'toggle' },
-                    { label: 'Center GUI', key: 'ui.centerBtn', type: 'button', action: 'centerGUI' }
+                    { label: 'Theme', key: 'ui.theme', type: 'select', options: ['terrix', 'territorial'], labels: ['TerriX Dark', 'Territorial.io'] }
                 ]
             },
             {
-                title: 'GODBOT SETTINGS',
+                title: 'GODBOT v5.0 SETTINGS',
                 items: [
                     { label: 'Enable GodBot', key: 'godbot.enabled', type: 'toggle' },
-                    { label: 'Strategy', key: 'godbot.strategy', type: 'select', options: ['balanced', 'aggressive', 'defensive', 'rush'] },
+                    { label: 'Strategy', key: 'godbot.strategy', type: 'select', options: ['balanced', 'aggressive', 'defensive', 'rush'], labels: ['Balanced', 'Aggressive', 'Defensive', 'Rush'] },
                     { label: 'Expand Ratio', key: 'godbot.expandRatio', type: 'number' },
                     { label: 'Attack Ratio', key: 'godbot.attackRatio', type: 'number' },
                     { label: 'Retreat Ratio', key: 'godbot.retreatRatio', type: 'number' },
-                    { label: 'Peace Threshold', key: 'godbot.peaceThreshold', type: 'number' },
+                    { label: 'Max Targets', key: 'godbot.maxTargets', type: 'number' },
                     { label: 'Tick Rate (ms)', key: 'godbot.tickRate', type: 'number' },
-                    { label: 'Only Attack Neighbors', key: 'godbot.onlyAttackNeighbors', type: 'toggle' },
                     { label: 'Queue Attacks', key: 'godbot.queueAttacks', type: 'toggle' },
-                    { label: 'Queue Delay (ms)', key: 'godbot.queueDelay', type: 'number' }
+                    { label: 'Queue Delay (ms)', key: 'godbot.queueDelay', type: 'number' },
+                    { label: 'Auto Reinforce', key: 'godbot.autoReinforce', type: 'toggle' },
+                    { label: 'Smart Expand', key: 'godbot.smartExpand', type: 'toggle' },
+                    { label: 'Bot Attack Window End', key: 'godbot.botAttackWindowEnd', type: 'number' },
+                    { label: 'Snipe Window Start', key: 'godbot.snipeWindowStart', type: 'number' },
+                    { label: 'Snipe Intensity', key: 'godbot.snipeIntensity', type: 'number' },
+                    { label: 'Density Parity Min', key: 'godbot.densityParityMin', type: 'number' },
+                    { label: 'Close Range (px)', key: 'godbot.closeRange', type: 'number' }
                 ]
             },
             {
@@ -1472,8 +1786,17 @@
                     { label: 'Enable Minimap', key: 'minimap.enabled', type: 'toggle' },
                     { label: 'Size (px)', key: 'minimap.size', type: 'number' },
                     { label: 'Opacity', key: 'minimap.opacity', type: 'number' },
-                    { label: 'Show Troops', key: 'minimap.showTroops', type: 'toggle' },
-                    { label: 'Show Targets', key: 'minimap.showTargets', type: 'toggle' }
+                    { label: 'Show Grid', key: 'minimap.showGrid', type: 'toggle' },
+                    { label: 'Show Viewport', key: 'minimap.showViewport', type: 'toggle' },
+                    { label: 'Show Mountains', key: 'minimap.showMountains', type: 'toggle' },
+                    { label: 'Show Players', key: 'minimap.showPlayers', type: 'toggle' }
+                ]
+            },
+            {
+                title: 'GUI POSITION',
+                items: [
+                    { label: 'Lock Position', key: 'ui.lockPosition', type: 'toggle' },
+                    { label: 'Center GUI', key: '__center__', type: 'button' }
                 ]
             }
         ];
@@ -1500,6 +1823,10 @@
                         setNested(TERRIX.config, item.key, !val);
                         sw.classList.toggle('on');
                         saveConfig();
+                        if (item.key === 'ui.lockPosition') {
+                            const hdr = document.getElementById('tx-header');
+                            if (hdr) hdr.classList.toggle('locked', !val);
+                        }
                     });
                     row.appendChild(sw);
                 } else if (item.type === 'number') {
@@ -1532,15 +1859,17 @@
                 } else if (item.type === 'button') {
                     const btn = document.createElement('button');
                     btn.className = 'tx-config-input';
-                    btn.textContent = 'Center GUI';
                     btn.style.width = '120px';
                     btn.style.cursor = 'pointer';
-                    btn.style.padding = '4px 10px';
-                    btn.style.fontSize = '11px';
-                    btn.style.fontWeight = 'bold';
+                    btn.style.background = 'rgba(58,71,255,0.2)';
+                    btn.style.border = '1px solid rgba(58,71,255,0.5)';
+                    btn.style.color = '#e8e8f0';
+                    btn.style.padding = '4px 0';
+                    btn.style.borderRadius = '4px';
+                    btn.textContent = 'CENTER';
                     btn.addEventListener('click', () => {
-                        centerGUI();
-                        toast('GUI Centered');
+                        if (TERRIX.centerGUI) TERRIX.centerGUI();
+                        toast('GUI centered');
                     });
                     row.appendChild(btn);
                 }
@@ -1564,97 +1893,253 @@
     function getScriptCode(id) {
         const scripts = {
             godbot: [
-                '/* GodBot v3.0 — Ultimate AI */',
+                '/* GodBot v5.0 — Cycle-Aware Strategic Engine */',
                 'if (TERRIX.loops.godbot) { clearInterval(TERRIX.loops.godbot); TERRIX.loops.godbot = null; TERRIX.config.godbot.enabled = false; Logger.log("GodBot stopped"); return; }',
                 'TERRIX.config.godbot.enabled = true;',
                 'const cfg = TERRIX.config.godbot;',
                 'const myId = GI.myId;',
                 'if (myId < 0) { Logger.error("Not in game"); return; }',
-                'Logger.log("GodBot v3.0 started — Strategy:", cfg.strategy);',
-                'const attackQueue = [];',
-                'let lastExpand = 0, lastAttack = 0;',
-                'TERRIX.loops.godbot = setInterval(() => {',
-                '  if (!GI.isPlayerAlive(myId)) return;',
-                '  const myTroops = GI.getMyTroops();',
-                '  const myTerritory = GI.getMyTerritory();',
-                '  if (myTerritory === 0 && myTroops < 10) return;',
+                'Logger.log("GodBot v5.0 started — Strategy:", cfg.strategy);',
                 '',
-                '  if (cfg.strategy === "rush") {',
-                '    const enemies = [];',
-                '    for (let i = 0; i < GI.maxPlayers; i++) {',
-                '      if (i !== myId && GI.isPlayerAlive(i) && !GI.areAllies(myId, i)) {',
-                '        enemies.push({ id: i, territory: GI.getPlayerTerritory(i) });',
+                'let lastExpand = 0, lastAttack = 0, lastRetreat = 0, lastReinforce = 0;',
+                'let openingPhase = true;',
+                'let totalAttacks = 0, totalExpands = 0, totalSnipes = 0;',
+                '',
+                'function getEnemies() {',
+                '  return GI.getAlivePlayers().filter(p => !p.isMe && !GI.areAllies(myId, p.id));',
+                '}',
+                '',
+                'function getNeighbors() {',
+                '  const borderTiles = GI.getBorderTiles(myId);',
+                '  const map = new Map();',
+                '  for (const tile of borderTiles) {',
+                '    for (const n of GI.getNeighbors(tile)) {',
+                '      const owner = GI.getTileOwner(n);',
+                '      if (owner >= 0 && owner !== myId && !GI.areAllies(myId, owner) && GI.isPlayerAlive(owner)) {',
+                '        if (!map.has(owner)) map.set(owner, { id: owner, territory: GI.getPlayerTerritory(owner), borderTiles: [], contactLen: 0, density: GI.getDensity(owner) });',
+                '        const entry = map.get(owner);',
+                '        entry.borderTiles.push(n);',
+                '        entry.contactLen++;',
                 '      }',
                 '    }',
-                '    enemies.sort((a, b) => a.territory - b.territory);',
-                '    if (enemies.length > 0 && myTroops > 50) {',
-                '      GI.sendAttack(Math.min(myTroops * 0.8, 1024), enemies[0].id);',
+                '  }',
+                '  return map;',
+                '}',
+                '',
+                'function determineMode(closestDist, isBordering) {',
+                '  if (isBordering) return "DEFEND";',
+                '  if (closestDist < (cfg.closeRange || 150)) return "CAUTIOUS";',
+                '  return "EXPAND";',
+                '}',
+                '',
+                'function smartExpand(myTroops, myTerritory, mode) {',
+                '  const now = Date.now();',
+                '  const expandDelay = mode === "DEFEND" ? 5000 : mode === "CAUTIOUS" ? 3000 : 1500;',
+                '  if (now - lastExpand < expandDelay) return;',
+                '  const borderTiles = GI.getBorderTiles(myId);',
+                '  const neutral = borderTiles.filter(t => GI.isNeutral(t) && GI.isWalkable(t) && !GI.isMountain(t));',
+                '  if (neutral.length === 0) return;',
+                '',
+                '  let best = null;',
+                '  let bestScore = -Infinity;',
+                '  const enemies = getEnemies();',
+                '  const closestEnemy = enemies.length > 0 ? enemies.sort((a,b) => GI.getDistanceToPlayer(a.id) - GI.getDistanceToPlayer(b.id))[0] : null;',
+                '',
+                '  for (const t of neutral) {',
+                '    const xy = GI.tileToXY(t);',
+                '    let score = 0;',
+                '    const neighbors = GI.getNeighbors(t);',
+                '    let friendly = 0, enemyN = 0;',
+                '    for (const n of neighbors) {',
+                '      const o = GI.getTileOwner(n);',
+                '      if (o === myId) friendly++;',
+                '      else if (o > 0 && o !== 512 && !GI.areAllies(myId, o)) enemyN++;',
+                '    }',
+                '    score = friendly * 15 - enemyN * 8;',
+                '    if (closestEnemy) {',
+                '      const ec = GI.getPlayerCenter(closestEnemy.id);',
+                '      if (ec) {',
+                '        const dx = xy.x - ec.x;',
+                '        const dy = xy.y - ec.y;',
+                '        const dist = Math.sqrt(dx*dx + dy*dy);',
+                '        if (mode === "EXPAND") score += Math.max(0, 300 - dist) * 0.5;',
+                '        else if (mode === "CAUTIOUS") score += Math.max(0, 150 - dist) * 0.3;',
+                '      }',
+                '    }',
+                '    score += Math.random() * 10;',
+                '    if (score > bestScore) { bestScore = score; best = t; }',
+                '  }',
+                '',
+                '  if (best) {',
+                '    let intensity;',
+                '    if (openingPhase) {',
+                '      intensity = Math.min(myTroops * 0.5, 300);',
+                '    } else if (mode === "DEFEND") {',
+                '      intensity = Math.min(myTroops * 0.1, 100);',
+                '    } else if (mode === "CAUTIOUS") {',
+                '      intensity = Math.min(myTroops * 0.15, 150);',
+                '    } else {',
+                '      intensity = Math.min(myTroops * 0.35, 256);',
+                '    }',
+                '    GI.sendAttackTile(intensity, best, -1);',
+                '    lastExpand = now;',
+                '    totalExpands++;',
+                '  }',
+                '}',
+                '',
+                'function smartAttack(myTroops, myTerritory, mode, cycleTick) {',
+                '  const now = Date.now();',
+                '  const neighbors = getNeighbors();',
+                '  if (neighbors.size === 0) return;',
+                '',
+                '  const targets = Array.from(neighbors.values()).sort((a, b) => {',
+                '    const aScore = a.territory / (a.contactLen || 1);',
+                '    const bScore = b.territory / (b.contactLen || 1);',
+                '    return aScore - bScore;',
+                '  });',
+                '',
+                '  const maxT = Math.min(targets.length, cfg.maxTargets || 3);',
+                '  for (let ti = 0; ti < maxT; ti++) {',
+                '    const t = targets[ti];',
+                '    if (myTroops < myTerritory * (cfg.attackRatio || 3)) break;',
+                '',
+                '    if (cfg.queueAttacks && now - lastAttack < (cfg.queueDelay || 150)) continue;',
+                '',
+                '    const prediction = GI.predictDensityAtContact(t.id);',
+                '    const densityOk = prediction.myDensity >= prediction.theirDensity * cfg.densityParityMin;',
+                '    if (!densityOk && mode !== "DEFEND") continue;',
+                '',
+                '    const bestTile = GI.findBestAttackTile(t.id);',
+                '    if (!bestTile) continue;',
+                '',
+                '    let intensity;',
+                '    if (mode === "DEFEND") {',
+                '      intensity = Math.min(myTroops * 0.3, 512);',
+                '    } else if (cfg.strategy === "aggressive" || cfg.strategy === "rush") {',
+                '      intensity = Math.min(myTroops * 0.6, 1024);',
+                '    } else {',
+                '      intensity = Math.min(myTroops * 0.4 / maxT, 512);',
+                '    }',
+                '',
+                '    GI.sendAttackTile(intensity, bestTile, t.id);',
+                '    lastAttack = now;',
+                '    totalAttacks++;',
+                '    myTroops -= intensity;',
+                '  }',
+                '}',
+                '',
+                'function lateCycleSnipe(myTroops, myTerritory, cycleTick) {',
+                '  if (cycleTick < cfg.snipeWindowStart) return;',
+                '  const neighbors = getNeighbors();',
+                '  if (neighbors.size === 0) return;',
+                '',
+                '  const targets = Array.from(neighbors.values());',
+                '  for (const t of targets) {',
+                '    if (!GI.shouldSnipe(t.id)) continue;',
+                '    const prediction = GI.predictDensityAtContact(t.id);',
+                '    const canSnipe = prediction.myDensity >= prediction.theirDensity * 0.8;',
+                '    if (!canSnipe) continue;',
+                '',
+                '    const bestTile = GI.findBestAttackTile(t.id);',
+                '    if (!bestTile) continue;',
+                '',
+                '    const intensity = Math.min(myTroops * cfg.snipeIntensity, 1024);',
+                '    const minTroopsAfter = myTerritory * (cfg.retreatRatio || 0.3);',
+                '    if (myTroops - intensity < minTroopsAfter) continue;',
+                '',
+                '    GI.sendAttackTile(intensity, bestTile, t.id);',
+                '    totalSnipes++;',
+                '    Logger.log("Snipe on", t.id, "at tick", cycleTick, "intensity:", Math.round(intensity));',
+                '    return;',
+                '  }',
+                '}',
+                '',
+                'function reinforce(myTroops, myTerritory) {',
+                '  const now = Date.now();',
+                '  if (now - lastReinforce < 3000) return;',
+                '  if (!GI.isVulnerable()) return;',
+                '  const neighbors = getNeighbors();',
+                '  for (const [eid, data] of neighbors) {',
+                '    if (data.contactLen > 5 && myTroops > myTerritory * 1.5) {',
+                '      const tile = GI.reinforceBorder(eid);',
+                '      if (tile) {',
+                '        GI.sendAttackTile(Math.min(myTroops * 0.2, 200), tile, eid);',
+                '        lastReinforce = now;',
+                '        return;',
+                '      }',
+                '    }',
+                '  }',
+                '}',
+                '',
+                'TERRIX.loops.godbot = setInterval(() => {',
+                '  if (!GI.isPlayerAlive(myId)) return;',
+                '  if (!GI.isPlaying()) { openingPhase = true; return; }',
+                '',
+                '  const cycleTick = GI.getCycleTick();',
+                '  const myTroops = GI.getMyTroops();',
+                '  const myTerritory = GI.getMyTerritory();',
+                '  const myDensity = GI.getDensity();',
+                '',
+                '  if (myTerritory === 0 && myTroops < 10) return;',
+                '',
+                '  if (myTerritory > 20 && openingPhase) {',
+                '    openingPhase = false;',
+                '    Logger.log("GodBot: Opening complete. Land:", myTerritory, "Density:", myDensity.toFixed(2));',
+                '  }',
+                '',
+                '  const enemies = getEnemies();',
+                '  let closestDist = 9999;',
+                '  let mainThreat = null;',
+                '  for (const e of enemies) {',
+                '    const d = GI.getDistanceToPlayer(e.id);',
+                '    if (d < closestDist) { closestDist = d; mainThreat = e; }',
+                '  }',
+                '  const isBordering = mainThreat && GI.getBorderWith(mainThreat.id).length > 0;',
+                '  const mode = determineMode(closestDist, isBordering);',
+                '',
+                '  if (myTroops < myTerritory * (cfg.retreatRatio || 0.3)) {',
+                '    const now = Date.now();',
+                '    if (now - lastRetreat > 5000) {',
+                '      GI.retreat();',
+                '      lastRetreat = now;',
                 '    }',
                 '    return;',
                 '  }',
                 '',
-                '  if (myTroops < myTerritory * cfg.retreatRatio) {',
-                '    GI.retreat(); return;',
-                '  }',
+                '  reinforce(myTroops, myTerritory);',
                 '',
-                '  if (cfg.onlyAttackNeighbors) {',
-                '    const borderTiles = GI.getBorderTiles(myId);',
-                '    const neighborEnemies = new Map();',
-                '    for (const tile of borderTiles) {',
-                '      const neighbors = GI.getNeighbors(tile);',
-                '      for (const n of neighbors) {',
-                '        const owner = GI.getTileOwner(n);',
-                '        if (owner >= 0 && owner !== myId && !GI.areAllies(myId, owner) && GI.isPlayerAlive(owner)) {',
-                '          if (!neighborEnemies.has(owner)) neighborEnemies.set(owner, { id: owner, territory: GI.getPlayerTerritory(owner), tiles: [] });',
-                '          neighborEnemies.get(owner).tiles.push(n);',
-                '        }',
-                '      }',
-                '    }',
-                '    if (neighborEnemies.size > 0 && myTroops > myTerritory * cfg.attackRatio) {',
-                '      const targets = Array.from(neighborEnemies.values()).sort((a, b) => a.territory - b.territory);',
-                '      const now = Date.now();',
-                '      for (const t of targets.slice(0, cfg.maxTargets)) {',
-                '        if (cfg.queueAttacks) {',
-                '          if (now - lastAttack >= cfg.queueDelay) {',
-                '            const tile = t.tiles[Math.floor(Math.random() * t.tiles.length)];',
-                '            GI.sendAttackTile(Math.min(myTroops / targets.length, 512), tile, t.id);',
-                '            lastAttack = now;',
-                '          }',
-                '        } else {',
-                '          GI.sendAttack(Math.min(myTroops / targets.length, 512), t.id);',
-                '        }',
-                '      }',
-                '    }',
-                '  } else {',
-                '    const enemies = [];',
-                '    for (let i = 0; i < GI.maxPlayers; i++) {',
-                '      if (i !== myId && GI.isPlayerAlive(i) && !GI.areAllies(myId, i)) {',
-                '        enemies.push({ id: i, territory: GI.getPlayerTerritory(i) });',
-                '      }',
-                '    }',
-                '    enemies.sort((a, b) => a.territory - b.territory);',
-                '    if (enemies.length > 0 && myTroops > myTerritory * cfg.attackRatio) {',
-                '      GI.sendAttack(Math.min(myTroops * 0.5, 1024), enemies[0].id);',
+                '  if (cycleTick < cfg.botAttackWindowEnd) {',
+                '    if (mode === "EXPAND" && myTroops > myTerritory * (cfg.expandRatio || 2.0)) {',
+                '      smartExpand(myTroops, myTerritory, mode);',
+                '    } else if (mode === "CAUTIOUS" && myTroops > myTerritory * 3.5) {',
+                '      smartExpand(myTroops, myTerritory, mode);',
+                '    } else if (mode === "DEFEND" && myTroops > myTerritory * 5.0) {',
+                '      smartExpand(myTroops, myTerritory, mode);',
                 '    }',
                 '  }',
                 '',
-                '  if (myTroops > myTerritory * cfg.expandRatio) {',
+                '  if (cycleTick > cfg.snipeWindowStart && cycleTick <= 99) {',
+                '    lateCycleSnipe(myTroops, myTerritory, cycleTick);',
+                '  }',
+                '',
+                '  if (cycleTick < 85) {',
+                '    if (mode === "EXPAND" && myTroops > myTerritory * (cfg.attackRatio || 3)) {',
+                '      smartAttack(myTroops, myTerritory, mode, cycleTick);',
+                '    } else if (mode === "CAUTIOUS" && myTroops > myTerritory * 4) {',
+                '      smartAttack(myTroops, myTerritory, mode, cycleTick);',
+                '    } else if (mode === "DEFEND" && myTroops > myTerritory * 5) {',
+                '      smartAttack(myTroops, myTerritory, mode, cycleTick);',
+                '    }',
+                '  }',
+                '',
+                '  if (myTerritory > 150 && myTroops < myTerritory * 1.1) {',
                 '    const now = Date.now();',
-                '    if (now - lastExpand > 2000) {',
-                '      const borderTiles = GI.getBorderTiles(myId);',
-                '      const neutralTiles = borderTiles.filter(t => GI.isNeutral(t) && GI.isWalkable(t));',
-                '      if (neutralTiles.length > 0) {',
-                '        const tile = neutralTiles[Math.floor(Math.random() * neutralTiles.length)];',
-                '        GI.sendAttackTile(Math.min(myTroops * 0.3, 256), tile, -1);',
-                '      }',
-                '      lastExpand = now;',
+                '    if (now - lastRetreat > 8000) {',
+                '      GI.retreat();',
+                '      lastRetreat = now;',
                 '    }',
                 '  }',
-                '',
-                '  if (myTerritory > 100 && myTroops < myTerritory * 1.2) {',
-                '    GI.retreat();',
-                '  }',
-                '}, cfg.tickRate);'
+                '}, cfg.tickRate || 600);'
             ].join('\n'),
 
             radar: [
@@ -1846,7 +2331,6 @@
     }
 
     const lbNodes = {};
-    let lbPropCache = null;
 
     function discoverAgProps() {
         const G = _win.G;
@@ -1924,121 +2408,453 @@
         });
     }
 
+    let _mmBufferCanvas = null;
+    let _mmBufferCtx = null;
+    let _mmLastDirty = false;
+    let _mmLastMapSeed = -1;
+    let _mmHoverPid = -1;
+    let _mmMouseDown = false;
+
     function ensureMinimap() {
         let el = document.getElementById('tx-minimap');
-        if (el) return;
-        el = document.createElement('div');
-        el.id = 'tx-minimap';
-        const cfg = TERRIX.config.minimap;
-        const size = cfg.size || 180;
-        el.style.width = size + 'px';
-        el.style.height = size + 'px';
-        el.style.opacity = cfg.opacity || 0.85;
-        const pos = cfg.position || 'bottom-right';
-        if (pos === 'bottom-right') { el.style.bottom = '10px'; el.style.right = '10px'; }
-        else if (pos === 'bottom-left') { el.style.bottom = '10px'; el.style.left = '10px'; }
-        else if (pos === 'top-right') { el.style.top = '40px'; el.style.right = '10px'; }
-        else if (pos === 'top-left') { el.style.top = '40px'; el.style.left = '10px'; }
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        el.appendChild(canvas);
-        document.body.appendChild(el);
-        TERRIX.loops.minimap = setInterval(renderMinimap, 200);
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'tx-minimap';
+            const cfg = TERRIX.config.minimap;
+            const size = cfg.size || 220;
+            el.style.cssText = `
+                width:${size}px;height:${size}px;position:fixed;z-index:2147483646;
+                pointer-events:auto;border:1.5px solid ${getCurrentTheme().minimapBorder || '#3a47ff'};
+                border-radius:4px;overflow:hidden;background:#060a14;
+                box-shadow:0 0 15px rgba(0,0,0,0.5);
+                ${cfg.position === 'bottom-right' ? 'bottom:10px;right:10px;' : 'bottom:10px;left:10px;'}
+            `;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            el.appendChild(canvas);
+            document.body.appendChild(el);
+
+            _mmBufferCanvas = document.createElement('canvas');
+            _mmBufferCanvas.width = size;
+            _mmBufferCanvas.height = size;
+            _mmBufferCtx = _mmBufferCanvas.getContext('2d', { alpha: false });
+
+            el.addEventListener('mousemove', _mmOnMouseMove);
+            el.addEventListener('mousedown', _mmOnMouseDown);
+            el.addEventListener('mouseleave', _mmOnMouseLeave);
+        }
+
+        if (!TERRIX.loops.minimap) {
+            TERRIX.loops.minimap = setInterval(renderMinimap, 100);
+        }
     }
 
     function removeMinimap() {
         const el = document.getElementById('tx-minimap');
-        if (el) el.remove();
+        if (el) {
+            el.removeEventListener('mousemove', _mmOnMouseMove);
+            el.removeEventListener('mousedown', _mmOnMouseDown);
+            el.removeEventListener('mouseleave', _mmOnMouseLeave);
+            el.remove();
+        }
         if (TERRIX.loops.minimap) { clearInterval(TERRIX.loops.minimap); TERRIX.loops.minimap = null; }
+        _mmBufferCanvas = null;
+        _mmBufferCtx = null;
+        _mmLastDirty = false;
+        _mmLastMapSeed = -1;
+    }
+
+    function _mmOnMouseMove(e) {
+        const el = document.getElementById('tx-minimap');
+        if (!el) return;
+        const G = _win.G;
+        if (!G || !G.ac || !G.bi || !G.bU) return;
+        const rect = el.getBoundingClientRect();
+        const relX = e.clientX - rect.left;
+        const relY = e.clientY - rect.top;
+        const W = _mmBufferCanvas.width, H = _mmBufferCanvas.height;
+        const mapW = G.bU.fK, mapH = G.bU.fL;
+        const tileX = Math.floor((relX / W) * mapW);
+        const tileY = Math.floor((relY / H) * mapH);
+        if (tileX < 0 || tileY < 0 || tileX >= mapW || tileY >= mapH) { _mmHoverPid = -1; return; }
+        const en = G.ac.yk(tileX, tileY);
+        const pid = G.ac.f1(en);
+        _mmHoverPid = (pid > 0 && pid < 512) ? pid : -1;
+        if (_mmHoverPid > 0 && G.bi && G.bi.aBo) {
+            const teamIdx = G.bi.aBo[_mmHoverPid];
+            const ac6 = G.bi.ac6;
+            const color = ac6 && ac6[teamIdx] ? ac6[teamIdx] : null;
+            if (color) el.style.cursor = 'pointer';
+            else el.style.cursor = 'default';
+        } else {
+            el.style.cursor = 'default';
+        }
+    }
+
+    function _mmOnMouseDown(e) {
+        if (e.button !== 0) return;
+        _mmMouseDown = true;
+        const el = document.getElementById('tx-minimap');
+        if (!el) return;
+        const G = _win.G;
+        if (!G || !G.ac || !G.bU || !_win.aS) return;
+        const rect = el.getBoundingClientRect();
+        const relX = e.clientX - rect.left;
+        const relY = e.clientY - rect.top;
+        const W = _mmBufferCanvas.width, H = _mmBufferCanvas.height;
+        const mapW = G.bU.fK, mapH = G.bU.fL;
+        const tileX = (relX / W) * mapW;
+        const tileY = (relY / H) * mapH;
+        try {
+            const aS = _win.aS;
+            const h = _win.h;
+            aS.nk(tileX, h.i / 2);
+            aS.nl(tileY, h.j / 2);
+            if (G.bh) G.bh.dp = true;
+        } catch(err) {}
+    }
+
+    function _mmOnMouseLeave() {
+        _mmHoverPid = -1;
+        _mmMouseDown = false;
+    }
+
+    function _mmUpdateBuffer(G, W, H, mapW, mapH) {
+        const ctx = _mmBufferCtx;
+        const scaleX = W / mapW;
+        const scaleY = H / mapH;
+        const step = 3;
+
+        if (G.bU.xe && G.bU.xe.width > 1) {
+            ctx.drawImage(G.bU.xe, 0, 0, G.bU.xe.width, G.bU.xe.height, 0, 0, W, H);
+        } else {
+            ctx.fillStyle = "#060a14";
+            ctx.fillRect(0, 0, W, H);
+        }
+
+        if (!G.aD || G.aD.a18 !== 1 || !G.ac || !G.bi) return;
+
+        const ac = G.ac;
+        const bi = G.bi;
+        const f1 = ac.f1;
+        const yk = ac.yk;
+        const aBo = bi.aBo;
+        const aWA = bi.aWA;
+        const ac6 = bi.ac6;
+
+        if (!f1 || !yk || !aBo) return;
+
+        const colorCache = new Map();
+        let lastOwner = -1;
+
+        for (let y = 0; y < mapH; y += step) {
+            lastOwner = -1;
+            for (let x = 0; x < mapW; x += step) {
+                const en = yk(x, y);
+                const owner = f1(en);
+
+                if (owner > 0 && owner < 512) {
+                    let color = colorCache.get(owner);
+                    if (!color) {
+                        const team = aBo[owner];
+                        if (team === undefined || team < 0) { lastOwner = -1; continue; }
+                        color = (aWA && aWA[team]) ? aWA[team] : (ac6 && ac6[team]) ? ac6[team] : null;
+                        if (!color) { lastOwner = -1; continue; }
+                        colorCache.set(owner, color);
+                    }
+
+                    if (lastOwner !== -1 && lastOwner !== owner) {
+                        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+                        ctx.fillRect(x * scaleX, y * scaleY, Math.max(1, scaleX), scaleY * step);
+                    }
+                    lastOwner = owner;
+
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x * scaleX, y * scaleY, scaleX * step, scaleY * step);
+                } else {
+                    lastOwner = -1;
+                }
+            }
+        }
     }
 
     function renderMinimap() {
+        const G = _win.G;
+        if (!G || !G.bU || !_mmBufferCanvas) return;
+
         const el = document.getElementById('tx-minimap');
         if (!el) return;
         const canvas = el.querySelector('canvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        const G = _win.G;
-        if (!G || !G.ag || !G.aD || !G.bU || !G.ac) return;
-
         const mapW = G.bU.fK, mapH = G.bU.fL;
         if (!mapW || !mapH) return;
 
-        // Find the all-tiles property (gq, gb, gp, or fY) — must be an array of arrays
-        const agProps = Object.getOwnPropertyNames(G.ag);
-        let allTilesProp = null;
-        for (const p of ['gq', 'fY', 'gb', 'gp']) {
-            if (agProps.includes(p) && Array.isArray(G.ag[p]) && G.ag[p] !== null) {
-                // Verify it looks like tile data (array of arrays)
-                if (G.ag[p].length > 0 && Array.isArray(G.ag[p][0])) {
-                    allTilesProp = p;
-                    break;
+        const W = _mmBufferCanvas.width, H = _mmBufferCanvas.height;
+        const cfg = TERRIX.config.minimap;
+        const scaleX = W / mapW;
+        const scaleY = H / mapH;
+
+        const isDirty = G.bh && G.bh.dp;
+        const mapChanged = (G.bU.mapSeed !== _mmLastMapSeed);
+
+        if (isDirty || mapChanged || !_mmLastDirty) {
+            _mmLastMapSeed = G.bU.mapSeed;
+            _mmLastDirty = true;
+            _mmUpdateBuffer(G, W, H, mapW, mapH);
+        }
+
+        ctx.drawImage(_mmBufferCanvas, 0, 0);
+
+        if (_mmHoverPid > 0 && G.ac && G.bi) {
+            const aBo = G.bi.aBo;
+            const aWA = G.bi.aWA;
+            const ac6 = G.bi.ac6;
+            const teamIdx = aBo ? aBo[_mmHoverPid] : _mmHoverPid;
+            const baseColor = (aWA && aWA[teamIdx]) ? aWA[teamIdx] : (ac6 && ac6[teamIdx]) ? ac6[teamIdx] : null;
+            if (baseColor) {
+                const f1 = G.ac.f1;
+                const yk = G.ac.yk;
+                const step = 3;
+                ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                for (let y = 0; y < mapH; y += step) {
+                    for (let x = 0; x < mapW; x += step) {
+                        const en = yk(x, y);
+                        const owner = f1(en);
+                        if (owner === _mmHoverPid) {
+                            ctx.fillRect(x * scaleX, y * scaleY, scaleX * step, scaleY * step);
+                        }
+                    }
                 }
             }
         }
-        if (!allTilesProp) return; // Tile data not initialized yet
 
-        const aliveProp = agProps.includes('n4') ? 'n4' : agProps.includes('a4W') ? 'a4W' : null;
-        if (!aliveProp) return;
+        if (cfg.showPlayers !== false && G.bP && G.bP.y) {
+            const bPy = G.bP.y;
+            const shipCount = bPy.mK | 0;
+            if (shipCount > 0 && bPy.mZ && bPy.mO) {
+                const mZ = bPy.mZ;
+                const mO = bPy.mO;
+                const mapW16 = mapW << 4;
+                const myId = G.aD ? (G.aD.et | 0) : -1;
+                const maxP = G.aD ? (G.aD.f6 || 512) : 512;
+                const drawn = new Uint8Array(maxP);
 
-        // Tile to XY conversion using ac.zC/ac.zD
+                for (let s = 0; s < shipCount; s++) {
+                    const iS = mZ[s];
+                    if (!iS || iS <= 0) continue;
+                    const tileX = (iS % mapW16) / 16;
+                    const tileY = Math.floor(iS / mapW16) / 16;
+                    if (tileX < 0 || tileY < 0 || tileX >= mapW || tileY >= mapH) continue;
+                    const playerId = mO[s] >> 3;
+                    if (playerId < 0 || playerId >= maxP || drawn[playerId]) continue;
+                    drawn[playerId] = 1;
+
+                    const dotX = tileX * scaleX;
+                    const dotY = tileY * scaleY;
+                    const isMe = playerId === myId;
+                    const teamIdx = G.bi.aBo ? G.bi.aBo[playerId] : playerId;
+                    const dotColor = (G.bi.ac6 && G.bi.ac6[teamIdx]) ? G.bi.ac6[teamIdx] : (isMe ? "#00ff64" : "#ff4444");
+
+                    ctx.beginPath();
+                    ctx.arc(dotX, dotY, isMe ? 4 : 3, 0, Math.PI * 2);
+                    ctx.fillStyle = dotColor;
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(dotX, dotY, (isMe ? 4 : 3) * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fill();
+                }
+            }
+        }
+
+        if (cfg.showViewport !== false && _win.aS) {
+            try {
+                const aS = _win.aS;
+                const camX = aS.zC();
+                const camY = aS.zD();
+                const h = _win.h;
+                const iK = aS.a9n ? aS.a9n() : 1;
+                const vpW = (h.i / iK) * scaleX;
+                const vpH = (h.j / iK) * scaleY;
+                const vpX = camX * scaleX;
+                const vpY = camY * scaleY;
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(vpX, vpY, Math.max(6, vpW), Math.max(6, vpH));
+            } catch(e) {}
+        }
+
+        if (cfg.showGrid !== false) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctx.lineWidth = 0.5;
+            const gridStep = Math.max(1, Math.floor(mapW / 16));
+            for (let x = 0; x < mapW; x += gridStep) {
+                const px = x * scaleX;
+                ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+            }
+            for (let y = 0; y < mapH; y += gridStep) {
+                const py = y * scaleY;
+                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
+            }
+        }
+
+        const T = getCurrentTheme();
+        ctx.strokeStyle = T.minimapBorder || '#3a47ff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(0, 0, W, H);
+
+        if (G.ag && G.aD) {
+            const agProps = Object.getOwnPropertyNames(G.ag);
+            const aliveProp = agProps.includes('n4') ? 'n4' : agProps.includes('a4W') ? 'a4W' : null;
+            if (aliveProp) {
+                let aliveCount = 0;
+                const maxP = G.aD.f6 || 512;
+                for (let i = 0; i < maxP; i++) {
+                    if (G.ag[aliveProp] && G.ag[aliveProp][i] !== 0) aliveCount++;
+                }
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(2, 2, 56, 14);
+                ctx.fillStyle = '#fff';
+                ctx.font = '9px system-ui';
+                ctx.fillText(aliveCount + ' players', 5, 12);
+            }
+        }
+    }
+
+    // Fallback: render minimap by reading tile arrays directly.
+    // Used when bU.xe is not yet available.
+    function renderMinimapFromTiles(ctx, G, mapW, mapH, W, H, cfg) {
         const ac = G.ac;
+        const agProps = Object.getOwnPropertyNames(G.ag);
+
         const toX = typeof ac.zC === 'function' ? ac.zC : (e => (e >> 2) % mapW);
         const toY = typeof ac.zD === 'function' ? ac.zD : (e => Math.floor((e >> 2) / mapW));
 
-        const W = canvas.width, H = canvas.height;
-        const scaleX = W / mapW, scaleY = H / mapH;
+        let allTilesProp = null;
+        for (const p of ['gq', 'fY', 'gb', 'gp']) {
+            if (agProps.includes(p) && Array.isArray(G.ag[p]) && G.ag[p] !== null) {
+                if (G.ag[p].length > 0 && Array.isArray(G.ag[p][0])) { allTilesProp = p; break; }
+            }
+        }
 
-        ctx.fillStyle = '#0a0a0a';
+        const aliveProp = agProps.includes('n4') ? 'n4' : agProps.includes('a4W') ? 'a4W' : null;
+        const myId = G.aD ? G.aD.et : -1;
+        const maxPlayers = G.aD ? (G.aD.f6 || 512) : 512;
+
+        if (!_mmDebugOnce && TERRIX.Logger && TERRIX.Logger.log) {
+            TERRIX.Logger.log("Minimap", "FALLBACK: allTilesProp=" + allTilesProp + " aliveProp=" + aliveProp + " agProps=" + agProps.slice(0,20).join(',') + " ac.zC=" + (ac && typeof ac.zC) + " ac.zD=" + (ac && typeof ac.zD));
+        }
+
+        // Clear to ocean
+        ctx.fillStyle = '#060a14';
         ctx.fillRect(0, 0, W, H);
 
-        const max = G.aD.f6 || 512;
-        const myId = G.aD.et;
+        if (!allTilesProp || !aliveProp) return;
 
-        for (let i = 0; i < max; i++) {
-            if (i === myId || (G.ag[aliveProp] && G.ag[aliveProp][i] === 0)) continue;
-            const tiles = G.ag[allTilesProp] && G.ag[allTilesProp][i];
+        // Build a per-tile owner map into an ImageData buffer
+        const imgData = ctx.createImageData(W, H);
+        const data = imgData.data;
+
+        // Ocean background
+        for (let px = 0; px < data.length; px += 4) {
+            data[px] = 6; data[px+1] = 10; data[px+2] = 20; data[px+3] = 255;
+        }
+
+        const scaleX = W / mapW, scaleY = H / mapH;
+
+        const playerColors = {};
+        const hashColor = (id) => {
+            if (playerColors[id]) return playerColors[id];
+            const hue = ((id * 137.508) % 360) / 360;
+            const s = 0.7, l = 0.55;
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1; if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            playerColors[id] = {
+                r: Math.round(hue2rgb(p, q, hue + 1/3) * 255),
+                g: Math.round(hue2rgb(p, q, hue) * 255),
+                b: Math.round(hue2rgb(p, q, hue - 1/3) * 255)
+            };
+            return playerColors[id];
+        };
+
+        for (let pid = 0; pid < maxPlayers; pid++) {
+            if (G.ag[aliveProp] && G.ag[aliveProp][pid] === 0) continue;
+            const tiles = G.ag[allTilesProp] && G.ag[allTilesProp][pid];
             if (!tiles || !Array.isArray(tiles) || tiles.length === 0) continue;
+
+            const isMe = pid === myId;
             let isAlly = false;
             try {
-                if (G.bu && typeof G.bu.hi === 'function') isAlly = G.bu.hi(myId, i);
-                else if (G.bu && typeof G.bu.f2 === 'function') isAlly = !G.bu.f2(myId, i);
+                if (G.bu && typeof G.bu.hi === 'function') isAlly = G.bu.hi(myId, pid);
+                else if (G.bu && typeof G.bu.f2 === 'function') isAlly = !G.bu.f2(myId, pid);
             } catch(e) {}
-            ctx.fillStyle = isAlly ? 'rgba(0,100,255,0.4)' : 'rgba(200,50,50,0.4)';
-            const step = Math.max(1, Math.floor(tiles.length / 200));
-            for (let j = 0; j < tiles.length; j += step) {
+
+            let r, g, b, a;
+            if (isMe) { r = 0; g = 255; b = 100; a = 220; }
+            else if (isAlly) { r = 60; g = 140; b = 255; a = 180; }
+            else {
+                const col = hashColor(pid);
+                r = col.r; g = col.g; b = col.b; a = 180;
+            }
+
+            for (let j = 0; j < tiles.length; j++) {
                 try {
                     const enc = tiles[j];
-                    const xx = toX(enc);
-                    const yy = toY(enc);
-                    if (xx >= 0 && xx < mapW && yy >= 0 && yy < mapH) {
-                        ctx.fillRect(xx * scaleX, yy * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+                    const tileX = toX(enc);
+                    const tileY = toY(enc);
+                    if (tileX < 0 || tileX >= mapW || tileY < 0 || tileY >= mapH) continue;
+
+                    const px = Math.floor(tileX * scaleX);
+                    const py = Math.floor(tileY * scaleY);
+                    const pxEnd = Math.min(Math.floor((tileX + 1) * scaleX) + 1, W);
+                    const pyEnd = Math.min(Math.floor((tileY + 1) * scaleY) + 1, H);
+
+                    for (let sy = py; sy < pyEnd; sy++) {
+                        const rowOff = sy * W;
+                        for (let sx = px; sx < pxEnd; sx++) {
+                            const idx = (rowOff + sx) * 4;
+                            data[idx] = r; data[idx+1] = g; data[idx+2] = b; data[idx+3] = a;
+                        }
                     }
                 } catch(e) {}
             }
         }
 
-        // Draw my territory last (on top)
-        const myTiles = G.ag[allTilesProp] && G.ag[allTilesProp][myId];
-        if (myTiles && Array.isArray(myTiles) && myTiles.length > 0) {
-            ctx.fillStyle = 'rgba(0,255,0,0.6)';
-            const step = Math.max(1, Math.floor(myTiles.length / 200));
-            for (let j = 0; j < myTiles.length; j += step) {
-                try {
-                    const enc = myTiles[j];
-                    const xx = toX(enc);
-                    const yy = toY(enc);
-                    if (xx >= 0 && xx < mapW && yy >= 0 && yy < mapH) {
-                        ctx.fillRect(xx * scaleX, yy * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
-                    }
-                } catch(e) {}
+        // Render neutral/mountain tiles
+        if (cfg.showMountains !== false && typeof ac.fE === 'function' && typeof ac.yk === 'function') {
+            for (let y = 0; y < mapH; y += 4) {
+                for (let x = 0; x < mapW; x += 4) {
+                    try {
+                        const enc = ac.yk(x, y);
+                        if (ac.fE(enc)) {
+                            const px = Math.floor(x * scaleX);
+                            const py = Math.floor(y * scaleY);
+                            const pxEnd = Math.min(Math.floor((x + 4) * scaleX) + 1, W);
+                            const pyEnd = Math.min(Math.floor((y + 4) * scaleY) + 1, H);
+                            for (let sy = py; sy < pyEnd; sy++) {
+                                const rowOff = sy * W;
+                                for (let sx = px; sx < pxEnd; sx++) {
+                                    const idx = (rowOff + sx) * 4;
+                                    data[idx] = 35; data[idx+1] = 35; data[idx+2] = 45; data[idx+3] = 200;
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
             }
         }
 
-        ctx.strokeStyle = '#3a47ff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(0, 0, W, H);
+        ctx.putImageData(imgData, 0, 0);
     }
 
     const MultiTab = {
