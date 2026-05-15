@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TerriX Executor v3.0 | Ultimate Strategy Suite</title>
+    <title>TerriX Executor v5.0 | Ultimate Strategy Suite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root{--primary:#3a47ff;--glow:rgba(58,71,255,0.4);--gold:#ffd700;--green:#0f0;--bg:#030308;--surf:#0a0a14;--surf2:#111120;--brd:#222240;--txt:#e0e0e8;--dim:#666680}
@@ -162,7 +162,7 @@
     <div class="bg-grid"></div>
     <header>
         <div class="container">
-            <div class="logo">TERRIX <span class="ver">v3.0</span></div>
+            <div class="logo">TERRIX <span class="ver">v5.0</span></div>
             <p class="tagline">The Art of Conquest, Automated.</p>
         </div>
     </header>
@@ -182,43 +182,43 @@
             <div class="preview-3d active" id="preview-terrix">
                 <div class="mock-gui">
                     <div class="mock-header">
-                        <span class="mock-title">TERRIX <span class="mock-ver">v3.0</span></span>
-                        <span class="mock-close">✕</span>
+                        <span class="mock-title">TERRIX <span class="mock-ver">v5.0</span></span>
+                    <span class="mock-close">✕</span>
+                </div>
+                <div class="mock-body">
+                    <div class="mock-sidebar">
+                        <div class="mock-nav active">EDITOR</div>
+                        <div class="mock-nav">LEADERBOARD</div>
+                        <div class="mock-nav">SCRIPTS</div>
+                        <div class="mock-nav">CONFIG</div>
+                        <div class="mock-nav">ESP VIEW</div>
                     </div>
-                    <div class="mock-body">
-                        <div class="mock-sidebar">
-                            <div class="mock-nav active">EDITOR</div>
-                            <div class="mock-nav">LEADERBOARD</div>
-                            <div class="mock-nav">SCRIPTS</div>
-                            <div class="mock-nav">CONFIG</div>
-                            <div class="mock-nav">ESP VIEW</div>
+                    <div class="mock-main">
+                        <div class="mock-editor">
+                            <div class="mock-line"><span class="kw">const</span> tick = <span class="fn">GI</span>.<span class="fn">getCycleTick</span>();</div>
+                            <div class="mock-line"><span class="kw">const</span> d = <span class="fn">GI</span>.<span class="fn">getDensity</span>();</div>
+                            <div class="mock-line"><span class="kw">if</span> (tick &gt; <span class="num">85</span> &amp;&amp; <span class="fn">GI</span>.<span class="fn">shouldSnipe</span>(e.id)) {</div>
+                            <div class="mock-line">&nbsp;&nbsp;<span class="fn">GI</span>.<span class="fn">sendAttackTile</span>(<span class="num">0.4</span>, tile, e.id);</div>
+                            <div class="mock-line">}</div>
                         </div>
-                        <div class="mock-main">
-                            <div class="mock-editor">
-                                <div class="mock-line"><span class="kw">const</span> target = <span class="fn">GI</span>.<span class="fn">getWeakestNeighbor</span>();</div>
-                                <div class="mock-line"><span class="kw">if</span> (target &amp;&amp; <span class="fn">GI</span>.<span class="fn">getMyTroops</span>() &gt; <span class="num">500</span>) {</div>
-                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">GI</span>.<span class="fn">sendAttack</span>(<span class="num">0.8</span>, target);</div>
-                                <div class="mock-line">&nbsp;&nbsp;<span class="fn">Logger</span>.<span class="fn">log</span>(<span class="str">"Attacking "</span> + target);</div>
-                                <div class="mock-line">}</div>
-                            </div>
-                            <div class="mock-output">[TerriX] Executed successfully</div>
-                        </div>
-                    </div>
-                    <div class="mock-footer">
-                        <span class="mock-status online">● Hooked</span>
-                        <span class="mock-footer-right">
-                            <button class="mock-btn btn-primary">EXECUTE</button>
-                            <button class="mock-btn btn-danger">STOP ALL</button>
-                        </span>
+                        <div class="mock-output">[TerriX] Snipe at tick 92 — intensity 512</div>
                     </div>
                 </div>
+                <div class="mock-footer">
+                    <span class="mock-status online">● Hooked</span>
+                    <span class="mock-footer-right">
+                        <button class="mock-btn btn-primary">EXECUTE</button>
+                        <button class="mock-btn btn-danger">STOP ALL</button>
+                    </span>
+                </div>
             </div>
+        </div>
 
             <!-- TERRITORIAL.IO PREVIEW -->
             <div class="preview-3d" id="preview-territorial">
                 <div class="mock-gui territorial">
                     <div class="mock-header">
-                        <span class="mock-title">TERRIX <span class="mock-ver">v3.0</span></span>
+                        <span class="mock-title">TERRIX <span class="mock-ver">v5.0</span></span>
                         <span class="mock-close">✕</span>
                     </div>
                     <div class="mock-body">
@@ -276,9 +276,9 @@
         <div class="downloads">
             <div class="dl-card latest">
                 <span class="badge badge-gold">Latest</span>
-                <h2>TerriX v3.0 — Ultimate</h2>
-                <p>Complete rewrite. Neighbor-based AI, ESP overlay, minimap, multi-tab sync, configurable strategies, attack queuing, and debug tools.</p>
-                <a href="https://greasyfork.org/en/users/1538530-terri-exploits-inc" target="_blank" class="dl-btn">Install v3.0</a>
+                <h2>TerriX v5.0 — Ultimate</h2>
+                <p>Cycle-aware AI with density parity, late-cycle sniping, spatial mode switching, 10+ strategic API methods, and full custom scripting support.</p>
+                <a href="https://greasyfork.org/en/users/1538530-terri-exploits-inc" target="_blank" class="dl-btn">Install v5.0</a>
             </div>
             <div class="dl-card">
                 <span class="badge badge-gray">Legacy</span>
@@ -298,25 +298,26 @@
     <section class="container features">
         <h2>Features</h2>
         <div class="feat-grid">
-            <div class="feat-item"><i class="fa-solid fa-robot"></i><strong>GodBot AI</strong><span>Neighbor-based targeting, retreat logic, attack queuing, 4 strategies</span></div>
-            <div class="feat-item"><i class="fa-solid fa-map"></i><strong>Live Minimap</strong><span>Canvas-rendered overlay showing all player territories in real-time</span></div>
+            <div class="feat-item"><i class="fa-solid fa-robot"></i><strong>GodBot v5.0 AI</strong><span>Cycle-aware strategy, density parity, spatial mode switching, late-cycle sniping, 4 strategies</span></div>
+            <div class="feat-item"><i class="fa-solid fa-clock"></i><strong>Interest Cycle Engine</strong><span>Tracks the 100-tick interest cycle and times attacks for maximum ROI — bots early, enemies late</span></div>
+            <div class="feat-item"><i class="fa-solid fa-scale-balanced"></i><strong>Density Parity</strong><span>Win pressure calculation — won't over-expand if it leaves you vulnerable to a stronger neighbor</span></div>
+            <div class="feat-item"><i class="fa-solid fa-map"></i><strong>Live Minimap</strong><span>Canvas-rendered overlay showing all player territories, ship positions, and viewport in real-time</span></div>
             <div class="feat-item"><i class="fa-solid fa-eye"></i><strong>ESP View</strong><span>Full game state visualization with tile-level detail</span></div>
             <div class="feat-item"><i class="fa-solid fa-crosshairs"></i><strong>Threat Radar</strong><span>Instant visual warning when ships/boats target your territory</span></div>
             <div class="feat-item"><i class="fa-solid fa-layer-group"></i><strong>Multi-Tab Sync</strong><span>BroadcastChannel-based coordination between multiple game instances</span></div>
-            <div class="feat-item"><i class="fa-solid fa-code"></i><strong>Code Executor</strong><span>Built-in editor with GameInterface API for custom scripts</span></div>
-            <div class="feat-item"><i class="fa-solid fa-bolt"></i><strong>Rush Mode</strong><span>All-in attack on the weakest neighbor for fast eliminations</span></div>
-            <div class="feat-item"><i class="fa-solid fa-users"></i><strong>Team Assist</strong><span>Auto-attack enemies bordering your teammates</span></div>
-            <div class="feat-item"><i class="fa-solid fa-bug"></i><strong>Debug Dumper</strong><span>Dump all game state properties to console for reverse engineering</span></div>
+            <div class="feat-item"><i class="fa-solid fa-code"></i><strong>Code Executor</strong><span>Built-in editor with 30+ GameInterface API methods, snippets, and syntax tools</span></div>
+            <div class="feat-item"><i class="fa-solid fa-map-location-dot"></i><strong>Spatial Mode Switching</strong><span>Auto-switches between EXPAND / CAUTIOUS / DEFEND based on enemy proximity</span></div>
+            <div class="feat-item"><i class="fa-solid fa-bug"></i><strong>Debug Dumper v5</strong><span>Full strategic dump including cycle state, density, vulnerability, and alive players</span></div>
         </div>
     </section>
 
     <section class="container guide">
-        <h2>How to Use TerriX Executor v3.0</h2>
+        <h2>How to Use TerriX Executor v5.0</h2>
 
         <div class="guide-section">
             <h3><span class="guide-step">1</span> First Launch</h3>
             <div class="guide-body">
-                <p>After installing Tampermonkey and the TerriX Executor script, open the <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" target="_blank">TerriX Client</a> and join a game. Once the game loads, you will see a green <strong>TERRIX v3.0</strong> bar at the top of the screen. Click it (or press <kbd>F2</kbd>) to open the Executor panel.</p>
+                <p>After installing Tampermonkey and the TerriX Executor script, open the <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" target="_blank">TerriX Client</a> and join a game. Once the game loads, you will see a green <strong>TERRIX v5.0</strong> bar at the top of the screen. Click it (or press <kbd>F2</kbd>) to open the Executor panel.</p>
                 <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> If you see "Game Hook Not Detected", you are not using the TerriX Client. Open the TerriX Client URL instead.</div>
             </div>
         </div>
@@ -339,7 +340,7 @@
                     <div class="guide-card">
                         <i class="fa-solid fa-scroll"></i>
                         <strong>SCRIPTS</strong>
-                        <span>Pre-built scripts: GodBot v3.0, Threat Radar, Auto-Expand, Rush Mode, Team Assist, and Debug Dumper. Click LOAD to insert into the editor.</span>
+                        <span>Pre-built scripts: GodBot v5.0 (cycle-aware AI), Threat Radar, Auto-Expand, Density Analysis, Cycle Snipe, and Debug Dumper v5. Click LOAD to insert into the editor.</span>
                     </div>
                     <div class="guide-card">
                         <i class="fa-solid fa-sliders"></i>
@@ -370,39 +371,57 @@
         </div>
 
         <div class="guide-section">
-            <h3><span class="guide-step">4</span> GodBot v3.0 — The AI Bot</h3>
+            <h3><span class="guide-step">4</span> GodBot v5.0 — Cycle-Aware Strategic Engine</h3>
             <div class="guide-body">
-                <p>GodBot is the flagship feature. It automates expansion, attacking, and retreating based on configurable troop-to-territory ratios.</p>
-                <div class="guide-cols">
+                <p>GodBot v5.0 is a complete strategic overhaul. It doesn't just react to current ratios — it reads the game's internal clock, estimates distances to enemies, predicts future troop density, and switches between spatial modes to maximize income while surviving contact.</p>
+
+                <div class="guide-cols" style="margin-top:16px">
                     <div class="guide-card">
-                        <i class="fa-solid fa-chess"></i>
-                        <strong>4 Strategies</strong>
-                        <span><em>Balanced</em> — expand + attack neighbors. <em>Aggressive</em> — prioritize attacks. <em>Defensive</em> — hold territory. <em>Rush</em> — all-in on weakest player.</span>
+                        <i class="fa-solid fa-clock"></i>
+                        <strong>Interest Cycle Awareness</strong>
+                        <span>Every 100 ticks the game pays interest on your land. GodBot tracks the current tick (<code>GI.getCycleTick()</code>) and times attacks accordingly. Bot attacks happen early (ticks 0–70) for long-term ROI. Enemy attacks happen late (ticks 85+) to steal land right before income payout.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <strong>Density Parity Law</strong>
+                        <span>Win pressure = land advantage + troop density to survive contact. GodBot calculates <code>troops/land</code> for you and every neighbor. It won't over-expand into neutral land if it would leave you vulnerable to a bordering enemy with 2× your density.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <strong>Spatial Mode Switching</strong>
+                        <span>Three modes based on enemy proximity: <em>EXPAND</em> (far from enemies — greedy growth), <em>CAUTIOUS</em> (moderate distance — conservative expansion), <em>DEFEND</em> (bordering — hold density, only efficient attacks). Configured via the <kbd>Close Range</kbd> setting.</span>
+                    </div>
+                    <div class="guide-card">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <strong>Late-Cycle Sniping</strong>
+                        <span>Near the end of each 100-tick cycle, GodBot looks for enemy attacks that would increase your land share before income is paid. It checks density parity first — only sniping if it won't leave you punishably low. This converts enemy land into your income base immediately.</span>
                     </div>
                     <div class="guide-card">
                         <i class="fa-solid fa-shield-halved"></i>
-                        <strong>Smart Retreat</strong>
-                        <span>Automatically retreats when troops fall below the retreat ratio × territory. Re-engages when strong enough.</span>
+                        <strong>Smart Retreat & Reinforce</strong>
+                        <span>Automatically retreats when troops fall below the retreat ratio × territory. When <code>GI.isVulnerable()</code> returns true (a bordering neighbor has >1.2× your density), GodBot reinforces the border instead of expanding.</span>
                     </div>
                     <div class="guide-card">
                         <i class="fa-solid fa-list-ol"></i>
                         <strong>Attack Queuing</strong>
-                        <span>Sends attacks with a configurable delay between them to avoid the game's rate limiter.</span>
-                    </div>
-                    <div class="guide-card">
-                        <i class="fa-solid fa-users-viewfinder"></i>
-                        <strong>Neighbor Targeting</strong>
-                        <span>Only attacks enemies that border your territory (toggleable). Sorts targets by territory size — weakest first.</span>
+                        <span>Sends attacks with a configurable delay between them to avoid the game's rate limiter. Essential for multi-target strategies.</span>
                     </div>
                 </div>
-                <p style="margin-top:16px">Open the <strong>CONFIG</strong> tab to customize all GodBot parameters. Key settings:</p>
+
+                <p style="margin-top:20px">Open the <strong>CONFIG</strong> tab to customize all GodBot v5.0 parameters:</p>
                 <table class="guide-table">
+                    <tr><td><kbd>Strategy</kbd></td><td><em>Balanced</em> / <em>Aggressive</em> / <em>Defensive</em> / <em>Rush</em> — controls attack intensity and risk tolerance</td></tr>
                     <tr><td><kbd>Expand Ratio</kbd></td><td>Troops must exceed territory × this value to expand into neutral land (default: 2.0)</td></tr>
-                    <tr><td><kbd>Attack Ratio</kbd></td><td>Troops must exceed territory × this value to attack enemies (default: 4.0)</td></tr>
+                    <tr><td><kbd>Attack Ratio</kbd></td><td>Troops must exceed territory × this value to attack enemies (default: 3.0)</td></tr>
                     <tr><td><kbd>Retreat Ratio</kbd></td><td>Retreat when troops fall below territory × this value (default: 0.3)</td></tr>
-                    <tr><td><kbd>Tick Rate</kbd></td><td>How often the bot makes a decision, in milliseconds (default: 800ms)</td></tr>
-                    <tr><td><kbd>Queue Delay</kbd></td><td>Delay between queued attacks in milliseconds (default: 150ms)</td></tr>
+                    <tr><td><kbd>Tick Rate</kbd></td><td>How often the bot makes a decision, in milliseconds (default: 600ms)</td></tr>
+                    <tr><td><kbd>Bot Attack Window End</kbd></td><td>Tick at which bot/neutral expansion attacks stop (default: 70). After this, only enemy snipes.</td></tr>
+                    <tr><td><kbd>Snipe Window Start</kbd></td><td>Tick at which late-cycle enemy sniping begins (default: 85)</td></tr>
+                    <tr><td><kbd>Snipe Intensity</kbd></td><td>Fraction of troops to use per snipe attack (default: 0.4)</td></tr>
+                    <tr><td><kbd>Density Parity Min</kbd></td><td>Minimum ratio of your density vs enemy density to allow attacks (default: 0.8)</td></tr>
+                    <tr><td><kbd>Close Range (px)</kbd></td><td>Pixel distance to nearest enemy for CAUTIOUS mode (default: 150)</td></tr>
                 </table>
+                <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> <strong>Pro tip:</strong> Lower the <kbd>Bot Attack Window End</kbd> to 60 and raise <kbd>Snipe Window Start</kbd> to 90 for a "turtle then strike" playstyle. Raise <kbd>Density Parity Min</kbd> to 1.0 for maximum safety.</div>
             </div>
         </div>
 
@@ -436,7 +455,7 @@
                     <tr><td><code>TERRIX</code></td><td>The Terrix namespace — config, loops registry, version</td></tr>
                     <tr><td><code>Logger</code></td><td>Prefix-tagged console logger (<code>[TerriX]</code>)</td></tr>
                 </table>
-                <p style="margin-top:16px">Common <code>GI</code> methods:</p>
+                <p style="margin-top:16px"><strong>Core Methods:</strong></p>
                 <table class="guide-table">
                     <tr><td><code>GI.myId</code></td><td>Your player ID</td></tr>
                     <tr><td><code>GI.getMyTroops()</code></td><td>Your current troop count</td></tr>
@@ -454,7 +473,90 @@
                     <tr><td><code>GI.isNeutral(encoded)</code></td><td>Whether a tile is unowned</td></tr>
                     <tr><td><code>GI.tileToXY(encoded)</code></td><td>Convert tile encoding to {x, y} coordinates</td></tr>
                 </table>
-                <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> Use the <strong>Debug Dumper</strong> script to inspect all game object properties in the console. Essential for writing custom scripts.</div>
+                <p style="margin-top:16px"><strong>v5.0 Strategic Methods:</strong></p>
+                <table class="guide-table">
+                    <tr><td><code>GI.getCycleTick()</code></td><td>Current tick within the 100-tick interest cycle (0–99). Interest paid at tick 0.</td></tr>
+                    <tr><td><code>GI.getCycleProgress()</code></td><td>Cycle position as a float 0.0–1.0 (getCycleTick() / 100)</td></tr>
+                    <tr><td><code>GI.getDensity(id)</code></td><td>Troops per land unit for a player. Higher = harder to kill. Omit id for yourself.</td></tr>
+                    <tr><td><code>GI.getDistanceToPlayer(id)</code></td><td>Pixel distance between your center and another player's center</td></tr>
+                    <tr><td><code>GI.getTimeToContact(id)</code></td><td>Estimated ticks before an enemy reaches your border (distance / 3)</td></tr>
+                    <tr><td><code>GI.predictDensityAtContact(id)</code></td><td>Returns <code>{myDensity, theirDensity, ticksToContact, myFutureTroops, theirFutureTroops}</code> — projects both players' density at the moment of contact</td></tr>
+                    <tr><td><code>GI.predictResources(id, ticks)</code></td><td>Estimates a player's troop count N ticks in the future</td></tr>
+                    <tr><td><code>GI.isVulnerable()</code></td><td>Returns true if any bordering neighbor has >1.2× your density</td></tr>
+                    <tr><td><code>GI.shouldSnipe(id)</code></td><td>Returns true if attacking this enemy near cycle end is profitable (density parity OK or they're weak)</td></tr>
+                    <tr><td><code>GI.getAlivePlayers()</code></td><td>Returns array of <code>{id, name, troops, territory, team, isMe, density}</code> for all living players</td></tr>
+                </table>
+                <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> Use the <strong>Debug Dumper v5</strong> script to inspect all game object properties in the console. Essential for writing custom scripts.</div>
+            </div>
+        </div>
+
+        <div class="guide-section">
+            <h3><span class="guide-step">7b</span> Creating Custom Scripts</h3>
+            <div class="guide-body">
+                <p>The Code Executor lets you write custom automation scripts using the full GameInterface API. Here's how to get started:</p>
+
+                <p style="margin-top:14px"><strong>Basic Script Structure:</strong></p>
+                <pre style="background:var(--surf2);border:1px solid var(--brd);border-radius:6px;padding:14px 18px;font-family:Consolas,monospace;font-size:12px;line-height:1.7;overflow-x:auto;color:var(--txt);margin-top:8px"><span style="color:#c678dd">if</span> (<span style="color:#61afef">TERRIX</span>.loops.myScript) {
+  <span style="color:#61afef">clearInterval</span>(<span style="color:#61afef">TERRIX</span>.loops.myScript);
+  <span style="color:#61afef">TERRIX</span>.loops.myScript = <span style="color:#d19a66">null</span>;
+  <span style="color:#61afef">Logger</span>.<span style="color:#61afef">log</span>(<span style="color:#98c379">"Stopped"</span>);
+  <span style="color:#c678dd">return</span>;
+}
+<span style="color:#61afef">TERRIX</span>.loops.myScript = <span style="color:#61afef">setInterval</span>(() => {
+  <span style="color:#c678dd">if</span> (!<span style="color:#61afef">GI</span>.<span style="color:#61afef">isPlayerAlive</span>(<span style="color:#61afef">GI</span>.myId)) <span style="color:#c678dd">return</span>;
+  <span style="color:#7f848e">// your logic here</span>
+}, <span style="color:#d19a66">500</span>);</pre>
+
+                <p style="margin-top:16px"><strong>Example 1 — Density-Aware Expansion:</strong> Only expand if your density stays above 1.0 after the attack:</p>
+                <pre style="background:var(--surf2);border:1px solid var(--brd);border-radius:6px;padding:14px 18px;font-family:Consolas,monospace;font-size:12px;line-height:1.7;overflow-x:auto;color:var(--txt);margin-top:8px"><span style="color:#c678dd">const</span> troops = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getMyTroops</span>();
+<span style="color:#c678dd">const</span> land = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getMyTerritory</span>();
+<span style="color:#c678dd">const</span> density = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getDensity</span>();
+<span style="color:#c678dd">if</span> (land > <span style="color:#d19a66">0</span> && troops > land * <span style="color:#d19a66">2.5</span> && density > <span style="color:#d19a66">1.0</span>) {
+  <span style="color:#c678dd">const</span> tile = <span style="color:#61afef">GI</span>.<span style="color:#61afef">expandToNearest</span>();
+  <span style="color:#c678dd">if</span> (tile) {
+    <span style="color:#c678dd">const</span> cost = troops * <span style="color:#d19a66">0.25</span>;
+    <span style="color:#c678dd">const</span> newDensity = (troops - cost) / land;
+    <span style="color:#c678dd">if</span> (newDensity >= <span style="color:#d19a66">0.8</span>) {
+      <span style="color:#61afef">GI</span>.<span style="color:#61afef">sendAttackTile</span>(cost, tile, -<span style="color:#d19a66">1</span>);
+      <span style="color:#61afef">Logger</span>.<span style="color:#61afef">log</span>(<span style="color:#98c379">"Expanding, new density:"</span>, newDensity.toFixed(<span style="color:#d19a66">2</span>));
+    }
+  }
+}</pre>
+
+                <p style="margin-top:16px"><strong>Example 2 — Cycle-Aware Enemy Snipe:</strong> Attack the weakest bordering enemy in the last 15 ticks of each cycle:</p>
+                <pre style="background:var(--surf2);border:1px solid var(--brd);border-radius:6px;padding:14px 18px;font-family:Consolas,monospace;font-size:12px;line-height:1.7;overflow-x:auto;color:var(--txt);margin-top:8px"><span style="color:#c678dd">const</span> tick = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getCycleTick</span>();
+<span style="color:#c678dd">if</span> (tick < <span style="color:#d19a66">85</span>) <span style="color:#c678dd">return</span>; <span style="color:#7f848e">// too early</span>
+
+<span style="color:#c678dd">const</span> enemies = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getAlivePlayers</span>().<span style="color:#61afef">filter</span>(p => !p.isMe);
+<span style="color:#61afef">enemies</span>.<span style="color:#61afef">sort</span>((a, b) => a.troops - b.troops);
+
+<span style="color:#c678dd">for</span> (<span style="color:#c678dd">const</span> e <span style="color:#c678dd">of</span> enemies) {
+  <span style="color:#c678dd">if</span> (!<span style="color:#61afef">GI</span>.<span style="color:#61afef">shouldSnipe</span>(e.id)) <span style="color:#c678dd">continue</span>;
+  <span style="color:#c678dd">const</span> tile = <span style="color:#61afef">GI</span>.<span style="color:#61afef">findBestAttackTile</span>(e.id);
+  <span style="color:#c678dd">if</span> (!tile) <span style="color:#c678dd">continue</span>;
+  <span style="color:#c678dd">const</span> troops = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getMyTroops</span>();
+  <span style="color:#c678dd">const</span> intensity = <span style="color:#61afef">Math</span>.<span style="color:#61afef">min</span>(troops * <span style="color:#d19a66">0.4</span>, <span style="color:#d19a66">1024</span>);
+  <span style="color:#61afef">GI</span>.<span style="color:#61afef">sendAttackTile</span>(intensity, tile, e.id);
+  <span style="color:#61afef">Logger</span>.<span style="color:#61afef">log</span>(<span style="color:#98c379">"Snipe!"</span>, e.name, <span style="color:#98c379">"tick:"</span>, tick);
+  <span style="color:#c678dd">break</span>;
+}</pre>
+
+                <p style="margin-top:16px"><strong>Example 3 — Threat Assessment Dashboard:</strong> Log a full strategic overview every 2 seconds:</p>
+                <pre style="background:var(--surf2);border:1px solid var(--brd);border-radius:6px;padding:14px 18px;font-family:Consolas,monospace;font-size:12px;line-height:1.7;overflow-x:auto;color:var(--txt);margin-top:8px"><span style="color:#61afef">Logger</span>.<span style="color:#61afef">log</span>(<span style="color:#98c379">"=== STRATEGIC DASHBOARD ==="</span>);
+<span style="color:#61afef">Logger</span>.<span style="color:#61afef">log</span>(<span style="color:#98c379">"Tick:"</span>, <span style="color:#61afef">GI</span>.<span style="color:#61afef">getCycleTick</span>(), <span style="color:#98c379">"Density:"</span>, <span style="color:#61afef">GI</span>.<span style="color:#61afef">getDensity</span>().toFixed(<span style="color:#d19a66">2</span>));
+<span style="color:#61afef">Logger</span>.<span style="color:#61afef">log</span>(<span style="color:#98c379">"Vulnerable:"</span>, <span style="color:#61afef">GI</span>.<span style="color:#61afef">isVulnerable</span>());
+
+<span style="color:#c678dd">const</span> enemies = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getAlivePlayers</span>().<span style="color:#61afef">filter</span>(p => !p.isMe);
+<span style="color:#c678dd">for</span> (<span style="color:#c678dd">const</span> e <span style="color:#c678dd">of</span> enemies) {
+  <span style="color:#c678dd">const</span> dist = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getDistanceToPlayer</span>(e.id);
+  <span style="color:#c678dd">const</span> ttc = <span style="color:#61afef">GI</span>.<span style="color:#61afef">getTimeToContact</span>(e.id);
+  <span style="color:#61afef">Logger</span>.<span style="color:#61afef">log</span>(e.name,
+    <span style="color:#98c379">"dist:"</span>, dist.toFixed(<span style="color:#d19a66">0</span>),
+    <span style="color:#98c379">"TTC:"</span>, ttc.toFixed(<span style="color:#d19a66">0</span>),
+    <span style="color:#98c379">"density:"</span>, e.density.toFixed(<span style="color:#d19a66">2</span>));
+}</pre>
+
+                <div class="guide-tip"><i class="fa-solid fa-lightbulb"></i> <strong>Scripting tips:</strong> Always start with a toggle check (<code>if (TERRIX.loops.x) { clearInterval... return; }</code>). Always guard with <code>if (!GI.isPlayerAlive(GI.myId)) return;</code>. Use <code>GI.findBestAttackTile(id)</code> instead of raw tile math. Use the SNIPPET button in the editor for starter templates.</div>
             </div>
         </div>
 
@@ -492,9 +594,14 @@
     <section class="container compare">
         <h2>Version Comparison</h2>
         <table>
-            <thead><tr><th>Feature</th><th>v3.0 Ultimate</th><th>v2.8 Grandmaster</th></tr></thead>
+            <thead><tr><th>Feature</th><th>v5.0 Ultimate</th><th>v2.8 Grandmaster</th></tr></thead>
             <tbody>
-                <tr><td>GodBot AI</td><td class="check">&#10003; Neighbor-based</td><td class="check">&#10003; Basic</td></tr>
+                <tr><td>GodBot AI</td><td class="check">&#10003; Cycle-aware v5.0</td><td class="check">&#10003; Basic</td></tr>
+                <tr><td>Interest Cycle Engine</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+                <tr><td>Density Parity</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+                <tr><td>Spatial Mode Switching</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+                <tr><td>Late-Cycle Sniping</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
+                <tr><td>Strategic API (10+ methods)</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
                 <tr><td>Retreat Logic</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
                 <tr><td>Attack Queuing</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
                 <tr><td>Configurable Strategies</td><td class="check">&#10003; 4 modes</td><td class="cross">&#10007;</td></tr>
@@ -503,7 +610,7 @@
                 <tr><td>Multi-Tab Sync</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
                 <tr><td>Threat Radar</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
                 <tr><td>Leaderboard</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-                <tr><td>Code Executor</td><td class="check">&#10003; new Function()</td><td class="check">&#10003; eval()</td></tr>
+                <tr><td>Code Executor</td><td class="check">&#10003; 30+ API methods</td><td class="check">&#10003; eval()</td></tr>
                 <tr><td>Config Persistence</td><td class="check">&#10003; GM_setValue</td><td class="cross">&#10007;</td></tr>
                 <tr><td>Debug Tools</td><td class="check">&#10003;</td><td class="cross">&#10007;</td></tr>
             </tbody>
