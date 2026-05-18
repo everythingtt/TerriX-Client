@@ -5,7 +5,7 @@
 // @description  Ultimate Strategy Suite. Complete rewrite with neighbor-based AI, ESP, minimap, and multi-tab support.
 // @author       Terri Exploits Inc.
 // @match        *://territorial.io/*
-// @match        *://everythingtt.github.io/TerriX-Client/*
+// @match        *://everythingtt.github.io/The-TerriX-Client/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_deleteValue
@@ -44,6 +44,7 @@
         hooked: false,
         loops: {},
         gui: null,
+        auth: { user: null, profile: null, purchased: [], supabase: null },
         config: {
             godbot: {
                 enabled: false,
@@ -354,25 +355,25 @@
 
         get myId() {
             const G = this.G;
-            return G && G.aD ? G.aD.et : -1;
+            return G && G.aD ? G.aD.es : -1;
         },
 
         get maxPlayers() {
             const G = this.G;
-            return G && G.aD ? G.aD.f6 : 512;
+            return G && G.aD ? G.aD.f5 : 512;
         },
 
         getMyTroops() {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            const prop = PropResolver.resolveTypedArray(['hB','gx','h7','gt']) || 'hB';
+            const prop = PropResolver.resolveTypedArray(['hB','gx','h7','gt', 'gw', 'yf', 'hA']) || 'gw';
             return G.ag[prop][this.myId] || 0;
         },
 
         getMyTerritory() {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            const prop = PropResolver.resolveTypedArray(['gx','hB','h7','gt','j2']) || 'gx';
+            const prop = PropResolver.resolveTypedArray(['gx','hB','h7','gt','j2', 'gw', 'yf', 'hA']) || 'gw';
             return G.ag[prop][this.myId] || 0;
         },
 
@@ -388,21 +389,21 @@
         getPlayerTroops(id) {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            const prop = PropResolver.resolveTypedArray(['hB','gx','h7','gt']) || 'hB';
+            const prop = PropResolver.resolveTypedArray(['hB','gx','h7','gt', 'gw', 'yf', 'hA']) || 'gw';
             return G.ag[prop][id] || 0;
         },
 
         getPlayerTerritory(id) {
             const G = this.G;
             if (!G || !G.ag) return 0;
-            const prop = PropResolver.resolveTypedArray(['gx','hB','h7','gt','j2']) || 'gx';
+            const prop = PropResolver.resolveTypedArray(['gx','hB','h7','gt','j2', 'gw', 'yf', 'hA']) || 'gw';
             return G.ag[prop][id] || 0;
         },
 
         isPlayerAlive(id) {
             const G = this.G;
             if (!G || !G.ag) return false;
-            const prop = PropResolver.resolveTypedArray(['n4','a4W','a1h','n3','mz']) || 'n4';
+            const prop = PropResolver.resolveTypedArray(['n4','a4W','a1h','n3','mz', 'a4V']) || 'n3';
             return (G.ag[prop][id] || 0) !== 0;
         },
 
@@ -437,28 +438,28 @@
         getBorderTiles(id) {
             const G = this.G;
             if (!G || !G.ag) return [];
-            const prop = PropResolver.resolveAgProp(['gb','gp','gq','fY']) || 'gb';
+            const prop = PropResolver.resolveAgProp(['gb','gp','gq','fY', 'ga', 'go']) || 'gp';
             return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
         getAllTiles(id) {
             const G = this.G;
             if (!G || !G.ag) return [];
-            const prop = PropResolver.resolveAgProp(['gq','gb','gp','fY']) || 'gq';
+            const prop = PropResolver.resolveAgProp(['gq','gb','gp','fY', 'ga', 'go']) || 'gq';
             return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
         getLandTiles(id) {
             const G = this.G;
             if (!G || !G.ag) return [];
-            const prop = PropResolver.resolveAgProp(['fY','gq','gb','gp']) || 'fY';
+            const prop = PropResolver.resolveAgProp(['fY','gq','gb','gp', 'ga', 'go']) || 'fY';
             return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
         getPerimeterTiles(id) {
             const G = this.G;
             if (!G || !G.ag) return [];
-            const prop = PropResolver.resolveAgProp(['gp','gb','gq','fY']) || 'gp';
+            const prop = PropResolver.resolveAgProp(['gp','gb','gq','fY', 'ga', 'go']) || 'gp';
             return (G.ag[prop] && G.ag[prop][id]) || [];
         },
 
@@ -898,7 +899,7 @@
         getCycleTick() {
             const G = this.G;
             if (!G || !G.bh) return 0;
-            try { return G.bh.kR() % 100; } catch(e) { return 0; }
+            try { return G.bh.kQ() % 100; } catch(e) { return 0; }
         },
 
         getCycleProgress() {
@@ -950,7 +951,7 @@
             const myId = this.myId;
             const G = this.G;
             if (!G) return false;
-            const maxP = G.aD ? (G.aD.f6 || 512) : 512;
+            const maxP = G.aD ? (G.aD.f5 || 512) : 512;
             for (let i = 0; i < maxP; i++) {
                 if (i === myId || !this.isPlayerAlive(i) || this.areAllies(myId, i)) continue;
                 if (this.getBorderWith(i).length > 0) {
@@ -964,7 +965,7 @@
         getAlivePlayers() {
             const G = this.G;
             if (!G) return [];
-            const maxP = G.aD ? (G.aD.f6 || 512) : 512;
+            const maxP = G.aD ? (G.aD.f5 || 512) : 512;
             const players = [];
             for (let i = 0; i < maxP; i++) {
                 if (this.isPlayerAlive(i)) {
@@ -1016,15 +1017,11 @@
 
     function validateHook() {
         const G = _win.G;
-        if (!G) return false;
-        if (!G.aD) return false;
-        if (!G.ag) return false;
-        if (typeof G.aD.et !== 'number') return false;
-        // Check that core typed arrays exist (tile arrays like gb/gp/gq/fY are null until ag.dh() runs)
-        if (!(G.ag.gx instanceof Uint32Array)) return false;
-        if (!(G.ag.hB instanceof Uint32Array)) return false;
-        if (!(G.ag.n4 instanceof Uint8Array)) return false;
-        return true;
+        if (!G || !G.aD || !G.ag || typeof G.aD.es !== 'number') return false;
+        const props = Object.keys(G.ag);
+        const u32s = props.filter(p => G.ag[p] instanceof Uint32Array && G.ag[p].length === G.aD.f5);
+        const u8s = props.filter(p => G.ag[p] instanceof Uint8Array && G.ag[p].length === G.aD.f5);
+        return u32s.length >= 2 && u8s.length >= 1;
     }
 
     function waitForHook(attempts) {
@@ -1066,6 +1063,7 @@
         injectStyles();
         buildGUI();
         applyTheme();
+        initMarket();
         restoreGUIState();
         startLoops();
         setupKeyboardShortcuts();
@@ -1178,7 +1176,7 @@
             '    <div style="color:' + T.colorTextRed + ';font-size:16px;font-weight:bold;">Game Hook Not Detected</div>',
             '    <div style="color:' + T.colorTextDim + ';font-size:12px;text-align:center;max-width:400px;">',
             '      This page does not have the TerriX hook. You must use the TerriX Client to run TerriX Executor.<br><br>',
-            '      <a href="https://everythingtt.github.io/TerriX-Client/Territorial.io.html" style="color:' + T.colorBorderBtnPrimary + ';" target="_blank">Open TerriX Client →</a>',
+            '      <a href="https://everythingtt.github.io/The-TerriX-Client/Territorial.io.html" style="color:' + T.colorBorderBtnPrimary + ';" target="_blank">Open TerriX Client →</a>',
             '    </div>',
             '    <button class="tx-btn tx-btn-primary" style="background:' + T.bgBtnPrimary + ';border-color:' + T.colorBorderBtnPrimary + ';color:' + T.btnTextPrimary + ';" onclick="location.reload()">Retry</button>',
             '  </div>',
@@ -1219,6 +1217,7 @@
             '#tx-tab-scripts{flex:1;display:none;flex-direction:column;gap:4px;overflow-y:auto;padding:10px;}',
             '#tx-tab-config{flex:1;display:none;flex-direction:column;gap:4px;overflow-y:auto;padding:10px;}',
             '#tx-tab-esp{flex:1;display:none;overflow:hidden;}',
+            '#tx-tab-market{flex:1;display:none;overflow:hidden;}',
             '#tx-tab-editor{flex:1;display:none;flex-direction:column;overflow:hidden;}',
             '#tx-editor-wrap{flex:1;display:flex;overflow:hidden;position:relative;}',
             '#tx-line-nums{width:36px;flex-shrink:0;background:' + T.bgEditor + '99;border-right:1px solid ' + T.outputBorder + ';color:' + T.colorTextMuted + ';font-family:Consolas,monospace;font-size:11px;line-height:1.5;padding:8px 4px 8px 0;text-align:right;overflow:hidden;user-select:none;}',
@@ -1440,9 +1439,12 @@
         wrapper.innerHTML = [
             '<div id="tx-toggle">TERRIX v3.0</div>',
             '<div id="tx-gui">',
-            '  <div id="tx-header">',
+            '  <div id="tx-header" style="justify-content:space-between; display:flex; align-items:center;">',
             '    <span>TERRIX <span class="tx-ver">v3.0 ULTIMATE</span></span>',
-            '    <span id="tx-close">✕</span>',
+            '    <div style="display:flex; gap:10px; align-items:center;">',
+            '      <div id="tx-header-user" style="font-size:10px; color:#aaa; cursor:pointer;">Guest</div>',
+            '      <span id="tx-close">✕</span>',
+            '    </div>',
             '  </div>',
             '  <div id="tx-body">',
             '    <div id="tx-sidebar">',
@@ -1451,9 +1453,10 @@
             '      <button class="tx-nav-btn" data-tab="scripts">SCRIPTS</button>',
             '      <button class="tx-nav-btn" data-tab="config">CONFIG</button>',
             '      <button class="tx-nav-btn" data-tab="esp">ESP VIEW</button>',
+            '      <button class="tx-nav-btn" data-tab="market">MARKETPLACE</button>',
             '      <div style="flex:1"></div>',
             '      <button class="tx-nav-btn" id="tx-btn-hook" style="border-color:#664">HOOK</button>',
-            '      <button class="tx-nav-btn" onclick="window.open(\'https://everythingtt.github.io/TerriX-Client/Territorial.io.html\')">CLIENT</button>',
+            '      <button class="tx-nav-btn" onclick="window.open(\'https://everythingtt.github.io/The-TerriX-Client/Territorial.io.html\')">CLIENT</button>',
             '    </div>',
             '    <div id="tx-main">',
             '      <div id="tx-tab-editor">',
@@ -1465,6 +1468,7 @@
             '          <button class="tx-btn tx-btn-sm" id="tx-btn-format" title="Format code">FORMAT</button>',
             '          <button class="tx-btn tx-btn-sm" id="tx-btn-clear-editor" title="Clear editor">CLEAR</button>',
             '          <button class="tx-btn tx-btn-sm" id="tx-btn-snippet" title="Insert snippet">SNIPPET</button>',
+            '          <label class="tx-btn tx-btn-sm" style="display:inline-flex;align-items:center;cursor:pointer;margin:0;">UPLOAD<input type="file" id="tx-btn-upload-script" style="display:none;"></label>',
             '          <span id="tx-cursor-pos">Ln 1, Col 1</span>',
             '        </div>',
             '        <div id="tx-code-output"></div>',
@@ -1473,6 +1477,18 @@
             '      <div id="tx-tab-scripts"></div>',
             '      <div id="tx-tab-config"></div>',
             '      <div id="tx-tab-esp"><canvas id="tx-esp-canvas" style="width:100%;height:100%;"></canvas></div>',
+            '      <div id="tx-tab-market" style="background:#111; padding:10px; flex-direction:column; gap:8px; overflow-y:auto; display:none;">',
+            '        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:8px;">',
+            '          <h3 style="margin:0; font-size:14px; color:#fff;">TerriX Marketplace</h3>',
+            '          <div id="tx-market-auth-status" style="font-size:10px; color:#888;">Not Logged In</div>',
+            '        </div>',
+            '        <div style="display:flex; gap:4px;">',
+            '          <input type="text" id="tx-market-search" placeholder="Search scripts..." style="flex:1; background:#222; border:1px solid #444; color:#fff; padding:4px; font-size:11px;">',
+            '        </div>',
+            '        <div id="tx-market-grid" style="display:grid; grid-template-columns:1fr; gap:8px; max-height:430px; overflow-y:auto; padding-right:4px;">',
+            '          <div style="color:#888; text-align:center; padding:20px;">Loading scripts...</div>',
+            '        </div>',
+            '      </div>',
             '    </div>',
             '  </div>',
             '  <div id="tx-footer">',
@@ -1497,9 +1513,9 @@
                 document.querySelectorAll('.tx-nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const tab = btn.dataset.tab;
-                ['editor','chart','scripts','config','esp'].forEach(t => {
+                ['editor','chart','scripts','config','esp','market'].forEach(t => {
                     const el = document.getElementById('tx-tab-' + t);
-                    if (el) el.style.display = (t === tab) ? (t === 'editor' ? 'flex' : t === 'esp' ? 'block' : 'flex') : 'none';
+                    if (el) el.style.display = (t === tab) ? (t === 'editor' ? 'flex' : (t === 'esp' || t === 'market') ? 'block' : 'flex') : 'none';
                 });
                 persistGUIState();
             });
@@ -1544,6 +1560,19 @@
         }
 
         function execCode(code) {
+            // TerriX Executor Validation: check for valid key
+            if (code.includes('/* KEY INJECTED: {{KEY}} */')) {
+                txOutput.innerHTML = '<div class="tx-log-line tx-log-err">✗ Execution Failed: Item not purchased. No key found.</div>';
+                txOutput.style.color = '#f44';
+                return;
+            }
+            const keyMatch = code.match(/\/\* KEY INJECTED: (TX-[a-zA-Z0-9-]+) \*\//);
+            if (!keyMatch) {
+                // If no key system injection, allow it (maybe a free script)
+            } else {
+                Logger.log('Validated using key:', keyMatch[1]);
+            }
+
             const logs = [];
             const cappedLog = function() {
                 const msg = Array.from(arguments).join(' ');
@@ -1601,6 +1630,19 @@
             updateLineNums();
             txOutput.innerHTML = '';
             persistGUIState();
+        });
+
+        document.getElementById('tx-btn-upload-script').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                txEditor.value = re.target.result;
+                updateLineNums();
+                persistGUIState();
+                toast('Script loaded: ' + file.name);
+            };
+            reader.readAsText(file);
         });
 
         document.getElementById('tx-btn-format').addEventListener('click', () => {
@@ -1735,6 +1777,143 @@
                 }
             });
         });
+    }
+
+    async function initMarket() {
+        const SUPABASE_URL = 'https://yyoiojuhsoqeoyvqdzow.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_R3otBb20oWkvfY2IX1r_0A_OsOx0W4G';
+        
+        const marketGrid = document.getElementById('tx-market-grid');
+        const searchInput = document.getElementById('tx-market-search');
+        const headerUser = document.getElementById('tx-header-user');
+        const authStatus = document.getElementById('tx-market-auth-status');
+        
+        try {
+            const sm = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+            TERRIX.auth.supabase = sm.createClient(SUPABASE_URL, SUPABASE_KEY);
+            
+            // Restore session
+            const saved = localStorage.getItem('tx_user');
+            if (saved) {
+                const { u, p, profile } = JSON.parse(saved);
+                if (profile) {
+                    const ln = profile.linked_territorial_username || 'None';
+                    headerUser.textContent = `${profile.username} (${ln})`;
+                    headerUser.style.color = '#4a4';
+                    authStatus.textContent = `User: ${profile.username} | Gold: ${profile.gold_balance}G | Linked: ${ln}`;
+                    TERRIX.auth.user = { id: profile.id, user_metadata: { username: profile.username } };
+                    TERRIX.auth.profile = profile;
+                    renderMarket();
+                }
+                performLogin(u, p, true);
+            }
+            
+            headerUser.addEventListener('click', () => {
+                if (TERRIX.auth.user) {
+                    if (confirm('Logout from TerriX Account?')) logoutUser();
+                } else {
+                    const u = prompt('TerriX Username:');
+                    const p = prompt('TerriX Password:');
+                    if (u && p) performLogin(u, p);
+                }
+            });
+
+            async function performLogin(username, password, silent = false) {
+                const { data: acc, error } = await TERRIX.auth.supabase.from('terrix_accounts').select('*').eq('username', username).maybeSingle();
+                if (!acc) return !silent && alert('User not found');
+                const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password)).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''));
+                if (hash !== acc.password_hash) return !silent && alert('Invalid password');
+                
+                TERRIX.auth.user = { id: acc.id, user_metadata: { username: acc.username } };
+                TERRIX.auth.profile = acc;
+                localStorage.setItem('tx_user', JSON.stringify({ u: username, p: password, profile: acc }));
+                
+                const linkedName = acc.linked_territorial_username || 'None';
+                headerUser.textContent = `${acc.username} (${linkedName})`;
+                headerUser.style.color = '#4a4';
+                authStatus.textContent = `User: ${acc.username} | Gold: ${acc.gold_balance}G | Linked: ${linkedName}`;
+                
+                const { data: pur } = await TERRIX.auth.supabase.from('purchases').select('item_id').eq('buyer_id', TERRIX.auth.user.id);
+                TERRIX.auth.purchased = pur ? pur.map(p => p.item_id) : [];
+                
+                renderMarket();
+                if (!silent) toast(`Welcome, ${acc.username}!`);
+            }
+
+            function logoutUser() {
+                TERRIX.auth.user = null;
+                TERRIX.auth.profile = null;
+                TERRIX.auth.purchased = [];
+                localStorage.removeItem('tx_user');
+                headerUser.textContent = 'Guest';
+                headerUser.style.color = '#aaa';
+                authStatus.textContent = 'Not Logged In';
+                renderMarket();
+                toast('Logged out.');
+            }
+
+            await fetchMarket();
+        } catch(e) {
+            marketGrid.innerHTML = '<div style="color:red;padding:10px;">Marketplace Error.</div>';
+            Logger.error('Marketplace init failed:', e);
+        }
+        
+        searchInput.addEventListener('input', renderMarket);
+        
+        async function fetchMarket() {
+            if (!TERRIX.auth.supabase) return;
+            const { data } = await TERRIX.auth.supabase.from('marketplace_items').select('*').eq('is_approved', true).eq('category', 'exploits').order('created_at', { ascending: false });
+            TERRIX.items = data || [];
+            renderMarket();
+        }
+        
+        function renderMarket() {
+            if (!marketGrid) return;
+            const query = (searchInput.value || '').toLowerCase();
+            const filtered = (TERRIX.items || []).filter(i => i.title.toLowerCase().includes(query) || (i.description||'').toLowerCase().includes(query));
+            
+            if (filtered.length === 0) return marketGrid.innerHTML = '<div style="color:#444;padding:20px;text-align:center;font-size:10px;">No items found.</div>';
+            
+            marketGrid.innerHTML = '';
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.style.cssText = 'background:#1a1a1a; border:1px solid #333; padding:8px; border-radius:4px; display:flex; flex-direction:column; gap:4px;';
+                const hasPurchased = item.price_type === 'free' || TERRIX.auth.purchased.includes(item.id) || item.author_id === TERRIX.auth.user?.id;
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <h4 style="margin:0; color:#eee; font-size:11px;">${item.title.replace(/</g,'&lt;')}</h4>
+                        <span style="color:${item.price_type==='free'?'#4a4':'#a82'}; font-size:8px; font-weight:bold;">${item.price_type==='free'?'FREE':item.price_type==='gold'?item.price+'G':'KEY'}</span>
+                    </div>
+                    <div style="font-size:9px; color:#888;">${(item.description||'').slice(0, 50)}...</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                        <span style="font-size:8px; color:#555;">by ${item.author_username}</span>
+                        ${hasPurchased 
+                            ? `<button class="tx-btn tx-market-load-btn" data-content="${encodeURIComponent(item.item_content||'')}" style="background:#262; padding:2px 6px; font-size:9px; border:none; cursor:pointer;">LOAD</button>` 
+                            : `<button class="tx-btn tx-market-buy-btn" data-id="${item.id}" style="background:#444; padding:2px 6px; font-size:9px; border:none; cursor:pointer;" ${!TERRIX.auth.user ? 'disabled' : ''}>BUY</button>`
+                        }
+                    </div>
+                `;
+                marketGrid.appendChild(div);
+            });
+            
+            marketGrid.querySelectorAll('.tx-market-load-btn').forEach(btn => btn.onclick = () => {
+                document.getElementById('tx-editor').value = decodeURIComponent(btn.dataset.content);
+                document.querySelector('.tx-nav-btn[data-tab="editor"]').click();
+                toast('Script loaded.');
+            });
+            
+            marketGrid.querySelectorAll('.tx-market-buy-btn').forEach(btn => btn.onclick = async () => {
+                if (!TERRIX.auth.user) return;
+                const item = TERRIX.items.find(i => i.id === btn.dataset.id);
+                if (item && confirm(`Buy ${item.title} for ${item.price} Gold?`)) {
+                    const { error } = await TERRIX.auth.supabase.rpc('purchase_item', { p_item_id: item.id, p_buyer_id: TERRIX.auth.user.id });
+                    if (error) return alert('Failed: ' + error.message);
+                    TERRIX.auth.purchased.push(item.id);
+                    renderMarket();
+                    alert('Success!');
+                }
+            });
+        }
     }
 
     function buildConfigTab() {
@@ -2349,10 +2528,10 @@
             return null;
         };
         return {
-            territory: findTypedArray(['gx','h7','gt','j2'], Uint32Array),
-            troops: findTypedArray(['hB','h7','gt'], Uint32Array),
-            alive: findTypedArray(['n4','a1h','n3','mz'], Uint8Array) || find(['n4','a4W','a1h']),
-            names: find(['a1o','za','zb','zU','name','names']),
+            territory: findTypedArray(['gx','h7','gt','j2', 'gw', 'yf', 'hA'], Uint32Array),
+            troops: findTypedArray(['hB','h7','gt', 'gw', 'yf', 'hA'], Uint32Array),
+            alive: findTypedArray(['n4','a1h','n3','mz', 'a4V'], Uint8Array) || find(['n4','a4W','a1h', 'n3']),
+            names: find(['a1o','za','zb','zU','name','names', 'ga', 'go']),
             maxPlayers: (G.aD && G.aD.f6) || 512
         };
     }

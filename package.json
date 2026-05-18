@@ -1,0 +1,11 @@
+{
+  "name": "terrix-build",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "echo 'Done'"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0",
+    "pg": "^8.20.0"
+  }
+}
