@@ -6,6 +6,7 @@
 // @author       Terri Exploits Inc.
 // @match        *://territorial.io/*
 // @match        *://everythingtt.github.io/The-TerriX-Client/*
+// @match        *://everythingtt.github.io/TerriX-Client/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_deleteValue
@@ -16,17 +17,21 @@
     'use strict';
 
     // Spoof device footprint from iframe proxy if present
-    try {
-        if (window.name && window.name.startsWith('{')) {
-            const fp = JSON.parse(window.name);
-            
-            // MULTI-ACCOUNT ISOLATION: 
+    (function() {
+        try {
+            if (window.self === window.top) return;
+            const wName = String(window.name || '');
+            if (!wName.startsWith('{')) return;
+            const fp = JSON.parse(wName);
+            if (!fp || typeof fp !== 'object') return;
+
+            // MULTI-ACCOUNT ISOLATION:
             // Clear storage specifically to prevent "Player Already In Lobby" cross-tab detection
             try {
                 localStorage.clear();
                 sessionStorage.clear();
             } catch(e) {}
-            
+
             if (fp.ua) {
                 Object.defineProperty(navigator, 'userAgent', { value: fp.ua });
                 Object.defineProperty(navigator, 'hardwareConcurrency', { value: fp.cores });
@@ -35,8 +40,8 @@
                 Object.defineProperty(screen, 'width', { value: fp.width });
                 Object.defineProperty(screen, 'height', { value: fp.height });
             }
-        }
-    } catch(e) {}
+        } catch(e) {}
+    })();
     
     const TERRIX = {
         version: '3.0.0',
@@ -69,7 +74,10 @@
                 showTroops: true,
                 showNames: true,
                 showBorders: false,
-                colorCode: true
+                showPlayerLines: true,
+                showViewportBox: true,
+                colorCode: true,
+                overlayOpacity: 0.7
             },
             minimap: {
                 enabled: false,
@@ -466,19 +474,19 @@
         getMapSize() {
             const G = this.G;
             if (!G || !G.bU) return { w: 2048, h: 2048 };
-            return { w: G.bU.fK, h: G.bU.fL };
+            return { w: G.bU.fJ, h: G.bU.fK };
         },
 
         getTileOwner(encoded) {
             const G = this.G;
             if (!G || !G.ac) return -1;
-            return G.ac.f1(encoded);
+            return G.ac.f0(encoded);
         },
 
         isNeutral(encoded) {
             const G = this.G;
             if (!G || !G.ac) return false;
-            return G.ac.f0(encoded);
+            return G.ac.f0(encoded) === 0;
         },
 
         isWalkable(encoded) {
@@ -496,7 +504,9 @@
         isMountain(encoded) {
             const G = this.G;
             if (!G || !G.ac) return false;
-            return G.ac.fE(encoded);
+            if (typeof G.ac.iM === 'function') return G.ac.iM(encoded);
+            if (typeof G.ac.fE === 'function') return G.ac.fE(encoded);
+            return false;
         },
 
         getNeighbors(encoded) {
@@ -522,24 +532,17 @@
         tileToXY(encoded) {
             const G = this.G;
             if (!G) return { x: 0, y: 0 };
-            const mapW = (G.bU && G.bU.fK) || 512;
-            // Try ac.zC/ac.zD first (map tile access object)
+            const mapW = (G.bU && G.bU.fJ) || 512;
             if (G.ac && typeof G.ac.zC === 'function') return { x: G.ac.zC(encoded), y: G.ac.zD(encoded) };
-            // Try bO.fH/bO.fJ (map utility object)
             if (G.bO && typeof G.bO.fH === 'function') return { x: G.bO.fH(encoded), y: G.bO.fJ(encoded) };
-            // Fallback: manual computation (encoded = tileId * 4, tileId = y * mapW + x)
             return { x: (encoded >> 2) % mapW, y: Math.floor((encoded >> 2) / mapW) };
         },
 
         xyToTile(x, y) {
             const G = this.G;
             if (!G) return 0;
-            const mapW = (G.bU && G.bU.fK) || 512;
-            // Try ac.yk first
-            if (G.ac && typeof G.ac.yk === 'function') return G.ac.yk(x, y);
-            // Try bO.fW
-            if (G.bO && typeof G.bO.fW === 'function') return G.bO.fW(x, y);
-            // Fallback: manual computation
+            const mapW = (G.bU && G.bU.fJ) || 512;
+            if (G.bO && typeof G.bO.ip === 'function') return G.bO.ip(x, y);
             return (y * mapW + x) * 4;
         },
 
@@ -700,10 +703,15 @@
         getGameState() {
             const G = this.G;
             if (!G || !G.aD) return -1;
-            return G.aD.a18;
+            if (G.aD.hH !== undefined) return G.aD.hH ? 1 : 0;
+            if (G.aD.a18 !== undefined) return G.aD.a18;
+            return -1;
         },
 
         isPlaying() {
+            const G = this.G;
+            if (!G || !G.aD) return false;
+            if (G.aD.hH !== undefined) return !!G.aD.hH;
             return this.getGameState() === 1;
         },
 
@@ -731,7 +739,7 @@
             if (!G || !G.bP || !G.bP.y || !G.ac) return null;
             const ships = G.bP.y;
             const myId = this.myId;
-            const mapW = G.bU.fK;
+            const mapW = G.bU.fJ;
             const mapW16 = mapW << 4;
             let closest = null;
             let closestDist = maxDist || Infinity;
@@ -822,7 +830,7 @@
             const G = this.G;
             if (G && G.bP && G.bP.y) {
                 const ships = G.bP.y;
-                const mapW16 = G.bU.fK << 4;
+                const mapW16 = G.bU.fJ << 4;
                 for (let s = 0; s < ships.mK; s++) {
                     const owner = ships.mO[s] >> 3;
                     if (owner === this.myId || !this.isPlayerAlive(owner) || this.areAllies(this.myId, owner)) continue;
@@ -885,7 +893,7 @@
             const ships = G.bP.y;
             const myId = this.myId;
             const result = [];
-            const mapW16 = G.bU.fK << 4;
+            const mapW16 = G.bU.fJ << 4;
             for (let i = 0; i < ships.mK; i++) {
                 const owner = ships.mO[i] >> 3;
                 if (owner !== myId) continue;
@@ -993,25 +1001,362 @@
         }
     };
 
-    const Logger = {
-        prefix: '[TerriX]',
-        log() {
-            console.log(this.prefix, ...arguments);
+    const Logger = (() => {
+        const MAX_BUFFER = 500;
+        const buffer = [];
+        let panelEl = null;
+        let panelVisible = false;
+        let _autoScroll = true;
+
+        const LEVELS = { DEBUG: 0, LOG: 1, WARN: 2, ERROR: 3 };
+        let minLevel = LEVELS.DEBUG;
+
+        function formatTime() {
+            const d = new Date();
+            return String(d.getHours()).padStart(2, '0') + ':' +
+                   String(d.getMinutes()).padStart(2, '0') + ':' +
+                   String(d.getSeconds()).padStart(2, '0') + '.' +
+                   String(d.getMilliseconds()).padStart(3, '0');
+        }
+
+        function serializeArgs(args) {
+            const parts = [];
+            for (let i = 0; i < args.length; i++) {
+                const a = args[i];
+                if (a === null) parts.push('null');
+                else if (a === undefined) parts.push('undefined');
+                else if (typeof a === 'object') {
+                    try { parts.push(JSON.stringify(a)); } catch(e) { parts.push(String(a)); }
+                } else {
+                    parts.push(String(a));
+                }
+            }
+            return parts.join(' ');
+        }
+
+        function pushEntry(level, levelLabel, tag, args) {
+            const entry = {
+                time: formatTime(),
+                level,
+                levelLabel,
+                tag,
+                text: serializeArgs(args),
+                ts: Date.now()
+            };
+            buffer.push(entry);
+            if (buffer.length > MAX_BUFFER) buffer.shift();
+
+            if (panelEl && panelVisible) {
+                renderEntry(entry);
+            }
+        }
+
+        function renderEntry(entry) {
+            if (!panelEl) return;
+            const row = document.createElement('div');
+            row.className = 'tx-log-row tx-log-' + entry.levelLabel.toLowerCase();
+            row.innerHTML =
+                '<span class="tx-log-time">' + entry.time + '</span>' +
+                '<span class="tx-log-lvl">' + entry.levelLabel + '</span>' +
+                (entry.tag ? '<span class="tx-log-tag">[' + entry.tag + ']</span>' : '') +
+                '<span class="tx-log-msg">' + entry.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>';
+            panelEl.appendChild(row);
+            while (panelEl.children.length > MAX_BUFFER) {
+                panelEl.removeChild(panelEl.firstChild);
+            }
+            if (_autoScroll) {
+                panelEl.scrollTop = panelEl.scrollHeight;
+            }
+        }
+
+        function renderAll() {
+            if (!panelEl) return;
+            panelEl.innerHTML = '';
+            for (const entry of buffer) renderEntry(entry);
+        }
+
+        function setPanel(el) {
+            panelEl = el;
+            if (panelVisible) renderAll();
+        }
+
+        function showPanel() {
+            panelVisible = true;
+            if (panelEl) renderAll();
+        }
+
+        function hidePanel() {
+            panelVisible = false;
+        }
+
+        function clear() {
+            buffer.length = 0;
+            if (panelEl) panelEl.innerHTML = '';
+        }
+
+        function exportLog() {
+            return buffer.map(e => e.time + ' [' + e.levelLabel + ']' + (e.tag ? ' [' + e.tag + ']' : '') + ' ' + e.text).join('\n');
+        }
+
+        function setMinLevel(lvl) {
+            if (typeof lvl === 'string') minLevel = LEVELS[lvl.toUpperCase()] ?? LEVELS.DEBUG;
+            else minLevel = lvl;
+        }
+
+        function apiLog() {
+            if (LEVELS.LOG < minLevel) return;
+            pushEntry(LEVELS.LOG, 'LOG', 'TerriX', arguments);
+            console.log('[TerriX]', ...arguments);
+        }
+
+        function apiWarn() {
+            if (LEVELS.WARN < minLevel) return;
+            pushEntry(LEVELS.WARN, 'WARN', 'TerriX', arguments);
+            console.warn('[TerriX]', ...arguments);
+        }
+
+        function apiError() {
+            if (LEVELS.ERROR < minLevel) return;
+            pushEntry(LEVELS.ERROR, 'ERROR', 'TerriX', arguments);
+            console.error('[TerriX]', ...arguments);
+        }
+
+        function apiDebug() {
+            if (LEVELS.DEBUG < minLevel) return;
+            pushEntry(LEVELS.DEBUG, 'DBG', 'TerriX', arguments);
+            console.log('[TerriX:DBG]', ...arguments);
+        }
+
+        function apiTagged(tag) {
+            return {
+                log() { if (LEVELS.LOG < minLevel) return; pushEntry(LEVELS.LOG, 'LOG', tag, arguments); console.log('[TerriX:' + tag + ']', ...arguments); },
+                warn() { if (LEVELS.WARN < minLevel) return; pushEntry(LEVELS.WARN, 'WARN', tag, arguments); console.warn('[TerriX:' + tag + ']', ...arguments); },
+                error() { if (LEVELS.ERROR < minLevel) return; pushEntry(LEVELS.ERROR, 'ERROR', tag, arguments); console.error('[TerriX:' + tag + ']', ...arguments); },
+                debug() { if (LEVELS.DEBUG < minLevel) return; pushEntry(LEVELS.DEBUG, 'DBG', tag, arguments); console.log('[TerriX:' + tag + ':DBG]', ...arguments); }
+            };
+        }
+
+        return {
+            log: apiLog, warn: apiWarn, error: apiError, debug: apiDebug,
+            tagged: apiTagged, setPanel, showPanel, hidePanel, clear, exportLog,
+            setMinLevel, getBuffer: () => buffer, LEVELS,
+            get _autoScroll() { return _autoScroll; },
+            set _autoScroll(v) { _autoScroll = v; }
+        };
+    })();
+
+    Logger.log('TerriX v' + TERRIX.version + ' loaded.');
+
+    const _gamePatcher = {
+        _hooked: false,
+        _lastRender: 0,
+        _vf: null,
+        _camCache: { x: -1, y: -1, z: -1, frame: -1 },
+
+        install() {
+            if (this._hooked) return;
+            const G = _win.G;
+            if (!G || !G.bh) return;
+            const origEb = G.bh.a1H && G.bh.a1H.eb;
+            if (!origEb) return;
+            const self = this;
+            G.bh.a1H.eb = function() {
+                origEb.apply(this, arguments);
+                try { self._onGameTick(G); } catch(e) {}
+            };
+            this._hooked = true;
+            Logger.log('Game source patcher installed.');
         },
-        warn() {
-            console.warn(this.prefix, ...arguments);
+
+        _getVf() {
+            if (this._vf) return this._vf;
+            const canvases = document.querySelectorAll('canvas');
+            for (const c of canvases) {
+                if (c.width > 100 && c.height > 100) {
+                    this._vf = c.getContext('2d');
+                    return this._vf;
+                }
+            }
+            return null;
         },
-        error() {
-            console.error(this.prefix, ...arguments);
-        },
-        debug() {
-            if (TERRIX.config.debug) {
-                console.log(this.prefix + '[DBG]', ...arguments);
+
+        _onGameTick(G) {
+            if (!TERRIX.config.esp || !TERRIX.config.esp.enabled) return;
+            if (!G || !G.ag || !G.aD || !G.bU) return;
+
+            const now = performance.now();
+            if (now - this._lastRender < 200) return;
+            this._lastRender = now;
+
+            const vf = this._getVf();
+            if (!vf) return;
+
+            const aS = _win.aS;
+            const h = _win.h;
+            if (!aS || !h) return;
+
+            const camX = aS.zC ? aS.zC() : 0;
+            const camY = aS.zD ? aS.zD() : 0;
+            const zoom = (aS.a9n ? aS.a9n() : 1) || 1;
+            const mapW = G.bU.fJ, mapH = G.bU.fK;
+            if (!mapW || !mapH) return;
+
+            const cfg = TERRIX.config.esp;
+            const maxP = G.aD.f5 || 512;
+            const agProps = Object.getOwnPropertyNames(G.ag);
+            const aliveProp = agProps.find(p => G.ag[p] instanceof Uint8Array && G.ag[p].length === maxP) || 'n3';
+            let tilesProp = null;
+            for (const p of ['ga', 'gp', 'go']) {
+                if (Array.isArray(G.ag[p]) && G.ag[p].length === maxP) { tilesProp = p; break; }
+            }
+            if (!tilesProp) return;
+            const troopsProp = agProps.find(p => G.ag[p] instanceof Uint32Array && G.ag[p].length === maxP) || 'gw';
+            const namesProp = agProps.find(p => Array.isArray(G.ag[p]) && G.ag[p].length === maxP && typeof G.ag[p][0] === 'string') || 'za';
+            if (!G.ag[tilesProp] || !G.ag[aliveProp]) return;
+
+            const myId = G.aD.es;
+            const bi = G.bi;
+            const aBo = bi ? bi.aBo : null;
+            const aWA = bi ? bi.aWA : null;
+
+            const vpLeft = camX - h.i / zoom / 2;
+            const vpRight = camX + h.i / zoom / 2;
+            const vpTop = camY - h.j / zoom / 2;
+            const vpBottom = camY + h.j / zoom / 2;
+            const margin = 2;
+
+            const colorCache = new Map();
+            const hashColor = (id) => {
+                if (colorCache.has(id)) return colorCache.get(id);
+                const hue = ((id * 137.508) % 360);
+                const r = Math.sin(hue * Math.PI / 180) * 127 + 128;
+                const g = Math.sin((hue + 120) * Math.PI / 180) * 127 + 128;
+                const b = Math.sin((hue + 240) * Math.PI / 180) * 127 + 128;
+                const color = `rgb(${Math.floor(r)},${Math.floor(g)},${Math.floor(b)})`;
+                colorCache.set(id, color);
+                return color;
+            };
+
+            const screenTiles = new Map();
+
+            if (cfg.showPlayerLines !== false) {
+                for (let pid = 0; pid < maxP; pid++) {
+                    if (!G.ag[aliveProp][pid]) continue;
+                    const tiles = G.ag[tilesProp][pid];
+                    if (!tiles || !Array.isArray(tiles) || tiles.length === 0) continue;
+
+                    let color;
+                    if (pid === myId) {
+                        color = 'rgba(0,255,100,0.5)';
+                    } else {
+                        const teamIdx = aBo ? aBo[pid] : -1;
+                        if (teamIdx !== undefined && teamIdx >= 0 && aWA && aWA[teamIdx]) {
+                            color = aWA[teamIdx];
+                        } else {
+                            color = hashColor(pid);
+                        }
+                    }
+
+                    const step = Math.max(1, Math.floor(tiles.length / 150));
+                    for (let j = 0; j < tiles.length; j += step) {
+                        const enc = tiles[j];
+                        const tx = (enc >> 2) % mapW;
+                        const ty = Math.floor((enc >> 2) / mapW);
+
+                        if (tx < vpLeft - margin || tx > vpRight + margin || ty < vpTop - margin || ty > vpBottom + margin) continue;
+
+                        const sx = Math.round((tx - camX) * zoom);
+                        const sy = Math.round((ty - camY) * zoom);
+                        const key = `${sx},${sy}`;
+                        if (!screenTiles.has(key)) {
+                            screenTiles.set(key, { x: sx, y: sy, color: color });
+                        }
+                    }
+                }
+
+                vf.globalAlpha = 0.5;
+                for (const tile of screenTiles.values()) {
+                    vf.fillStyle = tile.color;
+                    vf.fillRect(tile.x, tile.y, Math.max(1, Math.ceil(zoom)), Math.max(1, Math.ceil(zoom)));
+                }
+                vf.globalAlpha = 1;
+            }
+
+            if (cfg.showTroops !== false && G.ag[troopsProp]) {
+                const troops = G.ag[troopsProp];
+                const names = G.ag[namesProp];
+
+                vf.textAlign = 'center';
+                vf.textBaseline = 'middle';
+
+                for (let pid = 0; pid < maxP; pid++) {
+                    if (pid === myId || !G.ag[aliveProp][pid]) continue;
+                    const playerTiles = G.ag[tilesProp][pid];
+                    if (!playerTiles || playerTiles.length === 0) continue;
+
+                    let sumX = 0, sumY = 0, count = 0;
+                    const sampleStep = Math.max(1, Math.floor(playerTiles.length / 20));
+                    for (let j = 0; j < playerTiles.length; j += sampleStep) {
+                        const enc = playerTiles[j];
+                        sumX += (enc >> 2) % mapW;
+                        sumY += Math.floor((enc >> 2) / mapW);
+                        count++;
+                    }
+                    if (count === 0) continue;
+
+                    const centroidX = sumX / count;
+                    const centroidY = sumY / count;
+
+                    if (centroidX < vpLeft - 5 || centroidX > vpRight + 5 || centroidY < vpTop - 5 || centroidY > vpBottom + 5) continue;
+
+                    const cx = (centroidX - camX) * zoom;
+                    const cy = (centroidY - camY) * zoom;
+
+                    const troopStr = _formatTroops(troops[pid]);
+                    const nameStr = names && names[pid] ? names[pid] : `#${pid}`;
+                    const text = `${nameStr} ${troopStr}`;
+
+                    const fontSize = Math.max(9, Math.min(14, 12 * zoom));
+                    vf.font = `bold ${fontSize}px system-ui`;
+                    const metrics = vf.measureText(text);
+                    const pad = 3 * zoom;
+
+                    vf.fillStyle = 'rgba(0,0,0,0.75)';
+                    vf.fillRect(cx - metrics.width / 2 - pad, cy - fontSize * 0.7, metrics.width + pad * 2, fontSize * 1.6);
+                    vf.fillStyle = '#fff';
+                    vf.fillText(text, cx, cy);
+                }
             }
         }
     };
 
-    Logger.log('TerriX v' + TERRIX.version + ' loaded.');
+    window.addEventListener('error', function(ev) {
+        const err = ev.error || {};
+        Logger.error('UNCAUGHT', err.message || ev.message || 'unknown',
+            'at', ev.filename || '?', 'line', ev.lineno || '?',
+            err.stack ? '\n' + err.stack.split('\n').slice(0, 3).join('\n') : '');
+    });
+
+    window.addEventListener('unhandledrejection', function(ev) {
+        const reason = ev.reason;
+        const msg = reason instanceof Error ? reason.message : String(reason || 'unknown');
+        const stack = reason instanceof Error && reason.stack ? '\n' + reason.stack.split('\n').slice(0, 3).join('\n') : '';
+        Logger.error('UNHANDLED PROMISE', msg, stack);
+    });
+
+    const _origConsoleError = console.error;
+    console.error = function() {
+        const args = Array.from(arguments);
+        const text = args.map(a => {
+            if (a instanceof Error) return a.message + (a.stack ? '\n' + a.stack.split('\n').slice(0, 3).join('\n') : '');
+            if (typeof a === 'object') { try { return JSON.stringify(a); } catch(e) { return String(a); } }
+            return String(a);
+        }).join(' ');
+        if (text.indexOf('[TerriX]') === -1) {
+            Logger.error('CONSOLE', text);
+        }
+        _origConsoleError.apply(console, arguments);
+    };
 
     let lbPropCache = null;
 
@@ -1071,6 +1416,7 @@
         PropResolver.resetCache();
         lbPropCache = null;
         MultiTab.init();
+        _gamePatcher.install();
         Logger.log('TerriX ready. Theme: ' + getCurrentTheme().name + '. Press the toggle bar or F2 to open.');
     }
 
@@ -1262,7 +1608,22 @@
             '.tx-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:' + T.toastBg + ';color:' + T.toastText + ';padding:8px 16px;border-radius:4px;font-size:12px;z-index:2147483647;border:1px solid ' + T.toastBorder + ';transition:opacity 0.3s;}',
             '#tx-code-output{flex:0 0 120px;background:' + T.bgOutput + ';border-top:1px solid ' + T.outputBorder + ';padding:6px 8px;font-family:monospace;font-size:10px;color:' + T.outputText + ';overflow-y:auto;}',
             '.tx-log-line{padding:1px 0;border-bottom:1px solid ' + T.outputBorder + '40;word-break:break-all;}',
-            '.tx-log-err{color:#f44;}'
+            '.tx-log-err{color:#f44;}',
+            '#tx-tab-logs{flex:1;display:none;flex-direction:column;overflow:hidden;}',
+            '#tx-log-panel{flex:1;overflow-y:auto;padding:4px 6px;font-family:Consolas,monospace;font-size:10px;background:' + T.bgEditor + ';color:' + T.outputText + ';}',
+            '.tx-log-row{display:flex;align-items:flex-start;gap:4px;padding:1px 0;border-bottom:1px solid ' + T.outputBorder + '30;line-height:1.4;}',
+            '.tx-log-time{flex-shrink:0;color:#666;font-size:9px;padding-top:1px;}',
+            '.tx-log-lvl{flex-shrink:0;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px;min-width:28px;text-align:center;}',
+            '.tx-log-tag{flex-shrink:0;color:#58a6ff;font-size:9px;}',
+            '.tx-log-msg{flex:1;word-break:break-all;white-space:pre-wrap;}',
+            '.tx-log-debug .tx-log-lvl{background:#333;color:#999;}',
+            '.tx-log-log .tx-log-lvl{background:#1a3a1a;color:#0f0;}',
+            '.tx-log-warn .tx-log-lvl{background:#3a2a00;color:#fa0;}',
+            '.tx-log-error .tx-log-lvl{background:#3a1a1a;color:#f44;}',
+            '.tx-log-error{background:rgba(255,68,68,0.06);}',
+            '#tx-log-toolbar{display:flex;align-items:center;gap:4px;padding:3px 6px;background:' + T.bgEditor + 'cc;border-top:1px solid ' + T.outputBorder + ';flex-shrink:0;}',
+            '#tx-log-toolbar .tx-btn-sm{padding:2px 8px;font-size:9px;}',
+            '#tx-log-filter{background:' + T.bgConfigInput + ';border:1px solid ' + T.configInputBorder + ';color:' + T.configInputText + ';padding:2px 6px;font-size:9px;border-radius:3px;margin-left:auto;}'
         ].join('');
         document.head.appendChild(s);
     }
@@ -1454,6 +1815,7 @@
             '      <button class="tx-nav-btn" data-tab="config">CONFIG</button>',
             '      <button class="tx-nav-btn" data-tab="esp">ESP VIEW</button>',
             '      <button class="tx-nav-btn" data-tab="market">MARKETPLACE</button>',
+            '      <button class="tx-nav-btn" data-tab="logs">LOGS</button>',
             '      <div style="flex:1"></div>',
             '      <button class="tx-nav-btn" id="tx-btn-hook" style="border-color:#664">HOOK</button>',
             '      <button class="tx-nav-btn" onclick="window.open(\'https://everythingtt.github.io/The-TerriX-Client/Territorial.io.html\')">CLIENT</button>',
@@ -1477,6 +1839,15 @@
             '      <div id="tx-tab-scripts"></div>',
             '      <div id="tx-tab-config"></div>',
             '      <div id="tx-tab-esp"><canvas id="tx-esp-canvas" style="width:100%;height:100%;"></canvas></div>',
+            '      <div id="tx-tab-logs">',
+            '        <div id="tx-log-panel"></div>',
+            '        <div id="tx-log-toolbar">',
+            '          <button class="tx-btn tx-btn-sm" id="tx-log-clear">CLEAR</button>',
+            '          <button class="tx-btn tx-btn-sm" id="tx-log-export">EXPORT</button>',
+            '          <button class="tx-btn tx-btn-sm" id="tx-log-autoscroll" style="color:#0f0;">AUTO-SCROLL</button>',
+            '          <select id="tx-log-filter"><option value="DEBUG">ALL</option><option value="LOG" selected>NORMAL</option><option value="WARN">WARN+</option><option value="ERROR">ERRORS</option></select>',
+            '        </div>',
+            '      </div>',
             '      <div id="tx-tab-market" style="background:#111; padding:10px; flex-direction:column; gap:8px; overflow-y:auto; display:none;">',
             '        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:8px;">',
             '          <h3 style="margin:0; font-size:14px; color:#fff;">TerriX Marketplace</h3>',
@@ -1513,12 +1884,45 @@
                 document.querySelectorAll('.tx-nav-btn[data-tab]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const tab = btn.dataset.tab;
-                ['editor','chart','scripts','config','esp','market'].forEach(t => {
+                ['editor','chart','scripts','config','esp','market','logs'].forEach(t => {
                     const el = document.getElementById('tx-tab-' + t);
-                    if (el) el.style.display = (t === tab) ? (t === 'editor' ? 'flex' : (t === 'esp' || t === 'market') ? 'block' : 'flex') : 'none';
+                    if (el) el.style.display = (t === tab) ? (t === 'editor' ? 'flex' : (t === 'esp' || t === 'market' || t === 'logs') ? 'block' : 'flex') : 'none';
                 });
+                if (tab === 'esp') {
+                    ensureESPView();
+                } else {
+                    removeESPView();
+                }
+                if (tab === 'logs') {
+                    Logger.setPanel(document.getElementById('tx-log-panel'));
+                    Logger.showPanel();
+                } else {
+                    Logger.hidePanel();
+                }
                 persistGUIState();
             });
+        });
+
+        document.getElementById('tx-log-clear').addEventListener('click', function() {
+            Logger.clear();
+        });
+        document.getElementById('tx-log-export').addEventListener('click', function() {
+            const text = Logger.exportLog();
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'terrix-log-' + Date.now() + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            toast('Log exported');
+        });
+        document.getElementById('tx-log-autoscroll').addEventListener('click', function() {
+            Logger._autoScroll = !Logger._autoScroll;
+            this.style.color = Logger._autoScroll ? '#0f0' : '#666';
+        });
+        document.getElementById('tx-log-filter').addEventListener('change', function() {
+            Logger.setMinLevel(this.value);
         });
 
         document.getElementById('tx-btn-hook').addEventListener('click', function() {
@@ -1579,13 +1983,16 @@
                 logs.push(msg);
                 if (logs.length > 50) logs.shift();
             };
+            const execTagged = Logger.tagged('Exec');
             const execLogger = {
-                log: cappedLog, warn: cappedLog, error: cappedLog, debug: cappedLog,
-                prefix: '[TerriX:Exec]'
+                log() { cappedLog.apply(null, arguments); execTagged.log.apply(null, arguments); },
+                warn() { cappedLog.apply(null, arguments); execTagged.warn.apply(null, arguments); },
+                error() { cappedLog.apply(null, arguments); execTagged.error.apply(null, arguments); },
+                debug() { cappedLog.apply(null, arguments); execTagged.debug.apply(null, arguments); }
             };
             try {
                 const fn = new Function('G', 'GI', 'TERRIX', 'Logger', 'console', code);
-                const result = fn(_win.G, GameInterface, TERRIX, execLogger, { log: cappedLog, warn: cappedLog, error: cappedLog });
+                const result = fn(_win.G, GameInterface, TERRIX, execLogger, { log: execLogger.log, warn: execLogger.warn, error: execLogger.error });
                 if (logs.length > 0) {
                     txOutput.innerHTML = logs.map(l => '<div class="tx-log-line">' + l.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>').join('');
                     txOutput.style.color = '#0f0';
@@ -1593,6 +2000,7 @@
                     txOutput.innerHTML = '<div class="tx-log-line">✓ Executed successfully' + (result !== undefined ? ' → ' + String(result).substring(0, 200) : '') + '</div>';
                     txOutput.style.color = '#0f0';
                 }
+                Logger.log('Code executed successfully');
             } catch(e) {
                 let errMsg = e.message || String(e);
                 if (e.stack) {
@@ -1607,6 +2015,7 @@
                 }
                 txOutput.innerHTML = '<div class="tx-log-line tx-log-err">✗ ' + errMsg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
                 txOutput.style.color = '#f44';
+                Logger.error('Exec failed:', errMsg);
             }
         }
 
@@ -1671,7 +2080,7 @@
                 { label: 'Cycle Snipe', code: '// Late-Cycle Snipe — Attack enemies before income tick\nconst cycleTick = GI.getCycleTick();\nif (cycleTick < 85) { Logger.log("Too early for snipe. Tick:", cycleTick); return; }\nconst enemies = GI.getAlivePlayers().filter(p => !p.isMe);\nfor (const e of enemies) {\n  if (!GI.shouldSnipe(e.id)) continue;\n  const tile = GI.findBestAttackTile(e.id);\n  if (!tile) continue;\n  const troops = GI.getMyTroops();\n  const intensity = Math.min(troops * 0.4, 1024);\n  GI.sendAttackTile(intensity, tile, e.id);\n  Logger.log("Snipe!", e.name, "tick:", cycleTick);\n  break;\n}' },
                 { label: 'Threat Radar', code: '// Threat Radar — Find and log all threats\nconst threats = GI.getThreats();\nconst neighbors = GI.getBorderTiles(GI.myId);\nLogger.log("Incoming ships:", threats.length);\nLogger.log("Border tiles:", neighbors.length);\nconst closeEnemies = GI.getAlivePlayers().filter(p => {\n  if (p.isMe) return false;\n  return GI.getDistanceToPlayer(p.id) < 150;\n});\ncloseEnemies.forEach(e => {\n  Logger.log("CLOSE:", e.name, "dist:", GI.getDistanceToPlayer(e.id).toFixed(0));\n});' },
                 { label: 'Leaderboard', code: '// Print Leaderboard\nconst lb = GI.getLeaderboard();\nlb.slice(0, 10).forEach((p, i) => {\n  Logger.log("#" + (i+1) + " " + p.name + " Score:" + p.score + " Territory:" + p.territory);\n});' },
-                { label: 'Debug Dump v5', code: '// Debug Game State v5.0 — Full strategic dump\nLogger.log("=== TERRIX v5.0 DEBUG ===");\nLogger.log("myId:", GI.myId);\nLogger.log("troops:", GI.getMyTroops());\nLogger.log("territory:", GI.getMyTerritory());\nLogger.log("density:", GI.getDensity().toFixed(2));\nLogger.log("cycleTick:", GI.getCycleTick());\nLogger.log("cycleProgress:", (GI.getCycleProgress() * 100).toFixed(0) + "%");\nLogger.log("alive:", GI.isPlayerAlive(GI.myId));\nLogger.log("playing:", GI.isPlaying());\nLogger.log("vulnerable:", GI.isVulnerable());\nLogger.log("gameState:", GI.getGameState());\nLogger.log("mapSize:", JSON.stringify(GI.getMapSize()));\nLogger.log("alivePlayers:", GI.getAlivePlayers().length);\nLogger.log("ships:", GI.getShipCount());' }
+                { label: 'Debug Dump v5', code: '// Debug Game State v5.0 — Full strategic dump\nLogger.log("=== TERRIX v5.0 DEBUG ===");\nLogger.log("myId:", GI.myId);\nLogger.log("troops:", GI.getMyTroops());\nLogger.log("territory:", GI.getMyTerritory());\nLogger.log("density:", GI.getDensity().toFixed(2));\nLogger.log("cycleTick:", GI.getCycleTick());\nLogger.log("cycleProgress:", (GI.getCycleProgress() * 100).toFixed(0) + "%");\nLogger.log("alive:", GI.isPlayerAlive(GI.myId));\nLogger.log("playing:", GI.isPlaying());\nLogger.log("vulnerable:", GI.isVulnerable());\nLogger.log("gameState:", GI.getGameState());\nLogger.log("mapSize:", JSON.stringify(GI.getMapSize()));\nLogger.log("alivePlayers:", GI.getAlivePlayers().length);\nLogger.log("ships:", GI.getShipCount());\nLogger.log("aD keys:", Object.keys(G.G.aD).slice(0,10).join(","));\nLogger.log("bU.fJ:", G.G.bU.fJ, "bU.fK:", G.G.bU.fK);' }
             ];
             const labels = snippets.map(s => s.label);
             const choice = prompt('Choose snippet:\n' + labels.map((l, i) => (i+1) + '. ' + l).join('\n'));
@@ -2462,7 +2871,7 @@
                 '',
                 '// --- bU (map size) ---',
                 'if (G.bU) {',
-                '  console.log("bU.fK(width) =", G.bU.fK, "| bU.fL(height) =", G.bU.fL);',
+                '  console.log("bU.fJ(width) =", G.bU.fJ, "| bU.fK(height) =", G.bU.fK);',
                 '}',
                 '',
                 '// --- bN (ships) ---',
@@ -2488,8 +2897,9 @@
             if (TERRIX.config.godbot.enabled && !TERRIX.loops.godbot) {
                 const code = getScriptCode('godbot');
                 if (code) {
+                    const botLog = Logger.tagged('GodBot');
                     const fn = new Function('G', 'GI', 'TERRIX', 'Logger', code);
-                    fn(_win.G, GameInterface, TERRIX, Logger);
+                    fn(_win.G, GameInterface, TERRIX, botLog);
                 }
             }
             if (TERRIX.config.minimap.enabled) {
@@ -2593,6 +3003,7 @@
     let _mmLastMapSeed = -1;
     let _mmHoverPid = -1;
     let _mmMouseDown = false;
+    let _mmDebugLogged = false;
 
     function ensureMinimap() {
         let el = document.getElementById('tx-minimap');
@@ -2625,7 +3036,7 @@
         }
 
         if (!TERRIX.loops.minimap) {
-            TERRIX.loops.minimap = setInterval(renderMinimap, 100);
+            TERRIX.loops.minimap = setInterval(renderMinimap, 250);
         }
     }
 
@@ -2653,12 +3064,39 @@
         const relX = e.clientX - rect.left;
         const relY = e.clientY - rect.top;
         const W = _mmBufferCanvas.width, H = _mmBufferCanvas.height;
-        const mapW = G.bU.fK, mapH = G.bU.fL;
-        const tileX = Math.floor((relX / W) * mapW);
-        const tileY = Math.floor((relY / H) * mapH);
-        if (tileX < 0 || tileY < 0 || tileX >= mapW || tileY >= mapH) { _mmHoverPid = -1; return; }
-        const en = G.ac.yk(tileX, tileY);
-        const pid = G.ac.f1(en);
+        if (W <= 0 || H <= 0) { _mmHoverPid = -1; return; }
+        const mapW = G.bU.fJ, mapH = G.bU.fK;
+        if (!mapW || !mapH || mapW <= 0 || mapH <= 0) { _mmHoverPid = -1; return; }
+        const tileX = Math.min(Math.floor((relX / W) * mapW), mapW - 1);
+        const tileY = Math.min(Math.floor((relY / H) * mapH), mapH - 1);
+        if (tileX < 0 || tileY < 0) { _mmHoverPid = -1; return; }
+        let pid = -1;
+        if (G.ac && typeof G.ac.f0 === 'function') {
+            const encoded = (tileY * mapW + tileX) << 2;
+            try { pid = G.ac.f0(encoded); } catch(e) {}
+        }
+        if (pid <= 0 || pid >= 512) {
+            if (G.ag) {
+                const agProps = Object.getOwnPropertyNames(G.ag);
+                const maxP = G.aD.f5 || 512;
+                const tilesProp = agProps.find(p => Array.isArray(G.ag[p]) && G.ag[p].length === maxP && Array.isArray(G.ag[p][0])) || 'ga';
+                const tiles = G.ag[tilesProp];
+                if (tiles) {
+                    const tx = tileX, ty = tileY;
+                    for (let i = 0; i < maxP; i++) {
+                        const playerTiles = tiles[i];
+                        if (!playerTiles || !Array.isArray(playerTiles)) continue;
+                        for (let j = 0; j < playerTiles.length; j++) {
+                            const enc = playerTiles[j];
+                            const px = (enc >> 2) % mapW;
+                            const py = Math.floor((enc >> 2) / mapW);
+                            if (px === tx && py === ty) { pid = i; break; }
+                        }
+                        if (pid > 0) break;
+                    }
+                }
+            }
+        }
         _mmHoverPid = (pid > 0 && pid < 512) ? pid : -1;
         if (_mmHoverPid > 0 && G.bi && G.bi.aBo) {
             const teamIdx = G.bi.aBo[_mmHoverPid];
@@ -2682,7 +3120,7 @@
         const relX = e.clientX - rect.left;
         const relY = e.clientY - rect.top;
         const W = _mmBufferCanvas.width, H = _mmBufferCanvas.height;
-        const mapW = G.bU.fK, mapH = G.bU.fL;
+        const mapW = G.bU.fJ, mapH = G.bU.fK;
         const tileX = (relX / W) * mapW;
         const tileY = (relY / H) * mapH;
         try {
@@ -2703,59 +3141,102 @@
         const ctx = _mmBufferCtx;
         const scaleX = W / mapW;
         const scaleY = H / mapH;
-        const step = 3;
 
-        if (G.bU.xe && G.bU.xe.width > 1) {
-            ctx.drawImage(G.bU.xe, 0, 0, G.bU.xe.width, G.bU.xe.height, 0, 0, W, H);
-        } else {
-            ctx.fillStyle = "#060a14";
-            ctx.fillRect(0, 0, W, H);
-        }
+        ctx.fillStyle = "#060a14";
+        ctx.fillRect(0, 0, W, H);
 
-        if (!G.aD || G.aD.a18 !== 1 || !G.ac || !G.bi) return;
+        if (!G.aD || !G.ag || !G.bi) return;
 
-        const ac = G.ac;
         const bi = G.bi;
-        const f1 = ac.f1;
-        const yk = ac.yk;
         const aBo = bi.aBo;
         const aWA = bi.aWA;
         const ac6 = bi.ac6;
 
-        if (!f1 || !yk || !aBo) return;
+        if (!aBo || !aWA) return;
+
+        const myId = G.aD.es;
+        const maxP = G.aD.f5 || 512;
+
+        const agProps = Object.getOwnPropertyNames(G.ag);
+        const aliveProp = agProps.find(p => G.ag[p] instanceof Uint8Array && G.ag[p].length === maxP) || 'n3';
+        const tilesProp = 'ga';
+
+        if (!G.ag[tilesProp] || !G.ag[aliveProp] || !Array.isArray(G.ag[tilesProp]) || G.ag[tilesProp].length !== maxP) {
+            if (!_mmDebugLogged) {
+                _mmDebugLogged = true;
+                const ga = G.ag[tilesProp];
+                console.log('[TerriX] Minimap: no tile data', {
+                    agProps: agProps,
+                    aliveProp: aliveProp,
+                    gaExists: !!ga,
+                    gaType: typeof ga,
+                    gaLength: Array.isArray(ga) ? ga.length : -1,
+                    ga0Type: ga && ga[0] ? (Array.isArray(ga[0]) ? 'array:' + ga[0].length : typeof ga[0]) : 'null',
+                    myId: myId,
+                    es: G.aD ? G.aD.es : -1,
+                    f5: G.aD ? G.aD.f5 : -1
+                });
+            }
+            return;
+        }
 
         const colorCache = new Map();
-        let lastOwner = -1;
 
-        for (let y = 0; y < mapH; y += step) {
-            lastOwner = -1;
-            for (let x = 0; x < mapW; x += step) {
-                const en = yk(x, y);
-                const owner = f1(en);
+        const hashColor = (id) => {
+            if (colorCache.has(id)) return colorCache.get(id);
+            const hue = ((id * 137.508) % 360) / 360;
+            const s = 0.7, l = 0.55;
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            const r = Math.round(hue2rgb(p, q, hue + 1/3) * 255);
+            const g = Math.round(hue2rgb(p, q, hue) * 255);
+            const b = Math.round(hue2rgb(p, q, hue - 1/3) * 255);
+            const color = `rgb(${r},${g},${b})`;
+            colorCache.set(id, color);
+            return color;
+        };
 
-                if (owner > 0 && owner < 512) {
-                    let color = colorCache.get(owner);
-                    if (!color) {
-                        const team = aBo[owner];
-                        if (team === undefined || team < 0) { lastOwner = -1; continue; }
-                        color = (aWA && aWA[team]) ? aWA[team] : (ac6 && ac6[team]) ? ac6[team] : null;
-                        if (!color) { lastOwner = -1; continue; }
-                        colorCache.set(owner, color);
-                    }
+        for (let pid = 0; pid < maxP; pid++) {
+            if (G.ag[aliveProp][pid] === 0) continue;
+            const tiles = G.ag[tilesProp][pid];
+            if (!tiles || !Array.isArray(tiles) || tiles.length === 0) continue;
 
-                    if (lastOwner !== -1 && lastOwner !== owner) {
-                        ctx.fillStyle = 'rgba(0,0,0,0.45)';
-                        ctx.fillRect(x * scaleX, y * scaleY, Math.max(1, scaleX), scaleY * step);
-                    }
-                    lastOwner = owner;
-
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x * scaleX, y * scaleY, scaleX * step, scaleY * step);
+            let color;
+            if (pid === myId) {
+                color = '#00ff64';
+            } else {
+                const teamIdx = aBo[pid];
+                if (teamIdx !== undefined && teamIdx >= 0 && aWA[teamIdx]) {
+                    color = aWA[teamIdx];
                 } else {
-                    lastOwner = -1;
+                    color = hashColor(pid);
                 }
             }
+
+            ctx.fillStyle = color;
+
+            for (let j = 0; j < tiles.length; j++) {
+                try {
+                    const enc = tiles[j];
+                    const tx = (enc >> 2) % mapW;
+                    const ty = Math.floor((enc >> 2) / mapW);
+                    if (tx < 0 || ty < 0 || tx >= mapW || ty >= mapH) continue;
+                    ctx.fillRect(tx * scaleX, ty * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+                } catch(e) {}
+            }
         }
+
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(0, 0, W, H);
     }
 
     function renderMinimap() {
@@ -2767,7 +3248,7 @@
         const canvas = el.querySelector('canvas');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        const mapW = G.bU.fK, mapH = G.bU.fL;
+        const mapW = G.bU.fJ, mapH = G.bU.fK;
         if (!mapW || !mapH) return;
 
         const W = _mmBufferCanvas.width, H = _mmBufferCanvas.height;
@@ -2792,18 +3273,21 @@
             const ac6 = G.bi.ac6;
             const teamIdx = aBo ? aBo[_mmHoverPid] : _mmHoverPid;
             const baseColor = (aWA && aWA[teamIdx]) ? aWA[teamIdx] : (ac6 && ac6[teamIdx]) ? ac6[teamIdx] : null;
-            if (baseColor) {
-                const f1 = G.ac.f1;
-                const yk = G.ac.yk;
-                const step = 3;
-                ctx.fillStyle = 'rgba(255,255,255,0.35)';
-                for (let y = 0; y < mapH; y += step) {
-                    for (let x = 0; x < mapW; x += step) {
-                        const en = yk(x, y);
-                        const owner = f1(en);
-                        if (owner === _mmHoverPid) {
-                            ctx.fillRect(x * scaleX, y * scaleY, scaleX * step, scaleY * step);
-                        }
+            if (baseColor && G.ag) {
+                const agProps = Object.getOwnPropertyNames(G.ag);
+                const maxP = G.aD.f5 || 512;
+                const tilesProp = agProps.find(p => Array.isArray(G.ag[p]) && G.ag[p].length === maxP && Array.isArray(G.ag[p][0])) || 'ga';
+                const tiles = G.ag[tilesProp] && G.ag[tilesProp][_mmHoverPid];
+                if (tiles && Array.isArray(tiles)) {
+                    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                    for (let j = 0; j < tiles.length; j++) {
+                        try {
+                            const enc = tiles[j];
+                            const tx = (enc >> 2) % mapW;
+                            const ty = Math.floor((enc >> 2) / mapW);
+                            if (tx < 0 || ty < 0 || tx >= mapW || ty >= mapH) continue;
+                            ctx.fillRect(tx * scaleX, ty * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+                        } catch(e) {}
                     }
                 }
             }
@@ -3009,13 +3493,13 @@
             }
         }
 
-        // Render neutral/mountain tiles
-        if (cfg.showMountains !== false && typeof ac.fE === 'function' && typeof ac.yk === 'function') {
+        // Render water/neutral tiles
+        if (cfg.showMountains !== false && typeof ac.ez === 'function' && G.bU.xe && G.bU.xd) {
             for (let y = 0; y < mapH; y += 4) {
                 for (let x = 0; x < mapW; x += 4) {
                     try {
-                        const enc = ac.yk(x, y);
-                        if (ac.fE(enc)) {
+                        const enc = (y * mapW + x) * 4;
+                        if (ac.ez(enc)) {
                             const px = Math.floor(x * scaleX);
                             const py = Math.floor(y * scaleY);
                             const pxEnd = Math.min(Math.floor((x + 4) * scaleX) + 1, W);
@@ -3034,6 +3518,294 @@
         }
 
         ctx.putImageData(imgData, 0, 0);
+    }
+
+    let _espCanvas = null;
+    let _espCtx = null;
+    let _espLastDirty = false;
+    let _espLastMapSeed = -1;
+
+    function ensureESPView() {
+        const el = document.getElementById('tx-tab-esp');
+        if (!el) return;
+
+        const canvas = document.getElementById('tx-esp-canvas');
+        if (!canvas) return;
+
+        const resizeCanvas = () => {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                return true;
+            }
+            return false;
+        };
+
+        _espCanvas = canvas;
+        _espCtx = canvas.getContext('2d');
+
+        if (!resizeCanvas()) {
+            requestAnimationFrame(() => resizeCanvas());
+        }
+
+        const resizeObserver = new ResizeObserver(() => resizeCanvas());
+        resizeObserver.observe(el);
+
+        if (!TERRIX.loops.esp) {
+            TERRIX.loops.esp = setInterval(renderESPView, 300);
+        }
+    }
+
+    function removeESPView() {
+        if (TERRIX.loops.esp) {
+            clearInterval(TERRIX.loops.esp);
+            TERRIX.loops.esp = null;
+        }
+        _espCanvas = null;
+        _espCtx = null;
+        _espLastDirty = false;
+        _espLastMapSeed = -1;
+    }
+
+    function renderESPView() {
+        const G = _win.G;
+        if (!_espCanvas || !_espCtx) return;
+        if (!G || !G.bU || !G.aD || !G.ag) return;
+
+        const cfg = TERRIX.config.esp;
+        if (!cfg || !cfg.enabled) return;
+
+        const canvas = _espCanvas;
+        const ctx = _espCtx;
+        const W = canvas.width;
+        const H = canvas.height;
+
+        if (W <= 0 || H <= 0) return;
+
+        const mapW = G.bU.fJ;
+        const mapH = G.bU.fK;
+        if (!mapW || !mapH) return;
+
+        const isDirty = G.bh && G.bh.dp;
+        const mapChanged = (G.bU.mapSeed !== _espLastMapSeed);
+
+        if (!isDirty && !mapChanged && _espLastDirty) return;
+
+        _espLastMapSeed = G.bU.mapSeed;
+        _espLastDirty = true;
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#060a14';
+        ctx.fillRect(0, 0, W, H);
+
+        const scaleX = W / mapW;
+        const scaleY = H / mapH;
+        const bi = G.bi;
+        const myId = G.aD.es;
+        const maxP = G.aD.f5 || 512;
+        const aBo = bi ? bi.aBo : null;
+        const aWA = bi ? bi.aWA : null;
+        const ac6 = bi ? bi.ac6 : null;
+
+        const agProps = Object.getOwnPropertyNames(G.ag);
+        const aliveProp = agProps.find(p => G.ag[p] instanceof Uint8Array && G.ag[p].length === maxP) || 'n3';
+        let tilesProp = null;
+        for (const p of ['ga', 'gp', 'go', 'fX', 'gq']) {
+            if (Array.isArray(G.ag[p]) && G.ag[p].length === maxP) {
+                const mt = G.ag[p][myId];
+                if (mt && Array.isArray(mt) && mt.length > 0) { tilesProp = p; break; }
+            }
+        }
+        if (!tilesProp) {
+            for (const p of ['ga', 'gp', 'go', 'fX', 'gq']) {
+                if (Array.isArray(G.ag[p]) && G.ag[p].length === maxP) { tilesProp = p; break; }
+            }
+        }
+        if (!tilesProp) tilesProp = 'ga';
+
+        if (!G.ag[tilesProp] || !G.ag[aliveProp]) return;
+
+        const colorCache = new Map();
+
+        const hashColor = (id) => {
+            if (colorCache.has(id)) return colorCache.get(id);
+            const hue = ((id * 137.508) % 360) / 360;
+            const s = 0.7, l = 0.55;
+            const hue2rgb = (p, q, t) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1/6) return p + (q - p) * 6 * t;
+                if (t < 1/2) return q;
+                if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            };
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            const r = Math.round(hue2rgb(p, q, hue + 1/3) * 255);
+            const g = Math.round(hue2rgb(p, q, hue) * 255);
+            const b = Math.round(hue2rgb(p, q, hue - 1/3) * 255);
+            const color = `rgb(${r},${g},${b})`;
+            colorCache.set(id, color);
+            return color;
+        };
+
+        for (let pid = 0; pid < maxP; pid++) {
+            if (G.ag[aliveProp][pid] === 0) continue;
+            const tiles = G.ag[tilesProp][pid];
+            if (!tiles || !Array.isArray(tiles) || tiles.length === 0) continue;
+
+            let color;
+            if (pid === myId) {
+                color = '#00ff64';
+            } else {
+                const teamIdx = aBo ? aBo[pid] : -1;
+                if (teamIdx !== undefined && teamIdx >= 0 && aWA && aWA[teamIdx]) {
+                    color = aWA[teamIdx];
+                } else {
+                    color = hashColor(pid);
+                }
+            }
+
+            ctx.fillStyle = color;
+            for (let j = 0; j < tiles.length; j++) {
+                try {
+                    const enc = tiles[j];
+                    const tx = (enc >> 2) % mapW;
+                    const ty = Math.floor((enc >> 2) / mapW);
+                    if (tx < 0 || ty < 0 || tx >= mapW || ty >= mapH) continue;
+                    ctx.fillRect(tx * scaleX, ty * scaleY, Math.max(1, scaleX), Math.max(1, scaleY));
+                } catch(e) {}
+            }
+        }
+
+        if (cfg.showTroops !== false && G.ag) {
+            const troopsProp = agProps.find(p => G.ag[p] instanceof Uint32Array && G.ag[p].length === maxP) || 'gw';
+            const troops = G.ag[troopsProp];
+
+            if (troops) {
+                ctx.font = 'bold 10px system-ui';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                for (let pid = 0; pid < maxP; pid++) {
+                    if (pid === myId || G.ag[aliveProp][pid] === 0) continue;
+                    if (troops[pid] > 100) {
+                        const playerTiles = G.ag[tilesProp][pid];
+                        if (!playerTiles || playerTiles.length === 0) continue;
+
+                        let sumX = 0, sumY = 0, count = 0;
+                        const sampleStep = Math.max(1, Math.floor(playerTiles.length / 50));
+                        for (let j = 0; j < playerTiles.length; j += sampleStep) {
+                            const enc = playerTiles[j];
+                            sumX += (enc >> 2) % mapW;
+                            sumY += Math.floor((enc >> 2) / mapW);
+                            count++;
+                        }
+
+                        if (count > 0) {
+                            const cx = (sumX / count) * scaleX;
+                            const cy = (sumY / count) * scaleY;
+
+                            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                            ctx.fillRect(cx - 20, cy - 8, 40, 16);
+                            ctx.fillStyle = '#fff';
+                            ctx.fillText(formatNumber(troops[pid]), cx, cy);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (cfg.showNames !== false && G.ag) {
+            const nameProp = agProps.find(p => G.ag[p] instanceof Array && G.ag[p].length === maxP) || 'za';
+            const names = G.ag[nameProp];
+
+            if (names) {
+                ctx.font = 'bold 11px system-ui';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+
+                for (let pid = 0; pid < maxP; pid++) {
+                    if (pid === myId || G.ag[aliveProp][pid] === 0) continue;
+                    if (names[pid] && names[pid].length > 0) {
+                        const playerTiles = G.ag[tilesProp][pid];
+                        if (!playerTiles || playerTiles.length < 5) continue;
+
+                        let sumX = 0, sumY = 0, count = 0;
+                        const sampleStep = Math.max(1, Math.floor(playerTiles.length / 30));
+                        for (let j = 0; j < playerTiles.length; j += sampleStep) {
+                            const enc = playerTiles[j];
+                            sumX += (enc >> 2) % mapW;
+                            sumY += Math.floor((enc >> 2) / mapW);
+                            count++;
+                        }
+
+                        if (count > 0) {
+                            const cx = (sumX / count) * scaleX;
+                            const cy = (sumY / count) * scaleY;
+
+                            const name = names[pid];
+                            const metrics = ctx.measureText(name);
+                            const padding = 4;
+
+                            ctx.fillStyle = 'rgba(0,0,0,0.75)';
+                            ctx.fillRect(cx - metrics.width / 2 - padding, cy - 12, metrics.width + padding * 2, 14);
+                            ctx.fillStyle = '#fff';
+                            ctx.fillText(name, cx, cy - 2);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (G.bP && G.bP.y) {
+            const bPy = G.bP.y;
+            const shipCount = bPy.mK | 0;
+            if (shipCount > 0 && bPy.mZ && bPy.mO) {
+                const mZ = bPy.mZ;
+                const mO = bPy.mO;
+                const mapW16 = mapW << 4;
+
+                for (let s = 0; s < shipCount; s++) {
+                    const iS = mZ[s];
+                    if (!iS || iS <= 0) continue;
+                    const tileX = (iS % mapW16) / 16;
+                    const tileY = Math.floor(iS / mapW16) / 16;
+                    if (tileX < 0 || tileY < 0 || tileX >= mapW || tileY >= mapH) continue;
+
+                    const playerId = mO[s] >> 3;
+                    const isMe = playerId === myId;
+                    const dotX = tileX * scaleX;
+                    const dotY = tileY * scaleY;
+
+                    ctx.beginPath();
+                    ctx.arc(dotX, dotY, isMe ? 5 : 4, 0, Math.PI * 2);
+                    ctx.fillStyle = isMe ? '#00ff64' : '#ff4444';
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(dotX, dotY, (isMe ? 5 : 4) * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                }
+            }
+        }
+
+        ctx.strokeStyle = '#3a47ff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, W, H);
+    }
+
+    function formatNumber(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+    }
+
+    function _formatTroops(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(0) + 'K';
+        return num.toString();
     }
 
     const MultiTab = {
