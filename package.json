@@ -1,11 +1,23 @@
 {
-  "name": "terrix-build",
-  "version": "1.0.0",
+  "name": "demonclient",
+  "version": "0.1.0",
+  "description": "Lightweight Territorial.io 1v1 client",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build": "echo 'Done'"
+    "build": "node index.js",
+    "build-only": "node build.js",
+    "build-client": "node build.js --skip-patching",
+    "patch": "node build.js --patch-only"
   },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "node-fetch": "^2.7.0",
-    "pg": "^8.20.0"
+    "core-js": "^3.44.0",
+    "js-beautify": "^1.14.11",
+    "uglify-js": "^3.19.2"
+  },
+  "devDependencies": {
+    "webpack": "^5.95.0"
   }
 }
